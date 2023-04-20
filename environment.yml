@@ -1,0 +1,21 @@
+name: pypestutils
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - appdirs
+  - fprettify
+  - jupytext
+  - matplotlib
+  - meson!=0.63.0
+  - ninja
+  - numpy
+  - pip
+  - pytest
+  - pytest-cases
+  - pytest-dotenv
+  - pytest-order
+  - pytest-xdist
+  - flaky
