@@ -9,6 +9,9 @@ os.makedirs(new_d)
 
 f90_files = [f for f in os.listdir(org_d) if f.lower().endswith(".f90")]
 driver_files = [f for f in f90_files if f.lower().startswith("driver")]
+lib_files = [f for f in f90_files if not f.lower().startswith("driver")]
+
+
 
 for f in f90_files:
     shutil.copy2(os.path.join(org_d,f),os.path.join(new_d,f))
@@ -16,15 +19,20 @@ for f in f90_files:
 bd = os.getcwd()
 os.chdir(new_d)
 for f in f90_files:
-    os.system("fprettify {0}".format(f))
+   os.system("fprettify {0}".format(f))
+os.chdir(bd)
 
 with open(os.path.join(new_d,"meson.build"),'w') as f:
     f.write("src_dir='.'\n")
-    f.write("lib_sources = files(src_dir,recursive=false)\n")
-    f.write("lib_sources = [s for s in sources if s[-4:] == '.f90']\n")
-    f.write("pplib = static_library('pplib',lib_sources)\n")
+    #f.write("lib_sources = files(src_dir,recursive=false)\n")
+    #f.write("lib_sources = [s for s in sources if s[-4:] == '.f90']\n")
+    f.write("lib_sources = files(\n")
+    for lib_file in lib_files:
+        f.write("    '{0}',\n".format(lib_file))
+    f.write(")\n")
+    f.write("ppulib = static_library('ppulib',lib_sources)\n")
     for driver_file in driver_files:
-        f.write("{0} = executable('{0}',{1},link_with: [lib_sources])\n".format(driver_file.split(".")[0],driver_file))
+        f.write("{0}exe = executable('{0}','{1}',link_with: [ppulib])\n".format(driver_file.split(".")[0],driver_file))
 
 
 
