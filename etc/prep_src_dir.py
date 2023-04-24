@@ -9,7 +9,7 @@ os.makedirs(new_d)
 
 f90_files = [f for f in os.listdir(org_d) if f.lower().endswith(".f90")]
 driver_files = [f for f in f90_files if f.lower().startswith("driver")]
-lib_files = [f for f in f90_files if not f.lower().startswith("driver")]
+lib_files = [f for f in f90_files if not f.lower().startswith("driver") and "newfunc" not in f]
 
 
 
@@ -30,10 +30,11 @@ with open(os.path.join(new_d,"meson.build"),'w') as f:
     for lib_file in lib_files:
         f.write("    '{0}',\n".format(lib_file))
     f.write(")\n")
-    f.write("ppulib = static_library('ppulib',lib_sources)\n")
+    f.write("ppucore = static_library('ppucore',lib_sources)\n")
+    f.write("library('ppu',lib_sources)\n")
     for driver_file in driver_files:
-        f.write("{0}exe = executable('{0}','{1}',link_with: [ppulib])\n".format(driver_file.split(".")[0],driver_file))
-
+        f.write("{0}exe = executable('{0}','{1}',link_with: [ppucore])\n".format(driver_file.split(".")[0],driver_file))
+        break
 
 
 

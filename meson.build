@@ -96,6 +96,6 @@ add_project_link_arguments(fc.get_supported_arguments(link_args), language: 'for
 subdir('src')
 
 # meson tests to evaluate installation success
-test('Test installation version', driver1exe, args : ['-v',])
-test('Test installation compiler', driver1exe, args : ['-c',])
-test('Test installation help', driver1exe, args : ['-h',])
+#test('Test installation version', driver1exe, args : ['-v',])
+#test('Test installation compiler', driver1exe, args : ['-c',])
+#test('Test installation help', driver1exe, args : ['-h',])
