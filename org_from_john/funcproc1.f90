@@ -3,22 +3,24 @@
 
 
 integer function inquire_modflow_binary_file_specs(FileIn,FileOut,isim,                          &
-                                                   itype,iprec,narray,ntime)
+                                                   itype,iprec,narray,ntime) bind(C,name="inquire_modflow_binary_file_specs_")
 
 ! -- This function reports some of the details of a MODFLOW-written binary file. This file may be single or double
 !    precision. It may be a system state or budget file.
-
+       use iso_c_binding, only: c_int,c_char
        use dimvar
        use utilities
-       implicit none
 
-       character (len=1), intent(in)  :: FileIn(LENFILENAME)     ! Length is arbitrary
-       character (len=1), intent(in)  :: FileOut(LENFILENAME)    ! Length is arbitrary
-       integer, intent(in)            :: isim             ! Simulator
-       integer, intent(in)            :: itype            ! 1 = system state; 2 = flows
-       integer, intent(out)           :: iprec            ! 1 = single; 2 = double
-       integer, intent(out)           :: narray
-       integer, intent(out)           :: ntime
+       implicit none
+       
+
+       character (kind=c_char),dimension(*), intent(in)  :: FileIn(LENFILENAME)     ! Length is arbitrary
+       character (kind=c_char), dimension(*), intent(in)  :: FileOut(LENFILENAME)    ! Length is arbitrary
+       integer(kind=c_int), intent(in)            :: isim             ! Simulator
+       integer(kind=c_int), intent(in)            :: itype            ! 1 = system state; 2 = flows
+       integer(kind=c_int), intent(out)           :: iprec            ! 1 = single; 2 = double
+       integer(kind=c_int), intent(out)           :: narray
+       integer(kind=c_int), intent(out)           :: ntime
 
        logical                        :: lout,lopened
        integer                        :: NDimFileIn,NDimFileOut
@@ -452,14 +454,14 @@ integer function inquire_modflow_binary_file_specs(FileIn,FileOut,isim,         
 end function inquire_modflow_binary_file_specs
 
 
-integer function retrieve_error_message(errormessage)
+integer function retrieve_error_message(errormessage) bind(c, name="retrieve_error_message_")
 
 ! -- This function retrieves a previously-recorded error message.
-
+       use iso_c_binding, only: c_int,c_char
        use utilities
        implicit none
 
-       character (len=1), intent(out) :: errormessage(LENMESSAGE)
+       character (kind=c_char), dimension(*), intent(out) :: errormessage(LENMESSAGE)
 
        if(amessage.eq.' ')then
          retrieve_error_message=1
@@ -473,20 +475,20 @@ end function retrieve_error_message
 
 
 
-integer function install_structured_grid(gridname,ncol,nrow,nlay,icorner,e0,n0,rotation,delr,delc)
+integer function install_structured_grid(gridname,ncol,nrow,nlay,icorner,e0,n0,rotation,delr,delc) bind(c,name="install_structured_grid_")
 
 ! -- This function installs specifications for a structured grid.
-
+       use iso_c_binding, only: c_int,c_char,c_double,c_float
        use dimvar
        use deftypes
        use utilities
        implicit none
 
-       character (len=1), intent(in)  :: gridname(LENGRIDNAME)
-       integer, intent(in)            :: ncol,nrow,nlay
-       integer, intent(in)            :: icorner             ! 1=top left; 2=bottom left
-       double precision, intent(in)   :: e0,n0,rotation
-       double precision, intent(in)   :: delr(ncol),delc(nrow)
+       character (kind=c_char),dimension(*), intent(in)  :: gridname(LENGRIDNAME)
+       integer (kind=c_int), intent(in)            :: ncol,nrow,nlay
+       integer (kind=c_int), intent(in)            :: icorner             ! 1=top left; 2=bottom left
+       real (kind=c_double), intent(in)   :: e0,n0,rotation
+       real (kind=c_double), intent(in)   :: delr(ncol),delc(nrow)
 
        integer                        :: ierr
        integer                        :: igrid,icol,irow,jgrid
@@ -632,17 +634,17 @@ integer function install_structured_grid(gridname,ncol,nrow,nlay,icorner,e0,n0,r
 end function install_structured_grid
 
 
-integer function uninstall_structured_grid(gridname)
+integer function uninstall_structured_grid(gridname) bind(c,name="uninstall_structured_grid_")
 
 ! -- This function uninstalls a previously installed set of structured grid specifications.
-
+       use iso_c_binding, only: c_char
        use dimvar
        use deftypes
        use utilities
        use high_level_utilities
        implicit none
 
-       character (len=1), intent(in)  :: gridname(LENGRIDNAME)
+       character (kind=c_char), dimension(*), intent(in)  :: gridname(LENGRIDNAME)
 
        integer                        :: igrid,ierr
        character (len=LENGRIDNAME)    :: aname
@@ -691,7 +693,7 @@ end function uninstall_structured_grid
 
 
 
-integer function free_all_memory()
+integer function free_all_memory() bind(c,name="free_all_memory_")
 
 ! -- This function deallocates all memory that is being used.
 
@@ -744,30 +746,31 @@ integer function interp_from_structured_grid(                                   
                              GridName,DepVarFile,isim,iprec,ntime,                    &
                              VarType,InterpThresh,NoInterpVal,                        &
                              npts,ecoord,ncoord,layer,                                &
-                             nproctime,simtime,simstate)
+                             nproctime,simtime,simstate)                              &
+                             bind(c,name="interp_from_structured_grid_")
 
 ! -- This function performs spatial interpolation from a structured grid to a set of points.
-
+       use iso_c_binding, only: c_int,c_double,c_float,c_char
        use dimvar
        use deftypes
        use utilities
        use high_level_utilities
        implicit none
 
-       character (len=1), intent(in)  :: gridname(LENGRIDNAME)      ! name of installed structured grid
-       character (len=1), intent(in)  :: depvarfile(LENFILENAME)    ! name of binary file to read
-       integer, intent(in)            :: isim                       ! -1 for MT3D; 1 for MODFLOW
-       integer, intent(in)            :: iprec                      ! 1 for single; 2 for double
-       integer, intent(in)            :: ntime                      ! number of output times
-       character (len=1), intent(in)  :: vartype(17)                ! only read arrays of this type
-       double precision, intent(in)   :: interpthresh               ! abs threshold for dry or inactive
-       double precision, intent(in)   :: nointerpval                ! no-interpolation-possible value
-       integer, intent(in)            :: npts                       ! number of points for which interpolation required
-       double precision, intent(in)   :: ecoord(npts),ncoord(npts)  ! eastings and northing of points
-       integer, intent(in)            :: layer(npts)                ! layers of points
-       integer, intent(out)           :: nproctime                  ! number of processed simulation times
-       double precision, intent(out)  :: simtime(ntime)             ! simulation time
-       double precision, intent(out)  :: simstate(ntime,npts)       ! interpolated system state
+       character (kind=c_char),dimension(*), intent(in)  :: gridname(LENGRIDNAME)      ! name of installed structured grid
+       character (kind=c_char),dimension(*), intent(in)  :: depvarfile(LENFILENAME)    ! name of binary file to read
+       integer(kind=c_int), intent(in)            :: isim                       ! -1 for MT3D; 1 for MODFLOW
+       integer(kind=c_int), intent(in)            :: iprec                      ! 1 for single; 2 for double
+       integer(kind=c_int), intent(in)            :: ntime                      ! number of output times
+       character (kind=c_char),dimension(*), intent(in)  :: vartype(17)                ! only read arrays of this type
+       real(kind=c_double), intent(in)   :: interpthresh               ! abs threshold for dry or inactive
+       real(kind=c_double), intent(in)   :: nointerpval                ! no-interpolation-possible value
+       integer(kind=c_int), intent(in)            :: npts                       ! number of points for which interpolation required
+       real(kind=c_double), intent(in)   :: ecoord(npts),ncoord(npts)  ! eastings and northing of points
+       integer(kind=c_int), intent(in)            :: layer(npts)                ! layers of points
+       integer(kind=c_int), intent(out)           :: nproctime                  ! number of processed simulation times
+       real(kind=c_double), intent(out)  :: simtime(ntime)             ! simulation time
+       real(kind=c_double), intent(out)  :: simstate(ntime,npts)       ! interpolated system state
 
        integer                        :: kstp,kper,ntrans,kstpold,kperold,ntransold
        integer                        :: inunit,ierr,ipts,igrid
@@ -1072,28 +1075,29 @@ end function interp_from_structured_grid
 integer function interp_to_obstime(                                            &
                              nsimtime,nproctime,npts,simtime,simval,           &
                              interpthresh,how_extrap,time_extrap,nointerpval,  &
-                             nobs,obspoint,obstime,obssimval)
+                             nobs,obspoint,obstime,obssimval)                  &
+                             bind(c,name="interp_to_obstime_")
 
 ! -- This function performs temporal interpolation for simulation times to observation times.
 ! -- Note that observation times do not need to be supplied in increasing order for each
 !    observation point. However simulation times in the SIMTIME array must be in increasing order.
-
+       use iso_c_binding, only: c_int,c_double,c_char
        use utilities
        implicit none
 
-       integer, intent(in)              :: nsimtime           ! first dimension of simtime and simval arrays
-       integer, intent(in)              :: nproctime          ! number of times in simtime and simval arrays
-       integer, intent(in)              :: npts               ! number of points in simval array (second dimension)
-       double precision, intent(in)     :: simtime(nsimtime)      ! simulation times
-       double precision, intent(in)     :: simval(nsimtime,npts)  ! simulated values
-       double precision, intent(in)     :: interpthresh       ! values equal or above this in simval have no meaning
-       character (len=1)                :: how_extrap         ! L=linear; C=constant
-       double precision, intent(in)     :: time_extrap        ! permitted extrapolation time
-       double precision, intent(in)     :: nointerpval        ! dummy output value if interpolation impossible
-       integer, intent(in)              :: nobs               ! number of elements inpbstime, obstime and obssimval arrays
-       integer, intent(in)              :: obspoint(nobs)     ! indices of observation points (start at 0; -1 means no index)
-       double precision, intent(in)     :: obstime(nobs)      ! observation times
-       double precision, intent(out)    :: obssimval(nobs)    ! time-interpolated simulation values
+       integer(kind=c_int), intent(in)              :: nsimtime           ! first dimension of simtime and simval arrays
+       integer(kind=c_int), intent(in)              :: nproctime          ! number of times in simtime and simval arrays
+       integer(kind=c_int), intent(in)              :: npts               ! number of points in simval array (second dimension)
+       real(kind=c_double), intent(in)     :: simtime(nsimtime)      ! simulation times
+       real(kind=c_double), intent(in)     :: simval(nsimtime,npts)  ! simulated values
+       real(kind=c_double), intent(in)     :: interpthresh       ! values equal or above this in simval have no meaning
+       character(kind=c_char,len=1),intent(in)                :: how_extrap         ! L=linear; C=constant
+       real(kind=c_double), intent(in)     :: time_extrap        ! permitted extrapolation time
+       real(kind=c_double), intent(in)     :: nointerpval        ! dummy output value if interpolation impossible
+       integer(kind=c_int), intent(in)              :: nobs               ! number of elements inpbstime, obstime and obssimval arrays
+       integer(kind=c_int), intent(in)              :: obspoint(nobs)     ! indices of observation points (start at 0; -1 means no index)
+       real(kind=c_double), intent(in)     :: obstime(nobs)      ! observation times
+       real(kind=c_double), intent(out)    :: obssimval(nobs)    ! time-interpolated simulation values
 
        character (len=1)                :: aextrap
        character (len=20)               :: atemp20
