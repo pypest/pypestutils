@@ -201,7 +201,7 @@
          do itime=1,ntime
            write(20,420) zonenumber(iz),timestep(itime),stressperiod(itime),   &
            simtime(itime),simflow(itime,iz)
-420        format(1x,i5,t20,i5,t30,i5,t40,pg16.9,t55,1pg16.9)
+420        format(1x,i5,t20,i5,t30,i5,t40,1pg16.9,t55,1pg16.9)
          end do
        end do
        close(unit=20)

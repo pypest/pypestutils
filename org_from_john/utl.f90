@@ -267,7 +267,7 @@ end function utl_whichone_int
 
 
 SUBROUTINE UTL_LOCPT (X0, Y0, X, Y, N, L, M)
-      DOUBLE PRECISION, intent(in) :: X(N), Y(N)
+      
 !-----------------------------------------------------------------------
 !     GIVEN A POLYGONAL LINE CONNECTING THE VERTICES (X(I),Y(I))
 !     (I = 1,...,N) TAKEN IN THIS ORDER. IT IS ASSUMED THAT THE
@@ -293,6 +293,7 @@ SUBROUTINE UTL_LOCPT (X0, Y0, X, Y, N, L, M)
 !jed      EXTERNAL   DPMPAR
 
       INTEGER            N,L,M,N0,I
+      DOUBLE PRECISION, intent(in) :: X(N), Y(N)
       DOUBLE PRECISION   ANGLE  ,DPMPAR ,EPS    ,PI     ,PI2    ,SUM
       DOUBLE PRECISION   THETA  ,THETAI ,THETA1 ,TOL    ,U      ,V
       DOUBLE PRECISION   X0     ,Y0

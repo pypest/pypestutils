@@ -116,23 +116,23 @@ integer function inquire_modflow_binary_file_specs(FileIn,FileOut,isim,         
          if((isim.eq.1).or.(isim.eq.21).or.(isim.eq.31))then
            write(outunit,40,err=9100)
 40         format(t2,'    KSTP',t12,'    KPER',t22,'  PERTIM',  &
-           t40,'  TOTIM',t58,'            TEXT',t78'    NCOL',t88,'    NROW',t98,'    ILAY')
+           t40,'  TOTIM',t58,'            TEXT',t78,'    NCOL',t88,'    NROW',t98,'    ILAY')
          else if(isim.eq.22)then
            write(outunit,41,err=9100)
 41         format(t2,'    KSTP',t12,'    KPER',t22,'  PERTIM',  &
-           t40,'  TOTIM',t58,'            TEXT',t78'   NSTRT',t88,'    NVAL',t98,'    ILAY')
+           t40,'  TOTIM',t58,'            TEXT',t78,'   NSTRT',t88,'    NVAL',t98,'    ILAY')
          else if(isim.eq.32)then
            write(outunit,42,err=9100)
 42         format(t2,'    KSTP',t12,'    KPER',t22,'  PERTIM',  &
-           t40,'  TOTIM',t58,'            TEXT',t78'    NCPL',t88,'    INT1',t98,'    ILAY')
+           t40,'  TOTIM',t58,'            TEXT',t78,'    NCPL',t88,'    INT1',t98,'    ILAY')
          else if(isim.eq.33)then
            write(outunit,43,err=9100)
 43         format(t2,'    KSTP',t12,'    KPER',t22,'  PERTIM',  &
-           t40,'  TOTIM',t58,'            TEXT',t78'   NODES',t88,'    INT1',t98,'    INT2')
+           t40,'  TOTIM',t58,'            TEXT',t78,'   NODES',t88,'    INT1',t98,'    INT2')
          else
            write(outunit,44,err=9100)
 44         format(t2,'    KSTP',t12,'    KPER',t22,'  PERTIM',  &
-           t40,'  TOTIM',t58,'            TEXT',t78'    INT1',t88,'    INT2',t98,'    INT3')
+           t40,'  TOTIM',t58,'            TEXT',t78,'    INT1',t88,'    INT2',t98,'    INT3')
          end if
        end if
        narray=0
@@ -316,9 +316,13 @@ integer function inquire_modflow_binary_file_specs(FileIn,FileOut,isim,         
              if(nlist.lt.0) go to 800
              if(nlist.gt.ibig) go to 800
              if(iprec.eq.1)then
-               read(inunit,err=800,end=800) ((itemp,rtemp),i=1,nlist)
+               do i=1,nlist
+                 read(inunit,err=800,end=800) itemp,rtemp
+               end do
              else
-               read(inunit,err=800,end=800) ((itemp,dtemp),i=1,nlist)
+               do i=1,nlist
+                 read(inunit,err=800,end=800) itemp,dtemp
+               end do
              end if
            else if(imeth.eq.3)then
              if(isim.eq.22)then
@@ -344,9 +348,19 @@ integer function inquire_modflow_binary_file_specs(FileIn,FileOut,isim,         
              if(nlist.gt.ibig) go to 800
              if((nlist.gt.0).and.(ndat.gt.0))then
                if(iprec.eq.1)then
-                 read(inunit,err=800,end=800)((itemp,(rtemp,i=1,ndat)),j=1,nlist)
+                 do j=1,nlist
+                   read(inunit,err=800,end=800) itemp
+                   do i=1,ndat
+                      read(inunit,err=800,end=800) rtemp
+                   end do
+                 end do
                else
-                 read(inunit,err=800,end=800)((itemp,(dtemp,i=1,ndat)),j=1,nlist)
+                 do j=1,nlist
+                   read(inunit,err=800,end=800) itemp
+                   do i=1,ndat
+                      read(inunit,err=800,end=800) dtemp
+                   end do
+                 end do
                end if
              end if
            else if(imeth.eq.6)then
@@ -361,9 +375,19 @@ integer function inquire_modflow_binary_file_specs(FileIn,FileOut,isim,         
              if(nlist.gt.ibig) go to 800
              if(nlist.gt.0)then
                if(iprec.eq.1)then
-                 read(inunit,err=800,end=800) ((itemp,itemp,(rtemp,i=1,ndat)),j=1,nlist)
+                 do j=1,nlist
+                   read(inunit,err=800,end=800) itemp
+                   do i=1,ndat
+                      read(inunit,err=800,end=800) rtemp
+                   end do
+                 end do
                else
-                 read(inunit,err=800,end=800) ((itemp,itemp,(dtemp,i=1,ndat)),j=1,nlist)
+                 do j=1,nlist
+                   read(inunit,err=800,end=800) itemp
+                   do i=1,ndat
+                      read(inunit,err=800,end=800) dtemp
+                   end do
+                 end do
                end if
              end if
            end if
@@ -828,7 +852,7 @@ integer function interp_from_structured_grid(                                   
            'than single precision allows.')
            go to 9890
          end if
-         rinterpthresh=min(huge(rinterpthresh)-2.0*spacing(huge(rinterpthresh)),interpthresh)
+         rinterpthresh=min(huge(rinterpthresh)-2.0*spacing(huge(rinterpthresh)),real(interpthresh))
        end if
 
 ! -- Identify the grid.
@@ -2953,9 +2977,13 @@ integer function extract_flows_from_cbc_file(             &
              if(nlist.gt.ibig) go to 9000
              if(iflag.eq.0)then
                if(iprec.eq.1)then
-                 read(inunit,err=9100,end=9100) ((itemp,rtemp),ilist=1,nlist)
+                do ilist=1,nlist
+                 read(inunit,err=9100,end=9100) itemp,rtemp
+                end do
                else
-                 read(inunit,err=9100,end=9100) ((itemp,dtemp),ilist=1,nlist)
+                 do ilist=1,nlist
+                  read(inunit,err=9100,end=9100) itemp,dtemp
+                 end do
                end if
              else
                ndimtemp=max(nlist,ncell)
@@ -2994,9 +3022,13 @@ integer function extract_flows_from_cbc_file(             &
                  end if
                end if
                if(iprec.eq.1)then
-                 read(inunit,err=9100,end=9100) ((iarray(ilist),rarray(ilist)),ilist=1,nlist)
+                 do ilist=1,nlist
+                   read(inunit,err=9100,end=9100) iarray(ilist),rarray(ilist)
+                 end do
                else
-                 read(inunit,err=9100,end=9100) ((iarray(ilist),darray(ilist)),ilist=1,nlist)
+                  do ilist=1,nlist
+                   read(inunit,err=9100,end=9100) iarray(ilist),darray(ilist)
+                 end do
                end if
                do ilist=1,nlist
                  icell=iarray(ilist)
@@ -3173,9 +3205,19 @@ integer function extract_flows_from_cbc_file(             &
              if(iflag.eq.0)then
                if((nlist.gt.0).and.(ndat.gt.0))then
                  if(iprec.eq.1)then
-                   read(inunit,err=9400,end=9400)((itemp,(rtemp,idat=1,ndat)),ilist=1,nlist)
+                   do ilist=1,nlist
+                     read(inunit,err=9400,end=9400)itemp
+                     do idat=1,ndat
+                       read(inunit,err=9400,end=9400)rtemp
+                     end do
+                   end do
                  else
-                   read(inunit,err=9400,end=9400)((itemp,(dtemp,idat=1,ndat)),ilist=1,nlist)
+                   do ilist=1,nlist
+                     read(inunit,err=9400,end=9400)itemp
+                     do idat=1,ndat
+                       read(inunit,err=9400,end=9400)dtemp
+                     end do
+                   end do
                  end if
                endif
              else
@@ -3217,11 +3259,19 @@ integer function extract_flows_from_cbc_file(             &
                  end if
                end if
                if(iprec.eq.1)then
-                 read(inunit,err=9400,end=9400)    &
-                 ((iarray(ilist),rarray(ilist),(rtemp,idat=1,ndat-1)),ilist=1,nlist)
+                 do ilist=1,nlist
+                    read(inunit,err=9400,end=9400) iarray(ilist),rarray(ilist)
+                    do idat=1,ndat-1
+                      read(inunit,err=9400,end=9400) rtemp
+                    end do
+                  end do
                else
-                 read(inunit,err=9400,end=9400)    &
-                 ((iarray(ilist),darray(ilist),(dtemp,idat=1,ndat-1)),ilist=1,nlist)
+                  do ilist=1,nlist
+                    read(inunit,err=9400,end=9400) iarray(ilist),darray(ilist)
+                    do idat=1,ndat-1
+                      read(inunit,err=9400,end=9400) dtemp
+                    end do
+                  end do
                end if
              end if
              if(iprec.eq.1)then
@@ -3263,9 +3313,19 @@ integer function extract_flows_from_cbc_file(             &
              if(nlist.gt.0)then
                if(iflag.eq.0)then
                  if(iprec.eq.1)then
-                   read(inunit,err=9100,end=9100) ((itemp,itemp,(rtemp,idat=1,ndat)),ilist=1,nlist)
+                   do ilist=1,nlist
+                     read(inunit,err=9100,end=9100) itemp,itemp
+                     do idat=1,ndat
+                       read(inunit,err=9100,end=9100) rtemp
+                     end do
+                   end do
                  else
-                   read(inunit,err=9100,end=9100) ((itemp,itemp,(dtemp,idat=1,ndat)),ilist=1,nlist)
+                   do ilist=1,nlist
+                     read(inunit,err=9100,end=9100) itemp,itemp
+                     do idat=1,ndat
+                       read(inunit,err=9100,end=9100) dtemp
+                     end do
+                   end do
                  end if
                else
                  ndimtemp=max(nlist,ncell)
@@ -3306,11 +3366,19 @@ integer function extract_flows_from_cbc_file(             &
                    end if
                  end if
                  if(iprec.eq.1)then
-                   read(inunit,err=9500,end=9500)    &
-                   ((iarray(ilist),itemp,rarray(ilist),(rtemp,idat=1,ndat-1)),ilist=1,nlist)
+                   do ilist=1,nlist
+                     read(inunit,err=9500,end=9500) iarray(ilist),itemp,rarray(ilist)
+                     do idat=1,ndat-1
+                       read(inunit,err=9500,end=9500) rtemp
+                     end do
+                   end do
                  else
-                   read(inunit,err=9500,end=9500)    &
-                   ((iarray(ilist),itemp,darray(ilist),(dtemp,idat=1,ndat-1)),ilist=1,nlist)
+                   do ilist=1,nlist
+                     read(inunit,err=9500,end=9500) iarray(ilist),itemp,darray(ilist)
+                     do idat=1,ndat-1
+                       read(inunit,err=9500,end=9500) dtemp
+                     end do
+                   end do
                  end if
                  if(iprec.eq.1)then
                    do ilist=1,nlist

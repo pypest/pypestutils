@@ -184,7 +184,7 @@
 
 !       Subroutine WRITINT writes an integer to a character variable.
 
-        integer*4 ival
+        integer(kind=4) ival
         character*6 afmt
         character*(*) atemp
 

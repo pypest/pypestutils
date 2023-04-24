@@ -16,11 +16,11 @@ lib_files = [f for f in f90_files if not f.lower().startswith("driver") and "new
 for f in f90_files:
     shutil.copy2(os.path.join(org_d,f),os.path.join(new_d,f))
 
-bd = os.getcwd()
-os.chdir(new_d)
-for f in f90_files:
-   os.system("fprettify {0}".format(f))
-os.chdir(bd)
+# bd = os.getcwd()
+# os.chdir(new_d)
+# for f in f90_files:
+#    os.system("fprettify {0}".format(f))
+# os.chdir(bd)
 
 with open(os.path.join(new_d,"meson.build"),'w') as f:
     f.write("src_dir='.'\n")
