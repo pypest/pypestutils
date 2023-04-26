@@ -78,16 +78,24 @@ def structured_freyberg_invest():
         layer.ctypes.data_as(POINTER(c_int)),
         isuccess.ctypes.data_as(POINTER(c_int)))
 
+    nnpts = c_int(npts[0])
+    ppu.dummy_test_(gridname.encode(),byref(nnpts),ecoord.ctypes.data_as(POINTER(c_double)),
+        ncoord.ctypes.data_as(POINTER(c_double)),
+        layer.ctypes.data_as(POINTER(c_int)),
+        isuccess.ctypes.data_as(POINTER(c_int)))
+
     #err = "                                 "
     #ppu.retrieve_error_message_(err.encode())
 
 
     print(isuccess)
     print(layer)
-    ppu.calc_mf6_interp_factors_(gridname.encode(),npts.ctypes.data_as(POINTER(c_int)),ecoord.ctypes.data_as(POINTER(c_double)),
+    factype = c_int(1)
+    retcode = ppu.calc_mf6_interp_factors_(gridname.encode(),byref(nnpts),ecoord.ctypes.data_as(POINTER(c_double)),
          ncoord.ctypes.data_as(POINTER(c_double)),layer.ctypes.data_as(POINTER(c_int)),facfile.encode(),
-         c_int(1),blnfile.encode(),isuccess.ctypes.data_as(POINTER(c_int)))
+         byref(factype),blnfile.encode(),isuccess.ctypes.data_as(POINTER(c_int)))
     print(isuccess)
+    print(retcode)
     
 
 

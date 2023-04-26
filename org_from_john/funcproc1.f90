@@ -1685,7 +1685,7 @@ integer function dummy_test(gridname,npts,ecoord,ncoord,layer,interp_success) bi
        !interp_success = 0.0 !array
        !print *,layer
        interp_success(1) = 1
-
+       print *,npts
        dummy_test=0
 
        return
