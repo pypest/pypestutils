@@ -1,6 +1,7 @@
 import os
 import platform
 import shutil
+import ctypes
 import numpy as np
 import pandas as pd
 import pyemu
@@ -39,18 +40,18 @@ def structured_freyberg_invest():
     #pyemu.helpers.SpatialReference(delc=delc,delr=delr,xll=xll,yll=yll).write_gridspec(gs_fname)
     grb_fname = os.path.join(test_d,"freyberg6.dis.grb")
     assert os.path.exists(grb_fname)
-    from ctypes import CDLL, POINTER, c_int, c_double,byref
-    idis = c_int(-1)
-    ncells = c_int(-1)
-    ndim1 = c_int(-1)
-    ndim2 = c_int(-1)
-    ndim3 = c_int(-1)
     
-    ppu = CDLL(os.path.join(test_d,lib_name))
+    idis = ctypes.c_int(-1)
+    ncells = ctypes.c_int(-1)
+    ndim1 = ctypes.c_int(-1)
+    ndim2 = ctypes.c_int(-1)
+    ndim3 = ctypes.c_int(-1)
+    
+    ppu = ctypes.CDLL(os.path.join(test_d,lib_name))
     
     gridname = "freyberg"
-    ppu.install_mf6_grid_from_file_(gridname.encode(),grb_fname.encode(),byref(idis),
-        byref(ncells),byref(ndim1),byref(ndim2),byref(ndim3))
+    ppu.install_mf6_grid_from_file_(gridname.encode(),grb_fname.encode(),ctypes.byref(idis),
+        ctypes.byref(ncells),ctypes.byref(ndim1),ctypes.byref(ndim2),ctypes.byref(ndim3))
     print(idis.value,ncells.value,ndim1.value,ndim2.value,ndim3.value)
     assert idis.value == 1
     assert ncells.value == nrow * ncol * nlay
@@ -65,7 +66,7 @@ def structured_freyberg_invest():
     ncoord = np.random.uniform(0,nrow*np.cumsum(delc)[-1],npts)
     print(ecoord)
     print(ncoord)
-    layer = np.ones(npts,dtype=int)
+    layer = np.ones(npts,dtype=np.int32)
     print(layer)
     facfile = os.path.join(test_d,"factors.dat")
     blnfile = os.path.join(test_d,"bln_file.dat")
@@ -73,29 +74,34 @@ def structured_freyberg_invest():
     print(isuccess)
 
 
-    ppu.dummy_test_(gridname.encode(),npts.ctypes.data_as(POINTER(c_int)),ecoord.ctypes.data_as(POINTER(c_double)),
-        ncoord.ctypes.data_as(POINTER(c_double)),
-        layer.ctypes.data_as(POINTER(c_int)),
-        isuccess.ctypes.data_as(POINTER(c_int)))
+    ppu.dummy_test_(gridname.encode(),npts.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+        isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
 
-    nnpts = c_int(npts[0])
-    ppu.dummy_test_(gridname.encode(),byref(nnpts),ecoord.ctypes.data_as(POINTER(c_double)),
-        ncoord.ctypes.data_as(POINTER(c_double)),
-        layer.ctypes.data_as(POINTER(c_int)),
-        isuccess.ctypes.data_as(POINTER(c_int)))
+    nnpts = ctypes.c_int(npts[0])
+    ppu.dummy_test_(gridname.encode(),ctypes.byref(nnpts),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+        isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
 
-    #err = "                                 "
-    #ppu.retrieve_error_message_(err.encode())
+    get_err = ppu.retrieve_error_message_
+    err_str = np.array([' ' for _ in range(1000)],dtype=np.dtype('a1'))
+
+    string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
+    retcode = ppu.retrieve_error_message_(string_ptr)
+
+    factype = ctypes.c_int(1)
+    retcode = ppu.calc_mf6_interp_factors_(gridname.encode(),ctypes.byref(nnpts),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+         ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),facfile.encode(),
+         ctypes.byref(factype),blnfile.encode(),isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
+    if retcode != 0:
+        err_str = np.array([' ' for _ in range(1000)],dtype=np.dtype('a1'))
+        string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
+        retcode = ppu.retrieve_error_message_(string_ptr)
+        print(string_ptr)
 
 
-    print(isuccess)
-    print(layer)
-    factype = c_int(1)
-    retcode = ppu.calc_mf6_interp_factors_(gridname.encode(),byref(nnpts),ecoord.ctypes.data_as(POINTER(c_double)),
-         ncoord.ctypes.data_as(POINTER(c_double)),layer.ctypes.data_as(POINTER(c_int)),facfile.encode(),
-         byref(factype),blnfile.encode(),isuccess.ctypes.data_as(POINTER(c_int)))
-    print(isuccess)
-    print(retcode)
     
 
 

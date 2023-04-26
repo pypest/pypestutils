@@ -464,9 +464,9 @@ integer function retrieve_error_message(errormessage) bind(c, name="retrieve_err
        character (kind=c_char,len=1), intent(out) :: errormessage(LENMESSAGE)
 
        if(amessage.eq.' ')then
-         retrieve_error_message=1
-       else
          retrieve_error_message=0
+       else
+         retrieve_error_message=1
          call utl_char2string(LENMESSAGE,amessage,errormessage)
        end if
        return
@@ -1683,7 +1683,6 @@ integer function dummy_test(gridname,npts,ecoord,ncoord,layer,interp_success) bi
        integer(kind=c_int), intent(out)                            :: interp_success(npts)       ! 1=success; 0=failure
 
        !interp_success = 0.0 !array
-       !print *,layer
        interp_success(1) = 1
        print *,npts
        dummy_test=0
