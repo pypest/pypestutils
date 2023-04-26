@@ -1240,21 +1240,21 @@ end function interp_to_obstime
 
 
 integer function install_mf6_grid_from_file(gridname,grbfile,                  &
-                                            idis,ncells,ndim1,ndim2,ndim3)
+                                            idis,ncells,ndim1,ndim2,ndim3) bind(c,name="install_mf6_grid_from_file_")
 
 ! -- This function installs specifications for a MF6 grid from the contents of a GRB file.
-
+       use iso_c_binding, only: c_int,c_char,c_double
        use dimvar
        use deftypes
        use utilities
        use high_level_utilities
        implicit none
 
-       character (len=1), intent(in)  :: gridname(LENGRIDNAME)
-       character (len=1), intent(in)  :: grbfile(LENFILENAME)
-       integer, intent(out)           :: idis                  ! 1=DIS; 2=DISV
-       integer, intent(out)           :: ncells
-       integer, intent(out)           :: ndim1,ndim2,ndim3
+       character (kind=c_char),dimension(*), intent(in)  :: gridname(LENGRIDNAME)
+       character (kind=c_char),dimension(*), intent(in)  :: grbfile(LENFILENAME)
+       integer(kind=c_int), intent(out)           :: idis                  ! 1=DIS; 2=DISV
+       integer(kind=c_int), intent(out)           :: ncells
+       integer(kind=c_int) , intent(out)           :: ndim1,ndim2,ndim3
 
        integer                        :: i,ierr,itype
        integer                        :: igrid,gridunit,jgrid,itemp
@@ -1610,17 +1610,17 @@ end function install_mf6_grid_from_file
 
 
 
-integer function uninstall_mf6_grid(gridname)
+integer function uninstall_mf6_grid(gridname) bind(c,name="uninstall_mf6_grid_")
 
 ! -- This function uninstalls a previously installed mf6 grid specification.
-
+       use iso_c_binding, only: c_char
        use dimvar
        use deftypes
        use utilities
        use high_level_utilities
        implicit none
 
-       character (len=1), intent(in)  :: gridname(LENGRIDNAME)
+       character (kind=c_char,len=1), intent(in)  :: gridname(LENGRIDNAME)
 
        integer                        :: igrid,ierr
        character (len=LENGRIDNAME)    :: aname
@@ -1673,24 +1673,24 @@ integer function calc_mf6_interp_factors(gridname,                      &
                                          npts,ecoord,ncoord,layer,      &
                                          factorfile, factorfiletype,    &
                                          blnfile,                       &
-                                         interp_success)
+                                         interp_success) bind(c,name="calc_mf6_interp_factors_")
 
 ! -- This function calculates interpolation factors from a MODFLOW 6 DIS or DISV
 !    grid to a set of user-supplied points.
-
+       use iso_c_binding, only: c_int, c_double, c_char
        use dimvar
        use deftypes
        use utilities
        implicit none
 
-       character (len=1), intent(in)  :: gridname(LENGRIDNAME)      ! name of installed MF6 grid
-       integer, intent(in)            :: npts                       ! number of points for which interpolation required
-       double precision, intent(in)   :: ecoord(npts),ncoord(npts)  ! eastings and northing of points
-       integer, intent(in)            :: layer(npts)                ! layers of points
-       character (len=1), intent(in)  :: factorfile(LENFILENAME)    ! name of factor file
-       integer, intent(in)            :: factorfiletype             ! 0=binary; 1=text
-       character (len=1), intent(in)  :: blnfile(LENFILENAME)       ! name of bln file to write
-       integer, intent(out)           :: interp_success(npts)       ! 1=success; 0=failure
+       character (kind=c_char), dimension(:), intent(in)  :: gridname(LENGRIDNAME)      ! name of installed MF6 grid
+       integer(kind=c_int), intent(in)            :: npts                       ! number of points for which interpolation required
+       real(kind=c_double), intent(in)   :: ecoord(npts),ncoord(npts)  ! eastings and northing of points
+       integer(kind=c_int), intent(in)            :: layer(npts)                ! layers of points
+       character(kind=c_char),dimension(*), intent(in)  :: factorfile(LENFILENAME)    ! name of factor file
+       integer(kind=c_int), intent(in)            :: factorfiletype             ! 0=binary; 1=text
+       character(kind=c_char),dimension(*), intent(in)  :: blnfile(LENFILENAME)       ! name of bln file to write
+       integer(kind=c_int), intent(out)           :: interp_success(npts)       ! 1=success; 0=failure
 
        integer                        :: ierr,i
        integer                        :: outunit1,outunit2

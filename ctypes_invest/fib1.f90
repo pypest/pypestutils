@@ -1,6 +1,7 @@
 module fib1
   use iso_c_binding, only: c_int,c_double,c_char,c_null_char
   implicit none
+  integer,parameter :: MAXLEN=10000
   contains
     subroutine fib(a,n) bind(c,name='c_fib')
       integer(c_int), intent(in), value :: n
@@ -18,7 +19,8 @@ module fib1
       end subroutine
 
     subroutine doing_stringy_things(str) bind(C, name='do_stringy_things')
-        character(kind=c_char), dimension(*), intent(in) :: str
+
+        character(kind=c_char), dimension(*), intent(in) :: str(MAXLEN)
         integer(c_int) :: n
         character(kind=c_char), dimension(:), allocatable :: new_str
         
