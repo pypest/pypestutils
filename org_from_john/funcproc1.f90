@@ -466,8 +466,9 @@ integer function retrieve_error_message(errormessage) bind(c, name="retrieve_err
        if(amessage.eq.' ')then
          retrieve_error_message=0
        else
-         retrieve_error_message=1
+         
          call utl_char2string(LENMESSAGE,amessage,errormessage)
+         retrieve_error_message=len(trim(amessage))
        end if
        return
 

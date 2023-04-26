@@ -88,18 +88,23 @@ def structured_freyberg_invest():
     get_err = ppu.retrieve_error_message_
     err_str = np.array([' ' for _ in range(1000)],dtype=np.dtype('a1'))
 
-    string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
-    retcode = ppu.retrieve_error_message_(string_ptr)
+    #string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
+    #retcode = ppu.retrieve_error_message_(string_ptr)
 
     factype = ctypes.c_int(1)
-    retcode = ppu.calc_mf6_interp_factors_(gridname.encode(),ctypes.byref(nnpts),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-         ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),facfile.encode(),
-         ctypes.byref(factype),blnfile.encode(),isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
+    retcode = ppu.calc_mf6_interp_factors_(gridname.encode(),ctypes.byref(nnpts),
+                                           ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                                           ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                                           layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),facfile.encode(),
+                                           ctypes.byref(factype),blnfile.encode(),
+                                           isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
     if retcode != 0:
-        err_str = np.array([' ' for _ in range(1000)],dtype=np.dtype('a1'))
+        err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
         string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
         retcode = ppu.retrieve_error_message_(string_ptr)
-        print(string_ptr)
+        if retcode != 0:
+            print(retcode) 
+            raise Exception(string_ptr[:retcode].decode())
 
 
     
