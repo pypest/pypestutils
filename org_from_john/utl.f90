@@ -591,10 +591,10 @@ subroutine utl_real2char(rnum,anum)
         write(anum,afmt,err=100) rnum
         anum=adjustl(anum)
         return
-
+        
 100     continue
         anum=' '
-	return
+        return
 
 end subroutine utl_real2char
 
@@ -629,7 +629,7 @@ subroutine utl_dbl2char(dnum,anum)
 
 100     continue
         anum=' '
-	return
+	      return
 
 end subroutine utl_dbl2char
 
