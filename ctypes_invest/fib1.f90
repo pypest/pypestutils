@@ -3,11 +3,14 @@ module fib1
   implicit none
   integer,parameter :: MAXLEN=10000
   contains
-    subroutine fib(a,n,i) bind(c,name='c_fib')
+    subroutine fib(a,n,i,aux,out) bind(c,name='c_fib')
       integer(c_int), intent(in), value :: n
       integer(c_int), intent(out) :: i
-      real(c_double) :: a(n)
+      real(c_double),intent(out) :: a(n)
+      real(kind=c_double),intent(in) :: aux(n)
+      integer(c_int), intent(out) :: out(n)
       do i=1, n
+         out(i) = n
          if (i==1) then
             a(i) = 0.0d0
          else if (i==2) then
@@ -16,11 +19,14 @@ module fib1
             a(i) = a(i-1) + a(i-2)
          end if
       end do
+      print *,aux
+
       end subroutine
 
-    subroutine doing_stringy_things(str) bind(C, name='do_stringy_things')
+    subroutine doing_stringy_things(str,a) bind(C, name='do_stringy_things')
 
         character(kind=c_char), dimension(*), intent(in) :: str(MAXLEN)
+        real(kind=c_double), intent(in),dimension(*) :: a
         integer(c_int) :: n
         character(kind=c_char), dimension(:), allocatable :: new_str
         
@@ -37,6 +43,7 @@ module fib1
         
         
         print *, "The string is '", new_str, "'"
+        print *, a(2)
         deallocate(new_str)
 
   end subroutine doing_stringy_things  

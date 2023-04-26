@@ -26,12 +26,18 @@ import numpy as np
 
 fibby = CDLL(libname)
 a = np.zeros(7)
+b = a.copy() + 10
 #fibby.c_fib.argtypes = [POINTER(c_double),POINTER(c_int)]
 intvarptr = c_int(0)
-fibby.c_fib(a.ctypes.data_as(POINTER(c_double)),c_int(7),byref(intvarptr))
+out = np.zeros(7,dtype=np.int32)
+fibby.c_fib(a.ctypes.data_as(POINTER(c_double)),c_int(7),byref(intvarptr),b.ctypes.data_as(POINTER(c_double)),out.ctypes.data_as(POINTER(c_int)))
+print(out)
 print(a,intvarptr.value)
+print(b)
 
-#s1 = "stringy thing"
-#fibby.do_stringy_things(s1.encode())
+
+
+s1 = "stringy thing"
+fibby.do_stringy_things(s1.encode(),a.ctypes.data_as(POINTER(c_double)))
 
 

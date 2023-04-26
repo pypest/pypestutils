@@ -461,7 +461,7 @@ integer function retrieve_error_message(errormessage) bind(c, name="retrieve_err
        use utilities
        implicit none
 
-       character (kind=c_char), dimension(*), intent(out) :: errormessage(LENMESSAGE)
+       character (kind=c_char,len=1), intent(out) :: errormessage(LENMESSAGE)
 
        if(amessage.eq.' ')then
          retrieve_error_message=1
@@ -1668,6 +1668,30 @@ integer function uninstall_mf6_grid(gridname) bind(c,name="uninstall_mf6_grid_")
 end function uninstall_mf6_grid
 
 
+integer function dummy_test(gridname,npts,ecoord,ncoord,layer,interp_success) bind(c,name="dummy_test_")
+       use iso_c_binding, only: c_int, c_double, c_char
+       use dimvar
+       use deftypes
+       use utilities
+       implicit none
+
+       character (kind=c_char,len=1), intent(in)                   :: gridname(LENGRIDNAME)      ! name of installed MF6 grid
+       integer(kind=c_int), intent(in)                              :: npts                       ! number of points for which interpolation required
+       real(kind=c_double), intent(in)                              :: ecoord(npts)
+       real(kind=c_double), intent(in)                              :: ncoord(npts)  ! eastings and northing of points
+       integer(kind=c_int), intent(in)                              :: layer(npts) 
+       integer(kind=c_int), intent(out)                            :: interp_success(npts)       ! 1=success; 0=failure
+
+       !interp_success = 0.0 !array
+       !print *,layer
+       interp_success(1) = 1
+
+       dummy_test=0
+
+       return
+
+end function dummy_test
+
 
 integer function calc_mf6_interp_factors(gridname,                      &
                                          npts,ecoord,ncoord,layer,      &
@@ -1683,14 +1707,14 @@ integer function calc_mf6_interp_factors(gridname,                      &
        use utilities
        implicit none
 
-       character (kind=c_char), dimension(:), intent(in)  :: gridname(LENGRIDNAME)      ! name of installed MF6 grid
-       integer(kind=c_int), intent(in)            :: npts                       ! number of points for which interpolation required
-       real(kind=c_double), intent(in)   :: ecoord(npts),ncoord(npts)  ! eastings and northing of points
-       integer(kind=c_int), intent(in)            :: layer(npts)                ! layers of points
-       character(kind=c_char),dimension(*), intent(in)  :: factorfile(LENFILENAME)    ! name of factor file
-       integer(kind=c_int), intent(in)            :: factorfiletype             ! 0=binary; 1=text
-       character(kind=c_char),dimension(*), intent(in)  :: blnfile(LENFILENAME)       ! name of bln file to write
-       integer(kind=c_int), intent(out)           :: interp_success(npts)       ! 1=success; 0=failure
+       character (kind=c_char,len=1), intent(in)                   :: gridname(LENGRIDNAME)      ! name of installed MF6 grid
+       integer(kind=c_int), intent(in)                              :: npts                       ! number of points for which interpolation required
+       real(kind=c_double), intent(in)                              :: ecoord(npts),ncoord(npts)  ! eastings and northing of points
+       integer(kind=c_int), intent(in)                              :: layer(npts)                ! layers of points
+       character(kind=c_char,len=1), intent(in)                    :: factorfile(LENFILENAME)    ! name of factor file
+       integer(kind=c_int), intent(in)                              :: factorfiletype             ! 0=binary; 1=text
+       character(kind=c_char,len=1), intent(in)              :: blnfile(LENFILENAME)       ! name of bln file to write
+       integer(kind=c_int), intent(out)                             :: interp_success(npts)       ! 1=success; 0=failure
 
        integer                        :: ierr,i
        integer                        :: outunit1,outunit2
@@ -1737,15 +1761,15 @@ integer function calc_mf6_interp_factors(gridname,                      &
        double precision, allocatable  :: cellxmax(:),cellxmin(:),cellymax(:),cellymin(:)
 
 ! -- Initialisation
-
+       
        calc_mf6_interp_factors=0
        function_name='calc_mf6_interp_factors()'
        outunit1=0
        outunit2=0
        eps=1.0d-7              !arbitrary
+       
 
 ! -- Character arrays are translated to character variables.
-
        call utl_string2char(LENGRIDNAME,gridname,chargridname)
        chargridname=adjustl(chargridname)
        call utl_casetrans(chargridname,'lo')
@@ -1761,6 +1785,7 @@ integer function calc_mf6_interp_factors(gridname,                      &
 110      format('The npts argument of function ',a,' must be greater than zero.')
          go to 9890
        end if
+
        do igrid=1,MAXMF6MODGRID
          if(mf6modgrid(igrid)%name.eq.chargridname) go to 150
        end do
@@ -1795,7 +1820,7 @@ integer function calc_mf6_interp_factors(gridname,                      &
        if(outfile2.ne.' ') call utl_addquote(outfile2,afile2)
 
 ! -- We find the maximum and minimum local x and y coordinates in the grid.
-
+      
         if(distype.eq.1)then
           nrow=mf6modgrid(igrid)%nrow
           ncol=mf6modgrid(igrid)%ncol

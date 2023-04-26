@@ -35,8 +35,8 @@ def structured_freyberg_invest():
     delc = np.zeros(nrow) + 250
     delr = np.zeros(ncol) + 250
     xll,yll = 0,0
-    gs_fname = os.path.join(test_d,"grid.spc")
-    pyemu.helpers.SpatialReference(delc=delc,delr=delr,xll=xll,yll=yll).write_gridspec(gs_fname)
+    #gs_fname = os.path.join(test_d,"grid.spc")
+    #pyemu.helpers.SpatialReference(delc=delc,delr=delr,xll=xll,yll=yll).write_gridspec(gs_fname)
     grb_fname = os.path.join(test_d,"freyberg6.dis.grb")
     assert os.path.exists(grb_fname)
     from ctypes import CDLL, POINTER, c_int, c_double,byref
@@ -45,8 +45,11 @@ def structured_freyberg_invest():
     ndim1 = c_int(-1)
     ndim2 = c_int(-1)
     ndim3 = c_int(-1)
+    
     ppu = CDLL(os.path.join(test_d,lib_name))
-    ppu.install_mf6_grid_from_file_(gs_fname.encode(),grb_fname.encode(),byref(idis),
+    
+    gridname = "freyberg"
+    ppu.install_mf6_grid_from_file_(gridname.encode(),grb_fname.encode(),byref(idis),
         byref(ncells),byref(ndim1),byref(ndim2),byref(ndim3))
     print(idis.value,ncells.value,ndim1.value,ndim2.value,ndim3.value)
     assert idis.value == 1
@@ -54,6 +57,41 @@ def structured_freyberg_invest():
     assert ndim1.value == ncol
     assert ndim2.value == nrow
     assert ndim3.value == nlay
+
+    npts = np.zeros(1,dtype=np.int32) + 10
+
+    np.random.seed(12345)
+    ecoord = np.random.uniform(0,ncol*np.cumsum(delr)[-1],npts)
+    ncoord = np.random.uniform(0,nrow*np.cumsum(delc)[-1],npts)
+    print(ecoord)
+    print(ncoord)
+    layer = np.ones(npts,dtype=int)
+    print(layer)
+    facfile = os.path.join(test_d,"factors.dat")
+    blnfile = os.path.join(test_d,"bln_file.dat")
+    isuccess = np.zeros(npts,dtype=int)
+    print(isuccess)
+
+
+    ppu.dummy_test_(gridname.encode(),npts.ctypes.data_as(POINTER(c_int)),ecoord.ctypes.data_as(POINTER(c_double)),
+        ncoord.ctypes.data_as(POINTER(c_double)),
+        layer.ctypes.data_as(POINTER(c_int)),
+        isuccess.ctypes.data_as(POINTER(c_int)))
+
+    #err = "                                 "
+    #ppu.retrieve_error_message_(err.encode())
+
+
+    print(isuccess)
+    print(layer)
+    ppu.calc_mf6_interp_factors_(gridname.encode(),npts.ctypes.data_as(POINTER(c_int)),ecoord.ctypes.data_as(POINTER(c_double)),
+         ncoord.ctypes.data_as(POINTER(c_double)),layer.ctypes.data_as(POINTER(c_int)),facfile.encode(),
+         c_int(1),blnfile.encode(),isuccess.ctypes.data_as(POINTER(c_int)))
+    print(isuccess)
+    
+
+
+
 
 
 
