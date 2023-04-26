@@ -12,6 +12,7 @@ dependencies:
   - meson!=0.63.0
   - ninja
   - numpy
+  - pandas
   - pip
   - pytest
   - pytest-cases
@@ -20,3 +21,6 @@ dependencies:
   - pytest-xdist
   - flaky
   - cython
+  - pip
+  - pip:
+    - git+https://github.com/pypestutils/pyemu.git

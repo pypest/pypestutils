@@ -1250,8 +1250,8 @@ integer function install_mf6_grid_from_file(gridname,grbfile,                  &
        use high_level_utilities
        implicit none
 
-       character (kind=c_char),dimension(*), intent(in)  :: gridname(LENGRIDNAME)
-       character (kind=c_char),dimension(*), intent(in)  :: grbfile(LENFILENAME)
+       character (kind=c_char,len=1), intent(in)  :: gridname(LENGRIDNAME)
+       character (kind=c_char,len=1), intent(in)  :: grbfile(LENFILENAME)
        integer(kind=c_int), intent(out)           :: idis                  ! 1=DIS; 2=DISV
        integer(kind=c_int), intent(out)           :: ncells
        integer(kind=c_int) , intent(out)           :: ndim1,ndim2,ndim3

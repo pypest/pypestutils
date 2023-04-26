@@ -3,9 +3,9 @@ module fib1
   implicit none
   integer,parameter :: MAXLEN=10000
   contains
-    subroutine fib(a,n) bind(c,name='c_fib')
+    subroutine fib(a,n,i) bind(c,name='c_fib')
       integer(c_int), intent(in), value :: n
-      integer(c_int) :: i
+      integer(c_int), intent(out) :: i
       real(c_double) :: a(n)
       do i=1, n
          if (i==1) then
