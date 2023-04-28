@@ -20,11 +20,31 @@ else:
     lib_path = os.path.join("..","builddir","src","libppu.so")
 
 
+def _rename_model(org_d,new_d):
+    if os.path.exists(new_d):
+        shutil.rmtree(new_d)
+    os.makedirs(new_d)
+    contents = os.listdir(org_d)
+    for content in contents:
+        if os.path.isdir(os.path.join(org_d,content)):
+            shutil.copytree(os.path.join(org_d,content),os.path.join(new_d,content))
+        elif content.startswith("."):
+            continue
+        else :
+            print(content) 
+            lines = open(os.path.join(org_d,content),'r').readlines()
+            new_f = content.replace("project","freyberg6")
+            with open(os.path.join(new_d,new_f),'w') as f:
+                for line in lines:
+                    f.write(line.replace("project","freyberg6"))
+    
+    pyemu.os_utils.run("mf6",cwd=new_d)
+            
 def structured_freyberg_invest():
     test_d = 'freyberg_structured_invest'
     if os.path.exists(test_d):
         shutil.rmtree(test_d)
-    shutil.copytree("freyberg_structured","freyberg_structured_invest")
+    shutil.copytree("freyberg_structured",test_d)
     for f in os.listdir(bin_path):
         shutil.copy2(os.path.join(bin_path,f),os.path.join(test_d,f))
     lib_name = os.path.split(lib_path)[-1]
@@ -59,7 +79,7 @@ def structured_freyberg_invest():
     assert ndim2.value == nrow
     assert ndim3.value == nlay
 
-    npts = np.zeros(1,dtype=np.int32) + 10
+    npts = np.zeros(1,dtype=np.int32) + 1000
 
     np.random.seed(12345)
     ecoord = np.random.uniform(0,ncol*np.cumsum(delr)[-1],npts)
@@ -110,9 +130,87 @@ def structured_freyberg_invest():
     
 
 
+def unstructured_freyberg_invest():
+    test_d = 'freyberg_unstructured_invest'
+    if os.path.exists(test_d):
+        shutil.rmtree(test_d)
+    shutil.copytree("freyberg_unstructured",test_d)
+    for f in os.listdir(bin_path):
+        shutil.copy2(os.path.join(bin_path,f),os.path.join(test_d,f))
+    lib_name = os.path.split(lib_path)[-1]
+    shutil.copy2(lib_path,os.path.join(test_d,lib_name)) 
+    pyemu.os_utils.run("mf6",cwd=test_d)
+    
+    grb_fname = os.path.join(test_d,"freyberg6.disv.grb")
+    assert os.path.exists(grb_fname)
+    
+    idis = ctypes.c_int(-1)
+    ncells = ctypes.c_int(-1)
+    ndim1 = ctypes.c_int(-1)
+    ndim2 = ctypes.c_int(-1)
+    ndim3 = ctypes.c_int(-1)
+    
+    ppu = ctypes.CDLL(os.path.join(test_d,lib_name))
+    
+    gridname = "freyberg"
+    ppu.install_mf6_grid_from_file_(gridname.encode(),grb_fname.encode(),ctypes.byref(idis),
+        ctypes.byref(ncells),ctypes.byref(ndim1),ctypes.byref(ndim2),ctypes.byref(ndim3))
+    print(idis.value,ncells.value,ndim1.value,ndim2.value,ndim3.value)
+    assert idis.value == 2
+    
+    npts = np.zeros(1,dtype=np.int32) + 1000
+
+    np.random.seed(12345)
+    ecoord = np.random.uniform(0,1000,npts)
+    ncoord = np.random.uniform(0,1000,npts)
+    print(ecoord)
+    print(ncoord)
+    layer = np.ones(npts,dtype=np.int32)
+    print(layer)
+    facfile = os.path.join(test_d,"factors.dat")
+    blnfile = os.path.join(test_d,"bln_file.dat")
+    isuccess = np.zeros(npts,dtype=int)
+    print(isuccess)
+
+
+    ppu.dummy_test_(gridname.encode(),npts.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+        isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
+
+    nnpts = ctypes.c_int(npts[0])
+    ppu.dummy_test_(gridname.encode(),ctypes.byref(nnpts),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+        isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
+
+    get_err = ppu.retrieve_error_message_
+    err_str = np.array([' ' for _ in range(1000)],dtype=np.dtype('a1'))
+
+    #string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
+    #retcode = ppu.retrieve_error_message_(string_ptr)
+
+    factype = ctypes.c_int(1)
+    retcode = ppu.calc_mf6_interp_factors_(gridname.encode(),ctypes.byref(nnpts),
+                                           ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                                           ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                                           layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),facfile.encode(),
+                                           ctypes.byref(factype),blnfile.encode(),
+                                           isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
+    if retcode != 0:
+        err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
+        string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
+        retcode = ppu.retrieve_error_message_(string_ptr)
+        if retcode != 0:
+            print(retcode) 
+            raise Exception(string_ptr[:retcode].decode())
+
+
+    
 
 
 
 
 if __name__ == "__main__":
-    structured_freyberg_invest()
+    unstructured_freyberg_invest()
+    
