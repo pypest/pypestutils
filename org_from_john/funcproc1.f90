@@ -1927,7 +1927,7 @@ integer function calc_mf6_interp_factors(gridname,                      &
             write(outunit1,err=9300) ecoord(ipts),ncoord(ipts),layer(ipts)
           end do
         else
-          print *,npts,distype,ndim1,ncol,ndim2,nrow
+          !print *,npts,distype,ndim1,ncol,ndim2,nrow
           write(outunit1,220,err=9300) npts,distype,ndim1,ndim2,ndim3
 220       format(5i10)
           do ipts=1,npts

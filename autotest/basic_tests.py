@@ -132,15 +132,35 @@ def structured_freyberg_invest():
     
     
     depvar_fname = os.path.join(test_d,"freyberg6_freyberg.hds")
-    ntime = ctypes.c_int(25)
+    depvar_contents_fname = os.path.join(test_d,"freyberg6_freyberg.hds.out")
+    isim = ctypes.c_int(1)
+    itype = ctypes.c_int(1)
+    iprec = ctypes.c_int(-1)
+    narray = ctypes.c_int(-1)
+    ntime = ctypes.c_int(-1)
+
+    # todo: read output file to get a mapping of what var-times are available
+    retcode = ppu.inquire_modflow_binary_file_specs_(depvar_fname.encode(),depvar_contents_fname.encode(),
+                                          ctypes.byref(isim),ctypes.byref(itype),ctypes.byref(iprec),
+                                          ctypes.byref(narray),ctypes.byref(ntime))
+    
+    if retcode != 0:
+        err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
+        string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
+        retcode = ppu.retrieve_error_message_(string_ptr)
+        if retcode != 0:
+            print(retcode) 
+            raise Exception(string_ptr[:retcode].decode())
+    #ntime = ctypes.c_int(25)
     vartype = np.zeros(17,dtype="a1")
     for i,c in enumerate("HEAD"):
         vartype[i] = c
     hdry = ctypes.c_double(1.0e+10)
     reapportion =ctypes.c_int(0)
-    nproctime = ctypes.c_int(25)
-    simtime = np.zeros(25,dtype=ctypes.c_double)
-    simstate = np.zeros((25,npts[0]),dtype=ctypes.c_double,order='F')
+    nproctime = ctypes.c_int(int(ntime.value))
+       
+    simtime = np.zeros(int(ntime.value),dtype=ctypes.c_double)
+    simstate = np.zeros((int(ntime.value),npts[0]),dtype=ctypes.c_double,order='F')
     retcode = ppu.interp_from_mf6_depvar_file_(depvar_fname.encode(),facfile.encode(),ctypes.byref(factype),
                                                ctypes.byref(ntime),vartype.ctypes.data_as(ctypes.POINTER(ctypes.c_char)),
                                                ctypes.byref(hdry),ctypes.byref(reapportion),ctypes.byref(hdry),
@@ -157,7 +177,8 @@ def structured_freyberg_invest():
         if retcode != 0:
             print(retcode) 
             raise Exception(string_ptr[:retcode].decode())
-
+    print(simtime)
+    print(simstate)
 
 
 class PyPestUtils(object):
@@ -194,6 +215,7 @@ class PyPestUtils(object):
 
 
     def install_grid(self,gridname,grb_fname):
+        # todo: setup grid dimension tracking for earlier error trapping
         idis = ctypes.c_int(-1)
         ncells = ctypes.c_int(-1)
         ndim1 = ctypes.c_int(-1)
@@ -217,6 +239,7 @@ class PyPestUtils(object):
             else:
                 gridname = self.gridnames[0]
         # todo: check for requried cols in df
+        # todo: check if factor file exists and warn
 
         if facformat.lower().startswith('a'):
             factype = ctypes.c_int(1)
@@ -234,10 +257,14 @@ class PyPestUtils(object):
                                         ctypes.byref(factype),blnfile.encode(),
                                         isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
         
-        # todo: check for unsuccessful interp...
-        return pd.DataFrame({"interpolation_success":isuccess},index=df.index)
-    
+        # todo: check and warn for unsuccessful interp...   
+        return pd.DataFrame({"interpolation_success":isuccess,"interpolation_order":np.arange(isuccess.shape[0],dtype=np.int32)},index=df.index)
 
+
+    def read_mf6_output_file():
+        #todo: make this a one-stop-shop to read a binary file to a dataframe - make
+        # all the underlying calls here to hide to gory details..
+        pass  
 
 def unstructured_freyberg_invest():
     test_d = 'freyberg_unstructured_invest'
