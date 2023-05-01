@@ -88,18 +88,11 @@ def structured_freyberg_invest():
     np.random.seed(12345)
     ecoord = np.random.uniform(125,4875,npts)
     ncoord = np.random.uniform(125,9875,npts)
-    ecoord[0] = 0.0
-    ncoord[0]= 0.0
-    print(ecoord)
-    print(ncoord)
     layer = np.ones(npts,dtype=np.int32)
-    print(layer)
     facfile = os.path.join(test_d,"factors.dat")
     blnfile = os.path.join(test_d,"bln_file.dat")
     isuccess = np.zeros(npts,dtype=np.int32)
-    print(isuccess)
-
-
+    
     # ppu.dummy_test_(gridname.encode(),npts.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
     #     ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
     #     layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
@@ -128,7 +121,7 @@ def structured_freyberg_invest():
             print(retcode) 
             raise Exception(string_ptr[:retcode].decode())
     df = pd.DataFrame({"x":ecoord,"y":ncoord,"layer":layer})
-    p.calc_mf6_interp_factors(df)
+    idf = p.calc_mf6_interp_factors(df)
     
     
     depvar_fname = os.path.join(test_d,"freyberg6_freyberg.hds")
@@ -177,8 +170,58 @@ def structured_freyberg_invest():
         if retcode != 0:
             print(retcode) 
             raise Exception(string_ptr[:retcode].decode())
+    
     print(simtime)
     print(simstate)
+
+    # commenting out for now - something is up with get file specs...
+    # cbc_fname = os.path.join(test_d,"freyberg6_freyberg.cbc")
+    # cbc_contents_fname = cbc_fname+".out"
+    # retcode = ppu.inquire_modflow_binary_file_specs_(cbc_fname.encode(),cbc_contents_fname.encode(),
+    #                                       ctypes.byref(isim),ctypes.byref(itype),ctypes.byref(iprec),
+    #                                       ctypes.byref(narray),ctypes.byref(ntime))
+    # if retcode != 0:
+    #     err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
+    #     string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
+    #     retcode = ppu.retrieve_error_message_(string_ptr)
+    #     if retcode != 0:
+    #         print(retcode) 
+    #         raise Exception(string_ptr[:retcode].decode())
+   
+    # zone_array = np.ones((nrow*ncol*nlay),dtype=ctypes.c_int)
+    # ncell = ctypes.c_int(len(zone_array))
+    # vartype = np.zeros(17,dtype="a1")
+    # for i,c in enumerate("FLOW JA"):
+    #     vartype[i] = c
+    # nzone = ctypes.c_int(1)
+    # numzone = ctypes.c_int(1)
+    # zone_number = np.zeros((1),dtype=ctypes.c_int)
+    # timestep = np.zeros((int(ntime.value)),dtype=ctypes.c_int)
+    # stressperiod = np.zeros((int(ntime.value)),dtype=ctypes.c_int)
+    # simtime = np.zeros((int(ntime.value)),dtype=ctypes.c_double)
+    # simflow = np.zeros((int(ntime.value),int(nzone.value)),dtype=ctypes.c_double,order="F")
+    
+
+    # retcode = ppu.extract_flows_from_cbc_file(cbc_fname.encode(),
+    #                                           vartype.ctypes.data_as(ctypes.POINTER(ctypes.c_char)),
+    #                                           ctypes.byref(isim), ctypes.byref(iprec), 
+    #                                           ctypes.byref(ncell),zone_array.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+    #                                           ctypes.byref(nzone),ctypes.byref(numzone),
+    #                                           zone_number.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+    #                                           ctypes.byref(ntime),ctypes.byref(nproctime),
+    #                                           timestep.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+    #                                           stressperiod.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+    #                                           simtime.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+    #                                           simflow.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
+    # if retcode != 0:
+    #     err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
+    #     string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
+    #     retcode = ppu.retrieve_error_message_(string_ptr)
+    #     if retcode != 0:
+    #         print(retcode) 
+    #         raise Exception(string_ptr[:retcode].decode())
+
+
 
 
 class PyPestUtils(object):
@@ -259,6 +302,8 @@ class PyPestUtils(object):
         
         # todo: check and warn for unsuccessful interp...   
         return pd.DataFrame({"interpolation_success":isuccess,"interpolation_order":np.arange(isuccess.shape[0],dtype=np.int32)},index=df.index)
+
+
 
 
     def read_mf6_output_file():
