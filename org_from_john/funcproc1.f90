@@ -1913,7 +1913,7 @@ integer function calc_mf6_interp_factors(gridname,                      &
 
 ! -- Record data at the top of the file.
 
-        if(distype.eq.0)then
+        if(distype.eq.1)then
           ndim1=ncol
           ndim2=nrow
         else
@@ -1927,6 +1927,7 @@ integer function calc_mf6_interp_factors(gridname,                      &
             write(outunit1,err=9300) ecoord(ipts),ncoord(ipts),layer(ipts)
           end do
         else
+          print *,npts,distype,ndim1,ncol,ndim2,nrow
           write(outunit1,220,err=9300) npts,distype,ndim1,ndim2,ndim3
 220       format(5i10)
           do ipts=1,npts
@@ -1952,6 +1953,8 @@ integer function calc_mf6_interp_factors(gridname,                      &
           if((xx.lt.xxmin).or.(xx.gt.xxmax).or.(yy.lt.yymin).or.(yy.gt.yymax)) go to 459
 ! -- Now we locate the cell (DISV grid) or the cell centres surrounding the bore (DIS grid).
           if(distype.eq.1)then
+            !print *, xcell(1),xcell(ncol)
+            !print *, ycell(1),ycell(nrow)
             if(xx.lt.xcell(1)) go to 459
             do icol=2,ncol
               if(xx.le.xcell(icol))then
@@ -2344,27 +2347,27 @@ end function calc_mf6_interp_factors
 integer function interp_from_mf6_depvar_file(                          &
                  depvarfile,factorfile,factorfiletype,                 &
                  ntime,vartype,interpthresh,reapportion,nointerpval,   &
-                 npts,nproctime,simtime,simstate)
+                 npts,nproctime,simtime,simstate) bind(c,name="interp_from_mf6_depvar_file_")
 
 ! -- This function interpolates to a set of points using previously-calculated
 !    interpolation factors.
-
+       use iso_c_binding, only: c_int, c_char,c_double
        use dimvar
        use utilities
        implicit none
 
-       character (len=1), intent(in)  :: depvarfile(LENFILENAME)    ! Dependent variable file written by MODFLOW 6
-       character (len=1), intent(in)  :: factorfile(LENFILENAME)    ! File containing spatial interpolation factors
-       integer, intent(in)            :: factorfiletype             ! 0 for binary; 1 for ascii
-       integer, intent(in)            :: ntime                      ! First dimension of simtime and simstate arrays
-       character (len=1), intent(in)  :: vartype(17)                ! only read arrays of this type
-       double precision, intent(in)   :: interpthresh               ! abs threshold for dry or inactive
-       integer, intent(in)            :: reapportion                ! 0 for no; 1 for yes
-       double precision, intent(in)   :: nointerpval                ! no-interpolation-possible value
-       integer, intent(in)            :: npts                       ! second dimension of simstate
-       integer, intent(out)           :: nproctime                  ! number of processed simulation times
-       double precision, intent(out)  :: simtime(ntime)             ! simulation times
-       double precision, intent(out)  :: simstate(ntime,npts)       ! interpolated system states
+       character(kind=c_char,len=1), intent(in)   :: depvarfile(LENFILENAME)    ! Dependent variable file written by MODFLOW 6
+       character(kind=c_char,len=1), intent(in)   :: factorfile(LENFILENAME)    ! File containing spatial interpolation factors
+       integer(kind=c_int), intent(in)            :: factorfiletype             ! 0 for binary; 1 for ascii
+       integer(kind=c_int), intent(in)            :: ntime                      ! First dimension of simtime and simstate arrays
+       character (kind=c_char,len=1), intent(in)  :: vartype(17)                ! only read arrays of this type
+       real(kind=c_double), intent(in)            :: interpthresh               ! abs threshold for dry or inactive
+       integer(kind=c_int), intent(in)            :: reapportion                ! 0 for no; 1 for yes
+       real(kind=c_double), intent(in)            :: nointerpval                ! no-interpolation-possible value
+       integer(kind=c_int), intent(in)            :: npts                       ! second dimension of simstate
+       integer(kind=c_int), intent(out)           :: nproctime                  ! number of processed simulation times
+       real(kind=c_double), intent(out)           :: simtime(ntime)             ! simulation times
+       real(kind=c_double), intent(out)           :: simstate(ntime,npts)       ! interpolated system states
 
        integer                        :: ierr,itemp
        integer                        :: dvunit,facunit
@@ -2664,30 +2667,30 @@ integer function extract_flows_from_cbc_file(             &
                  ncell,izone,nzone,                       &
                  numzone,zonenumber,                      &
                  ntime,nproctime,                         &
-                 timestep,stressperiod,simtime,simflow)
+                 timestep,stressperiod,simtime,simflow) bind(c,name="extract_flows_from_cbc_file_")
 
 ! -- This function reads and accumulates flows (as read from a cell-by-cell flow term file)
 !    to a user-specified boundary condition.
-
+       use iso_c_binding, only: c_int, c_char, c_double
        use dimvar
        use utilities
        implicit none
 
-       character (len=1), intent(in)  :: cbcfile(LENGRIDNAME)       ! cell-by-cell flow term file written by any MF version.
-       character (len=1), intent(in)  :: flowtype(17)               ! type of flow to read.
-       integer, intent(in)            :: isim                       ! Simulator type
-       integer, intent(in)            :: iprec                      ! precision used to record real variables in cbc file
-       integer, intent(in)            :: ncell                      ! number of cells in the model
-       integer, intent(in)            :: izone(ncell)               ! zonation of model domain
-       integer, intent(in)            :: nzone                      ! equals or exceeds number of zones; zone 0 doesn't count
-       integer, intent(out)           :: numzone                    ! number of non-zero-valued zones
-       integer, intent(out)           :: zonenumber(nzone)          ! zone numbers (processed from izone)
-       integer, intent(in)            :: ntime                      ! equals or exceed number of model output times for flow type
-       integer, intent(out)           :: nproctime                  ! number of processed simulation times
-       integer, intent(out)           :: timestep(ntime)            ! simulation time step
-       integer, intent(out)           :: stressperiod(ntime)        ! simulation stress period
-       double precision, intent(out)  :: simtime(ntime)             ! simulation time; a time of -1.0 indicates unknown
-       double precision, intent(out)  :: simflow(ntime,nzone)       ! interpolated flows
+       character (kind=c_char,len=1), intent(in)  :: cbcfile(LENGRIDNAME)       ! cell-by-cell flow term file written by any MF version.
+       character (kind=c_char,len=1), intent(in)  :: flowtype(17)               ! type of flow to read.
+       integer(kind=c_int), intent(in)            :: isim                       ! Simulator type
+       integer(kind=c_int), intent(in)            :: iprec                      ! precision used to record real variables in cbc file
+       integer(kind=c_int), intent(in)            :: ncell                      ! number of cells in the model
+       integer(kind=c_int), intent(in)            :: izone(ncell)               ! zonation of model domain
+       integer(kind=c_int), intent(in)            :: nzone                      ! equals or exceeds number of zones; zone 0 doesn't count
+       integer(kind=c_int), intent(out)           :: numzone                    ! number of non-zero-valued zones
+       integer(kind=c_int), intent(out)           :: zonenumber(nzone)          ! zone numbers (processed from izone)
+       integer(kind=c_int), intent(in)            :: ntime                      ! equals or exceed number of model output times for flow type
+       integer(kind=c_int), intent(out)           :: nproctime                  ! number of processed simulation times
+       integer(kind=c_int), intent(out)           :: timestep(ntime)            ! simulation time step
+       integer(kind=c_int), intent(out)           :: stressperiod(ntime)        ! simulation stress period
+       real(kind=c_double), intent(out)           :: simtime(ntime)             ! simulation time; a time of -1.0 indicates unknown
+       real(kind=c_double), intent(out)           :: simflow(ntime,nzone)       ! interpolated flows
 
 ! -- Note that for older versions of MODFLOW the simulation time may not be recorded in the cbc flow term file.
 !    This is why ISTP and IPER are also reported.

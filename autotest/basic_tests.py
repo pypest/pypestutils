@@ -86,22 +86,24 @@ def structured_freyberg_invest():
     npts = np.zeros(1,dtype=ctypes.c_int) + 10
 
     np.random.seed(12345)
-    ecoord = np.random.uniform(0,ncol*np.cumsum(delr)[-1],npts)
-    ncoord = np.random.uniform(0,nrow*np.cumsum(delc)[-1],npts)
+    ecoord = np.random.uniform(125,4875,npts)
+    ncoord = np.random.uniform(125,9875,npts)
+    ecoord[0] = 0.0
+    ncoord[0]= 0.0
     print(ecoord)
     print(ncoord)
     layer = np.ones(npts,dtype=np.int32)
     print(layer)
     facfile = os.path.join(test_d,"factors.dat")
     blnfile = os.path.join(test_d,"bln_file.dat")
-    isuccess = np.zeros(npts,dtype=int)
+    isuccess = np.zeros(npts,dtype=np.int32)
     print(isuccess)
 
 
-    ppu.dummy_test_(gridname.encode(),npts.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-        ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-        layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
-        isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
+    # ppu.dummy_test_(gridname.encode(),npts.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+    #     ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+    #     layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+    #     isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
 
     nnpts = ctypes.c_int(npts[0])
     ppu.dummy_test_(gridname.encode(),ctypes.byref(nnpts),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
@@ -127,6 +129,35 @@ def structured_freyberg_invest():
             raise Exception(string_ptr[:retcode].decode())
     df = pd.DataFrame({"x":ecoord,"y":ncoord,"layer":layer})
     p.calc_mf6_interp_factors(df)
+    
+    
+    depvar_fname = os.path.join(test_d,"freyberg6_freyberg.hds")
+    ntime = ctypes.c_int(25)
+    vartype = np.zeros(17,dtype="a1")
+    for i,c in enumerate("HEAD"):
+        vartype[i] = c
+    hdry = ctypes.c_double(1.0e+10)
+    reapportion =ctypes.c_int(0)
+    nproctime = ctypes.c_int(25)
+    simtime = np.zeros(25,dtype=ctypes.c_double)
+    simstate = np.zeros((25,npts[0]),dtype=ctypes.c_double,order='F')
+    retcode = ppu.interp_from_mf6_depvar_file_(depvar_fname.encode(),facfile.encode(),ctypes.byref(factype),
+                                               ctypes.byref(ntime),vartype.ctypes.data_as(ctypes.POINTER(ctypes.c_char)),
+                                               ctypes.byref(hdry),ctypes.byref(reapportion),ctypes.byref(hdry),
+                                               ctypes.byref(nnpts),ctypes.byref(nproctime),
+                                               simtime.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                                               simstate.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
+    
+                                               
+                                           
+    if retcode != 0:
+        err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
+        string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
+        retcode = ppu.retrieve_error_message_(string_ptr)
+        if retcode != 0:
+            print(retcode) 
+            raise Exception(string_ptr[:retcode].decode())
+
 
 
 class PyPestUtils(object):
