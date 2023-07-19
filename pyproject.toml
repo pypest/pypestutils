@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pypestutils"
+dynamic = ["version"]
+authors = [
+    {name = "Jeremy White", email = "jtwhite1000@gmail.com"},
+    {name = "Mike Taves", email = "mwtoews@gmail.com"},
+]
+description = "PEST utilities for MODFLOW"
+keywords = ["PEST", "MODFLOW", "groundwater", "model"]
+license = {text = "CC0"}
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Hydrology",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "pandas",
+    "pyemu",
+]
+
+[project.readme]
+text = """\
+PEST utilities for MODFLOW.
+
+TODO.
+"""
+content-type = "text/x-rst"
+
+[project.urls]
+Repository = "https://github.com/pypest/pypestutils"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.dynamic]
+version = {attr = "pypestutils.version.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["pypestutils", "pypestutils.*"]
