@@ -1,7 +1,11 @@
 import os
+import sys
 import shutil
 
-org_d = os.path.join("..","org_from_john")
+
+#org_d = os.path.join("..","org_from_john_4jul2023")
+org_d = sys.argv[1]
+print(org_d)
 new_d = os.path.join("..","src")
 if os.path.exists(new_d):
     shutil.rmtree(new_d)

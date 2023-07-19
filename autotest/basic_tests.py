@@ -102,10 +102,10 @@ def structured_freyberg_invest():
     #     isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
 
     nnpts = ctypes.c_int(npts[0])
-    ppu.dummy_test_(gridname.encode(),ctypes.byref(nnpts),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-        ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-        layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
-        isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
+    # ppu.dummy_test_(gridname.encode(),ctypes.byref(nnpts),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+    #     ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+    #     layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+    #     isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
     
     
     factype = ctypes.c_int(1)
