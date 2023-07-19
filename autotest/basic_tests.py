@@ -13,12 +13,15 @@ lib_path = None
 if "darwin" in platform.platform().lower() or "mac" in platform.platform().lower():
     bin_path = os.path.join("bin","mac")
     lib_path = os.path.join("..","builddir","src","libppu.dylib")
+    
 elif "win" in platform.platform().lower():
     bin_path = os.path.join("bin","win")
     lib_path = os.path.join("..","builddir","src","libppu.dll")
+    
 else:
     bin_path = os.path.join("bin","linux")
     lib_path = os.path.join("..","builddir","src","libppu.so")
+    
 
 
 def _rename_model(org_d,new_d):
@@ -305,11 +308,64 @@ def unstructured_freyberg_invest():
             raise Exception(string_ptr[:retcode].decode())
 
 
+
+def output_driver1_test():
+    org_d = "output_driver_test"
+    test_d = org_d+"1"
+    if os.path.exists(test_d):
+        shutil.rmtree(test_d)
+    shutil.copytree(org_d,test_d)
+    # jwhite: for some reason, the driver program is erroring out...
+    # driver_d = os.path.split(lib_path)[0]
+    # print(os.listdir(driver_d))
+    # drivers = [f for f in os.listdir(driver_d) if f.startswith("driver") and not f.endswith(".p")]
+    # for driver in drivers:
+    #     shutil.copy2(os.path.join(driver_d,driver),os.path.join(test_d,driver))
+    #pyemu.os_utils.run("{0} <{1}".format("driver1","driver1a.in"),cwd=test_d)
+
+    lib_name = os.path.split(lib_path)[-1]
+    shutil.copy2(lib_path,os.path.join(test_d,lib_name)) 
+
+    # the details from driver1a.in
+    depvar_fname = os.path.join(test_d,"sva_tm.hds")
+    depvar_contents_fname = os.path.join(test_d,"sva_tm.hds.out")
+    depvar_contents_fname_org = os.path.join(test_d,"driver1a.out")
+    isim = ctypes.c_int(31)
+    itype = ctypes.c_int(1)
+    iprec = ctypes.c_int(-1)
+    narray = ctypes.c_int(-1)
+    ntime = ctypes.c_int(-1)
+
+    ppu = ctypes.CDLL(os.path.join(test_d,lib_name))
+
+    # todo: read output file to get a mapping of what var-times are available
+    retcode = ppu.inquire_modflow_binary_file_specs_(depvar_fname.encode(),depvar_contents_fname.encode(),
+                                          ctypes.byref(isim),ctypes.byref(itype),ctypes.byref(iprec),
+                                          ctypes.byref(narray),ctypes.byref(ntime))
+
+    if retcode != 0:
+        err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
+        string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
+        retcode = ppu.retrieve_error_message_(string_ptr)
+        if retcode != 0:
+            print(retcode) 
+            raise Exception(string_ptr[:retcode].decode())
+    assert os.path.exists(depvar_contents_fname)
+    org_df = pd.read_csv(depvar_contents_fname_org,delim_whitespace=True)
+    new_df = pd.read_csv(depvar_contents_fname,delim_whitespace=True)
+    print(org_df.dtypes)
+    comp_cols = [c for c in org_df.columns if org_df.dtypes[c] != object]
+    diff = org_df.loc[:,comp_cols] - new_df.loc[:,comp_cols]
+    assert diff.shape == diff.dropna().shape
+    mx = np.abs(diff.values).max()
+    print(mx)
+    assert mx < 1.0e-7
     
 
 
 
 
 if __name__ == "__main__":
-    structured_freyberg_invest()
+    #structured_freyberg_invest()
+    output_driver1_test()
     
