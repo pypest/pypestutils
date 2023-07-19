@@ -6,7 +6,6 @@ project(
   default_options : [
     'b_vscrt=static_from_buildtype', # Link runtime libraries statically on Windows
     'optimization=2',
-    'fortran_std=f2008',
 ])
 
 if get_option('optimization') == '3'
@@ -21,7 +20,8 @@ endif
 
 message('The used profile is:', profile)
 
-# windows options:
+# Gather host-system options
+system = build_machine.system()
 fc = meson.get_compiler('fortran')
 fc_id = fc.get_id()
 compile_args = []
@@ -33,6 +33,9 @@ if fc_id == 'gcc'
   compile_args += [
                    '-cpp',
                    '-Wcharacter-truncation',
+                   '-Wno-maybe-uninitialized',
+                   '-Wno-unused-label',
+                   '-Wno-unused-variable',
                    ]
 
   # Options specific to profile
@@ -44,13 +47,13 @@ if fc_id == 'gcc'
 
   # Define OS with gfortran for OS specific code
   # These are identical to pre-defined macros available with ifort
-  system = build_machine.system()
   if system == 'linux'
     compile_args += '-D__linux__'
   elif system == 'darwin'
     compile_args += '-D__APPLE__'
   elif system == 'windows'
     compile_args += '-D_WIN32'
+    link_args += ['-static-libgfortran']
   endif
 endif
 
