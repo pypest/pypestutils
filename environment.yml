@@ -23,4 +23,7 @@ dependencies:
   - cython
   - pip
   - pip:
-    - git+https://github.com/pypestutils/pyemu.git
+    - git+https://github.com/pypest/pyemu.git
+
+# Win64 may also want
+# - m2w64-gcc-fortran

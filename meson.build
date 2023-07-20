@@ -53,7 +53,10 @@ if fc_id == 'gcc'
     compile_args += '-D__APPLE__'
   elif system == 'windows'
     compile_args += '-D_WIN32'
-    link_args += ['-static-libgfortran']
+    link_args += [
+      '-static-libgcc',
+      '-static-libgfortran',
+    ]
   endif
 endif
 
