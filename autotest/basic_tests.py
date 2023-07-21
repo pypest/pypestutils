@@ -315,6 +315,9 @@ def output_driver1_test():
     if os.path.exists(test_d):
         shutil.rmtree(test_d)
     shutil.copytree(org_d,test_d)
+    lib_name = os.path.split(lib_path)[-1]
+    shutil.copy2(lib_path,os.path.join(test_d,lib_name)) 
+
     # jwhite: for some reason, the driver program is erroring out...
     # driver_d = os.path.split(lib_path)[0]
     # print(os.listdir(driver_d))
@@ -323,43 +326,52 @@ def output_driver1_test():
     #     shutil.copy2(os.path.join(driver_d,driver),os.path.join(test_d,driver))
     #pyemu.os_utils.run("{0} <{1}".format("driver1","driver1a.in"),cwd=test_d)
 
-    lib_name = os.path.split(lib_path)[-1]
-    shutil.copy2(lib_path,os.path.join(test_d,lib_name)) 
+    idf = pd.read_csv("driver1_inputs.csv")
 
-    # the details from driver1a.in
-    depvar_fname = os.path.join(test_d,"sva_tm.hds")
-    depvar_contents_fname = os.path.join(test_d,"sva_tm.hds.out")
-    depvar_contents_fname_org = os.path.join(test_d,"driver1a.out")
-    isim = ctypes.c_int(31)
-    itype = ctypes.c_int(1)
-    iprec = ctypes.c_int(-1)
-    narray = ctypes.c_int(-1)
-    ntime = ctypes.c_int(-1)
+    for isim,dp_fname,itype,out_name in zip(idf.isim,idf.depvar_fname,idf.itype,idf.depvar_contents_fname):
 
-    ppu = ctypes.CDLL(os.path.join(test_d,lib_name))
+        print("***********\n{0}\n**********\n".format(out_name))
+        # the details from driver1a.in
+        test_name = "test_"+out_name
+        depvar_fname = os.path.join(test_d,dp_fname)
+        depvar_contents_fname = os.path.join(test_d,test_name)
+        depvar_contents_fname_org = os.path.join(test_d,out_name)
+        isim = ctypes.c_int(int(isim))
+        itype = ctypes.c_int(int(itype))
+        iprec = ctypes.c_int(-1)
+        narray = ctypes.c_int(-1)
+        ntime = ctypes.c_int(-1)
 
-    # todo: read output file to get a mapping of what var-times are available
-    retcode = ppu.inquire_modflow_binary_file_specs_(depvar_fname.encode(),depvar_contents_fname.encode(),
-                                          ctypes.byref(isim),ctypes.byref(itype),ctypes.byref(iprec),
-                                          ctypes.byref(narray),ctypes.byref(ntime))
+        ppu = ctypes.CDLL(os.path.join(test_d,lib_name))
 
-    if retcode != 0:
-        err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
-        string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
-        retcode = ppu.retrieve_error_message_(string_ptr)
+        # todo: read output file to get a mapping of what var-times are available
+        retcode = ppu.inquire_modflow_binary_file_specs_(depvar_fname.encode(),depvar_contents_fname.encode(),
+                                              ctypes.byref(isim),ctypes.byref(itype),ctypes.byref(iprec),
+                                              ctypes.byref(narray),ctypes.byref(ntime))
+
         if retcode != 0:
-            print(retcode) 
-            raise Exception(string_ptr[:retcode].decode())
-    assert os.path.exists(depvar_contents_fname)
-    org_df = pd.read_csv(depvar_contents_fname_org,delim_whitespace=True)
-    new_df = pd.read_csv(depvar_contents_fname,delim_whitespace=True)
-    print(org_df.dtypes)
-    comp_cols = [c for c in org_df.columns if org_df.dtypes[c] != object]
-    diff = org_df.loc[:,comp_cols] - new_df.loc[:,comp_cols]
-    assert diff.shape == diff.dropna().shape
-    mx = np.abs(diff.values).max()
-    print(mx)
-    assert mx < 1.0e-7
+            err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
+            string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
+            retcode = ppu.retrieve_error_message_(string_ptr)
+            if retcode != 0:
+                print(retcode) 
+                raise Exception(string_ptr[:retcode].decode())
+        assert os.path.exists(depvar_contents_fname)
+        use_cols = None
+        if "driver1d" in out_name:
+            continue
+
+        org_df = pd.read_csv(depvar_contents_fname_org,sep="\s+").dropna(axis=1)
+        new_df = pd.read_csv(depvar_contents_fname,sep="\s+").dropna(axis=1)
+        #print(org_df.dtypes)
+        comp_cols = [c for c in org_df.columns if org_df.dtypes[c] != object]
+        diff = org_df.loc[:,comp_cols] - new_df.loc[:,comp_cols]
+        assert diff.shape == diff.dropna(axis=0).shape
+        mx = np.abs(diff.values).max()
+        print(mx)
+        assert mx < 1.0e-7
+
+
     
 
 
