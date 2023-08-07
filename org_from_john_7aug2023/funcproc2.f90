@@ -1432,9 +1432,9 @@ integer (kind=c_int) function krige_using_file(factorfile,factorfiletype,      &
 
        do
          if(factorfiletype.eq.0)then
-           read(iunit,err=9300,end=700) icellno,na,rtemp,((ivector1(j),rvector1(j)),j=1,na)
+           read(iunit,err=9300,end=700) icellno,na,rtemp,(ivector1(j),rvector1(j),j=1,na)
          else
-           read(iunit,*,err=9300,end=700) icellno,na,rtemp,((ivector1(j),rvector1(j)),j=1,na)
+           read(iunit,*,err=9300,end=700) icellno,na,rtemp,(ivector1(j),rvector1(j),j=1,na)
          end if
          if((icellno.lt.0).or.(icellno.gt.mpts))then
            call utl_num2char(icellno,anum)
@@ -2706,9 +2706,9 @@ integer (kind=c_int) function interpolate_blend_using_file(                    &
 
        do i=1,num2
          if(factorfiletype.eq.0)then
-           read(iunit,err=9300,end=9350) icellno,na,rtemp,((ivector1(j),dvector3(j)),j=1,na)
+           read(iunit,err=9300,end=9350) icellno,na,rtemp,(ivector1(j),dvector3(j),j=1,na)
          else
-           read(iunit,*,err=9300,end=9350) icellno,na,rtemp,((ivector1(j),dvector3(j)),j=1,na)
+           read(iunit,*,err=9300,end=9350) icellno,na,rtemp,(ivector1(j),dvector3(j),j=1,na)
          end if
          if((icellno.lt.1).or.(icellno.gt.mpts)) go to 9400
          dval0=targval(icellno)
