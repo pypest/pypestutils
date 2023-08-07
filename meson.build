@@ -1,7 +1,7 @@
 project(
-  'PYPESTUTILS',
+  'PESTUTILS',
   'fortran',
-  version: '0.0.0',
+  version: '2023.7.4',
   meson_version: '>= 0.59.0',
   default_options : [
     'b_vscrt=static_from_buildtype', # Link runtime libraries statically on Windows
