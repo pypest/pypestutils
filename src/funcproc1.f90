@@ -689,7 +689,7 @@ integer (kind=c_int) function free_all_memory() bind(c,name="free_all_memory_")
        use iso_c_binding, only: c_int
        implicit none
 
-       integer   :: ifail,igrid,jfail
+       integer   :: ifail,igrid,jfail,ierr
 
 ! -- Initialisation
 
@@ -715,6 +715,18 @@ integer (kind=c_int) function free_all_memory() bind(c,name="free_all_memory_")
            end if
          end do
        end if
+
+       call free_param_memory1()
+       call free_param_memory2()
+       if(allocated(seed))deallocate(seed,stat=ierr)
+       if(allocated(ivector1))deallocate(ivector1,stat=ierr)
+       if(allocated(ivector2))deallocate(ivector2,stat=ierr)
+       if(allocated(rvector1))deallocate(rvector1,stat=ierr)
+       if(allocated(rvector2))deallocate(rvector2,stat=ierr)
+       if(allocated(rvector3))deallocate(rvector3,stat=ierr)
+       if(allocated(dvector1))deallocate(dvector1,stat=ierr)
+       if(allocated(dvector2))deallocate(dvector2,stat=ierr)
+       if(allocated(dvector3))deallocate(dvector3,stat=ierr)
 
        if(jfail.ne.0)then
          free_all_memory=1
@@ -744,12 +756,12 @@ integer (kind=c_int) function interp_from_structured_grid(                   &
        use high_level_utilities
        implicit none
 
-       character (kind=c_char), intent(in)  :: gridname(LENGRIDNAME)                ! name of installed structured grid
-       character (kind=c_char), intent(in)  :: depvarfile(LENFILENAME)              ! name of binary file to read
+       character (kind=c_char), intent(in)  :: gridname(LENGRIDNAME)      ! name of installed structured grid
+       character (kind=c_char), intent(in)  :: depvarfile(LENFILENAME)    ! name of binary file to read
        integer(kind=c_int), intent(in)      :: isim                       ! -1 for MT3D; 1 for MODFLOW
        integer(kind=c_int), intent(in)      :: iprec                      ! 1 for single; 2 for double
        integer(kind=c_int), intent(in)      :: ntime                      ! number of output times
-       character (kind=c_char), intent(in)  :: vartype(17)                 ! only read arrays of this type
+       character (kind=c_char), intent(in)  :: vartype(17)                ! only read arrays of this type
        real(kind=c_double), intent(in)      :: interpthresh               ! abs threshold for dry or inactive
        real(kind=c_double), intent(in)      :: nointerpval                ! no-interpolation-possible value
        integer(kind=c_int), intent(in)      :: npts                       ! number of points for which interpolation required
@@ -1247,11 +1259,11 @@ integer (kind=c_int) function install_mf6_grid_from_file(gridname,grbfile,      
        use high_level_utilities
        implicit none
 
-       character (kind=c_char,len=1), intent(in)  :: gridname(LENGRIDNAME)       ! Name of installed grid
-       character (kind=c_char,len=1), intent(in)  :: grbfile(LENFILENAME)        ! MF6 GRB file from which grid specs read
-       integer(kind=c_int), intent(out)           :: idis              ! 1=DIS; 2=DISV
-       integer(kind=c_int), intent(out)           :: ncells            ! Number of cells in the grid
-       integer(kind=c_int), intent(out)           :: ndim1,ndim2,ndim3 ! Grid dimensions
+       character (kind=c_char,len=1), intent(in)  :: gridname(LENGRIDNAME)   ! Name of installed grid
+       character (kind=c_char,len=1), intent(in)  :: grbfile(LENFILENAME)    ! MF6 GRB file from which grid specs read
+       integer(kind=c_int), intent(out)           :: idis                    ! 1=DIS; 2=DISV
+       integer(kind=c_int), intent(out)           :: ncells                  ! Number of cells in the grid
+       integer(kind=c_int), intent(out)           :: ndim1,ndim2,ndim3       ! Grid dimensions
 
        integer                        :: i,ierr,itype
        integer                        :: igrid,gridunit,jgrid,itemp
@@ -1688,13 +1700,13 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
        use utilities
        implicit none
 
-       character (kind=c_char,len=1), intent(in)   :: gridname(LENGRIDNAME)                ! name of installed MF6 grid
+       character (kind=c_char,len=1), intent(in)   :: gridname(LENGRIDNAME)      ! name of installed MF6 grid
        integer(kind=c_int), intent(in)             :: npts                       ! number of points for which interpolation required
        real(kind=c_double), intent(in)             :: ecoord(npts),ncoord(npts)  ! eastings and northing of points
        integer(kind=c_int), intent(in)             :: layer(npts)                ! layers of points
-       character(kind=c_char,len=1), intent(in)    :: factorfile(LENFILENAME)              ! name of factor file
+       character(kind=c_char,len=1), intent(in)    :: factorfile(LENFILENAME)    ! name of factor file
        integer(kind=c_int), intent(in)             :: factorfiletype             ! 0=binary; 1=text
-       character(kind=c_char,len=1), intent(in)    :: blnfile(LENFILENAME)                 ! name of bln file to write
+       character(kind=c_char,len=1), intent(in)    :: blnfile(LENFILENAME)       ! name of bln file to write
        integer(kind=c_int), intent(out)            :: interp_success(npts)       ! 1=success; 0=failure
 
        integer                        :: ierr,i
@@ -2338,8 +2350,8 @@ integer (kind=c_int) function interp_from_mf6_depvar_file(             &
        use utilities
        implicit none
 
-       character(kind=c_char,len=1), intent(in)   :: depvarfile(LENFILENAME)        ! Dependent variable file written by MODFLOW 6
-       character(kind=c_char,len=1), intent(in)   :: factorfile(LENFILENAME)        ! File containing spatial interpolation factors
+       character(kind=c_char,len=1), intent(in)   :: depvarfile(LENFILENAME)   ! Dependent variable file written by MODFLOW 6
+       character(kind=c_char,len=1), intent(in)   :: factorfile(LENFILENAME)   ! File containing spatial interpolation factors
        integer(kind=c_int), intent(in)            :: factorfiletype       ! 0 for binary; 1 for ascii
        integer(kind=c_int), intent(in)            :: ntime                ! First dimension of simtime and simstate arrays
        character (kind=c_char,len=1), intent(in)  :: vartype(17)           ! Only read arrays of this type
@@ -2660,7 +2672,7 @@ integer (kind=c_int) function extract_flows_from_cbc_file(     &
        use utilities
        implicit none
 
-       character (kind=c_char,len=1), intent(in)  :: cbcfile(LENFILENAME)            ! Cell-by-cell flow term file written by any MF version.
+       character (kind=c_char,len=1), intent(in)  :: cbcfile(LENFILENAME)  ! Cell-by-cell flow term file written by any MF version.
        character (kind=c_char,len=1), intent(in)  :: flowtype(17)           ! Type of flow to read.
        integer(kind=c_int), intent(in)            :: isim                  ! Simulator type
        integer(kind=c_int), intent(in)            :: iprec                 ! Precision used to record real variables in cbc file

@@ -219,3 +219,83 @@ SUBROUTINE intREAD(IFAIL,CLINE,iTEMP)
 
 END SUBROUTINE INTREAD
 
+
+        SUBROUTINE DREALREAD(IFAIL,CLINE,RTEMP)
+
+! -- Subroutine REALREAD reads a real number from a string.
+
+        INTEGER IFAIL
+        double precision RTEMP
+        CHARACTER*8 AFMT
+        CHARACTER*(*) CLINE
+
+        IFAIL=0
+        AFMT='(F   .0)'
+        WRITE(AFMT(3:5),'(I3)') len_trim(CLINE)
+        READ(CLINE,AFMT,ERR=100) RTEMP
+        RETURN
+
+100     IFAIL=1
+        RETURN
+        END
+
+
+SUBROUTINE LINESPLIT(IFAIL,NUM,LW,RW,CLINE)
+
+! -- Subroutine LINESPLIT splits a string into blank-delimited fragments.
+
+        INTEGER IFAIL,NW,NBLC,J,I
+        INTEGER NUM,NBLNK
+        INTEGER LW(NUM),RW(NUM)
+        CHARACTER*(*) CLINE
+
+        IFAIL=0
+        NW=0
+        NBLC=len_trim(CLINE)
+        IF((NBLC.NE.0).AND.(INDEX(CLINE,CHAR(9)).NE.0)) THEN
+          CALL TABREM(CLINE)
+          NBLC=len_trim(CLINE)
+        ENDIF
+        IF(NBLC.EQ.0) THEN
+          IFAIL=-1
+          RETURN
+        END IF
+        J=0
+5       IF(NW.EQ.NUM) RETURN
+        DO 10 I=J+1,NBLC
+          IF((CLINE(I:I).NE.' ').AND.(CLINE(I:I).NE.',').AND.   &
+          (ICHAR(CLINE(I:I)).NE.9)) GO TO 20
+10      CONTINUE
+        IFAIL=1
+        RETURN
+20      NW=NW+1
+        LW(NW)=I
+        DO 30 I=LW(NW)+1,NBLC
+          IF((CLINE(I:I).EQ.' ').OR.(CLINE(I:I).EQ.',').OR.     &
+          (ICHAR(CLINE(I:I)).EQ.9)) GO TO 40
+30      CONTINUE
+        RW(NW)=NBLC
+        IF(NW.LT.NUM) IFAIL=1
+        RETURN
+40      RW(NW)=I-1
+        J=RW(NW)
+        GO TO 5
+
+END SUBROUTINE LINESPLIT
+
+
+SUBROUTINE TABREM(CLINE)
+
+! -- Subroutine TABREM removes tabs from a string.
+
+        INTEGER I
+        CHARACTER*(*) CLINE
+
+        DO 10 I=1,LEN(CLINE)
+10      IF(ICHAR(CLINE(I:I)).EQ.9) CLINE(I:I)=' '
+
+        RETURN
+END SUBROUTINE TABREM
+
+
+

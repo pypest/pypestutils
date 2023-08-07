@@ -10,5 +10,6 @@ module dimvar
        integer, parameter :: MAXSTRUCMODGRID=5
        integer, parameter :: MAXMF6MODGRID=5
        integer, parameter :: MAXINTERPVERT=10  ! Maximum no. of vertices for interpolation
+       integer, parameter :: LENFACCODE=20     ! Characters in factor file code
 
 end module dimvar

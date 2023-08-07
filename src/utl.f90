@@ -14,9 +14,20 @@ public
         character (len=LENCLINE)       :: cline
         character (len=LENMESSAGE)     :: amessage
 
+        integer, allocatable           :: seed(:)
+        integer, allocatable           :: ivector1(:)
+        integer, allocatable           :: ivector2(:)
+        real, allocatable              :: rvector1(:)
+        real, allocatable              :: rvector2(:)
+        real, allocatable              :: rvector3(:)
+        double precision, allocatable  :: dvector1(:)
+        double precision, allocatable  :: dvector2(:)
+        double precision, allocatable  :: dvector3(:)
+
 ! -- Geometry utilities
 
-public   utl_locpt
+public   utl_locpt,          &
+         utl_distance_to_segment
 
 ! -- File utilities
 
@@ -42,8 +53,15 @@ public  utl_casetrans,       &
 
 ! -- Array utilities
 
-public  utl_whichone,        &
-        utl_sort
+public  utl_allocate_vector, &
+        utl_whichone,        &
+        utl_sort,            &
+        utl_uniform_dvector
+
+! -- Number utilities
+
+public utl_equals
+public utl_random_normal
 
 ! -- Interfaces for generic functions.
 
@@ -70,6 +88,12 @@ interface utl_sort
         module procedure utl_sort_dbl
 end interface
 
+interface utl_equals
+        module procedure utl_equals_int
+        module procedure utl_equals_real
+        module procedure utl_equals_dbl
+end interface
+
 contains
 
 
@@ -78,6 +102,114 @@ contains
 !!!                               ARRAY UTILITES                                     !!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+integer function utl_allocate_vector(atype,inum,ndim)
+
+! -- Function UTL_ALLOCATE_VECTOR allocates one of the utility vectors used by the
+!    UTILITIES module.
+
+        implicit none
+        character (len=*), intent(in)   :: atype
+        integer, intent(in)             :: inum
+        integer, intent(in)             :: ndim
+
+        integer                         :: ierr
+        character (len=10)              :: atemp
+
+        utl_allocate_vector=0
+        if(inum.le.0) go to 9890
+        if(ndim.le.0) go to 9890
+        atemp=atype
+        call utl_casetrans(atemp,'lo')
+
+        if(atemp.eq.'i')then
+          if(inum.eq.1)then
+            if(allocated(ivector1))then
+              if(size(ivector1).ge.ndim)go to 9900
+              deallocate(ivector1,stat=ierr)
+              if(ierr.ne.0) go to 9890
+            end if
+            allocate(ivector1(ndim),stat=ierr)
+            if(ierr.ne.0) go to 9890
+          else if(inum.eq.2)then
+            if(allocated(ivector2))then
+              if(size(ivector2).ge.ndim)go to 9900
+              deallocate(ivector2,stat=ierr)
+              if(ierr.ne.0) go to 9890
+            end if
+            allocate(ivector2(ndim),stat=ierr)
+            if(ierr.ne.0) go to 9890
+          else
+            go to 9890
+          end if
+        else if(atemp.eq.'r')then
+          if(inum.eq.1)then
+            if(allocated(rvector1))then
+              if(size(rvector1).ge.ndim)go to 9900
+              deallocate(rvector1,stat=ierr)
+              if(ierr.ne.0) go to 9890
+            end if
+            allocate(rvector1(ndim),stat=ierr)
+            if(ierr.ne.0) go to 9890
+          else if(inum.eq.3)then
+            if(allocated(rvector3))then
+              if(size(rvector3).ge.ndim)go to 9900
+              deallocate(rvector3,stat=ierr)
+              if(ierr.ne.0) go to 9890
+            end if
+            allocate(rvector3(ndim),stat=ierr)
+            if(ierr.ne.0) go to 9890
+          else if(inum.eq.2)then
+            if(allocated(rvector2))then
+              if(size(rvector2).ge.ndim)go to 9900
+              deallocate(rvector2,stat=ierr)
+              if(ierr.ne.0) go to 9890
+            end if
+            allocate(rvector2(ndim),stat=ierr)
+            if(ierr.ne.0) go to 9890
+          else
+            go to 9890
+          end if
+        else if(atemp.eq.'d')then
+          if(inum.eq.1)then
+            if(allocated(dvector1))then
+              if(size(dvector1).ge.ndim)go to 9900
+              deallocate(dvector1,stat=ierr)
+              if(ierr.ne.0) go to 9890
+            end if
+            allocate(dvector1(ndim),stat=ierr)
+            if(ierr.ne.0) go to 9890
+          else if(inum.eq.2)then
+            if(allocated(dvector2))then
+              if(size(dvector2).ge.ndim)go to 9900
+              deallocate(dvector2,stat=ierr)
+              if(ierr.ne.0) go to 9890
+            end if
+            allocate(dvector2(ndim),stat=ierr)
+            if(ierr.ne.0) go to 9890
+          else if(inum.eq.3)then
+            if(allocated(dvector3))then
+              if(size(dvector3).ge.ndim)go to 9900
+              deallocate(dvector3,stat=ierr)
+              if(ierr.ne.0) go to 9890
+            end if
+            allocate(dvector3(ndim),stat=ierr)
+            if(ierr.ne.0) go to 9890
+          else
+            go to 9890
+          end if
+        else
+          go to 9890
+        end if
+        go to 9900
+
+9890    continue
+        utl_allocate_vector=1
+
+9900    continue
+        return
+
+end function utl_allocate_vector
 
 subroutine utl_sort_int(n,iarray)            ! Check this when a really low item occurs late in the array.
 
@@ -259,6 +391,41 @@ end function utl_whichone_int
 
 
 
+logical function utl_uniform_dvector(num,dvector,zone,izone)
+
+! -- This function tests whether all elements in a vector are equal for a particular zone.
+
+       integer, intent(in)          :: num
+       double precision, intent(in) :: dvector(num)
+       integer, intent(in)          :: zone(num)
+       integer, intent(in)          :: izone
+
+       integer                      :: i,j
+       double precision             :: dtemp
+
+       utl_uniform_dvector=.TRUE.
+       do i=1,num
+         if(zone(i).eq.izone) go to 10
+       end do
+       return
+
+10     continue
+       if(i.eq.num) return
+       dtemp=dvector(i)
+       do j=i+1,num
+         if(zone(j).eq.izone)then
+           if(.not.utl_equals(dvector(j),dtemp)) then
+             utl_uniform_dvector=.FALSE.
+             return
+           end if
+         end if
+       end do
+       return
+
+end function utl_uniform_dvector
+
+
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!                             GEOMETRY UTILITES                                    !!!
@@ -350,6 +517,48 @@ SUBROUTINE UTL_LOCPT (X0, Y0, X, Y, N, L, M)
    20 L = 0
       RETURN
 END SUBROUTINE UTL_LOCPT
+
+
+
+double precision function utl_distance_to_segment(x1,y1,x2,y2,x3,y3,u)
+
+! -- This function finds the distance between point (x3,y3) and the segment
+!    that joins points (x1,y1) and (x2,y2).
+
+      implicit none
+      double precision, intent(in)  :: x1,y1,x2,y2,x3,y3
+      double precision, intent(out) :: u
+
+      double precision             :: x,y
+      double precision             :: dx21,dx31,dy21,dy31,den
+
+! -- First we find the distance along the line to the intersection point.
+
+      dx21=x2-x1
+      dx31=x3-x1
+      dy21=y2-y1
+      dy31=y3-y1
+      den=dx21*dx21+dy21*dy21
+      if(den.gt.1.0d-200)then
+        u=(dx31*dx21+dy31*dy21)/den
+        if(u.le.0.0d0)then
+          x=x1
+          y=y1
+        else if(u.ge.1.0d0)then
+          x=x2
+          y=y2
+        else
+          x=x1+u*dx21
+          y=y1+u*dy21
+        end if
+      else
+        x=x1
+        y=y1
+        u=0.0d0
+      end if
+      utl_distance_to_segment=sqrt((x3-x)*(x3-x)+(y3-y)*(y3-y))
+
+end function utl_distance_to_segment
 
 
 
@@ -854,5 +1063,86 @@ integer function utl_wordsplit(nword,ls,rs,aline)
 
 end function utl_wordsplit
 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!                             NUMBER UTILITES                                      !!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+logical function utl_equals_int(r1,r2)
+
+        integer, intent(in)   :: r1
+        integer, intent(in)   :: r2
+
+        utl_equals_int=(r1.eq.r2)
+
+end function utl_equals_int
+
+
+
+logical function utl_equals_real(r1,r2,nspace)
+
+          real, intent(in)              :: r1
+          real, intent(in)              :: r2
+          integer, intent(in), optional :: nspace
+
+          integer                       :: ispace
+          real                          :: rtemp
+
+          ispace=5
+          if(present(nspace))then
+            ispace=max(ispace,nspace)
+          end if
+
+          rtemp=abs(ispace*spacing(r1))
+          if(abs(r1-r2).lt.rtemp)then
+            utl_equals_real=.true.
+          else
+            utl_equals_real=.false.
+          end if
+
+end function utl_equals_real
+
+
+logical function utl_equals_dbl(r1,r2,nspace)
+
+          real (kind (1.0d0)), intent(in)      :: r1
+          real (kind (1.0d0)), intent(in)      :: r2
+          integer, intent(in), optional        :: nspace
+
+          integer                              :: ispace
+          real (kind (1.0d0))                  :: rtemp
+
+          ispace=5
+          if(present(nspace))then
+            ispace=max(ispace,nspace)
+          end if
+          rtemp=abs(ispace*spacing(r1))
+          if(abs(r1-r2).lt.rtemp)then
+            utl_equals_dbl=.true.
+          else
+            utl_equals_dbl=.false.
+          end if
+
+end function utl_equals_dbl
+
+
+double precision function utl_random_normal()
+
+! -- Generate a sample from a normal distribution.
+
+       implicit none
+
+       double precision :: pi
+       double precision :: d1,d2
+
+       pi=3.14159265358979323846264338
+       call random_number(d1)
+       call random_number(d2)
+       utl_random_normal = sqrt ( - 2.0D+00 * log ( d1 ) ) * cos ( 2.0D+00 * pi * d2 )
+
+       return
+end function utl_random_normal
 
 end module utilities
