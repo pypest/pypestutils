@@ -17,7 +17,7 @@ meson install -C builddir
 # copy lib files to Python module
 mkdir pypestutils/lib
 if [ "$(uname)" == "Darwin" ]; then
-  cp inst/lib/libppu.dylib pypestutils/lib/
+  cp inst/lib/libpestutils.dylib pypestutils/lib/
 else
-  cp inst/lib/libppu.so pypestutils/lib/
+  cp inst/lib/libpestutils.so pypestutils/lib/
 fi

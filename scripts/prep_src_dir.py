@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Prepare 'src' directory and meson.build from upstream source."""
 import sys
 import shutil
@@ -42,16 +43,18 @@ lib_sources = files(
 {fmt_lib_files}
 )
 
-shared_library('pestutils', lib_sources, install : true)
+shared_library('pestutils', lib_sources,
+  name_prefix : host_machine.system() == 'windows' ? '' : 'lib',
+  install : true)
 
-ppucore = static_library('ppucore', lib_sources)
+pulib = static_library('pestutils_core', lib_sources)
 
 """
 for driver_file in driver_files:
     driver_name = driver_file.split(".")[0]
     txt += (
         f"executable('{driver_name}', ['{driver_file}', 'driversubs.f90'], "
-        "link_with : [ppucore], install : true)\n"
+        "link_with : [pulib], install : true)\n"
     )
 meson_build = new_d / "meson.build"
 meson_build.write_text(txt)

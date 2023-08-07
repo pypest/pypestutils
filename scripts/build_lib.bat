@@ -13,4 +13,4 @@ meson install -C builddir
 
 ::copy lib files to Python module
 MD pypestutils\lib
-COPY /B inst\bin\libppu.dll pypestutils\lib
+COPY /B inst\bin\pestutils.dll pypestutils\lib

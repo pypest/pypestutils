@@ -16,7 +16,7 @@ if "darwin" in platform.platform().lower() or "mac" in platform.platform().lower
     
 elif "win" in platform.platform().lower():
     bin_path = os.path.join("bin","win")
-    lib_path = os.path.join("..","builddir","src","libpestutils.dll")
+    lib_path = os.path.join("..","builddir","src","pestutils.dll")
     
 else:
     bin_path = os.path.join("bin","linux")
@@ -71,10 +71,10 @@ def structured_freyberg_invest():
     ndim2 = ctypes.c_int(-1)
     ndim3 = ctypes.c_int(-1)
     
-    ppu = ctypes.CDLL(os.path.join(test_d,lib_name))
+    lib = ctypes.CDLL(os.path.join(test_d,lib_name))
     
     gridname = "freyberg"
-    ppu.install_mf6_grid_from_file_(gridname.encode(),grb_fname.encode(),ctypes.byref(idis),
+    lib.install_mf6_grid_from_file_(gridname.encode(),grb_fname.encode(),ctypes.byref(idis),
         ctypes.byref(ncells),ctypes.byref(ndim1),ctypes.byref(ndim2),ctypes.byref(ndim3))
     print(idis.value,ncells.value,ndim1.value,ndim2.value,ndim3.value)
     assert idis.value == 1
@@ -99,13 +99,13 @@ def structured_freyberg_invest():
     blnfile = os.path.join(test_d,"bln_file.dat")
     isuccess = np.zeros(npts,dtype=np.int32)
     
-    # ppu.dummy_test_(gridname.encode(),npts.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+    # lib.dummy_test_(gridname.encode(),npts.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
     #     ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
     #     layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
     #     isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
 
     nnpts = ctypes.c_int(npts[0])
-    # ppu.dummy_test_(gridname.encode(),ctypes.byref(nnpts),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+    # lib.dummy_test_(gridname.encode(),ctypes.byref(nnpts),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
     #     ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
     #     layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
     #     isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
@@ -113,7 +113,7 @@ def structured_freyberg_invest():
     
     factype = ctypes.c_int(1)
     # note : casting ndarray using as_type works like layer.astype(np.int64).ctypes.data_as(ctypes.POINTER(ctypes.c_longlong))
-    retcode = ppu.calc_mf6_interp_factors_(gridname.encode(),ctypes.byref(nnpts),
+    retcode = lib.calc_mf6_interp_factors_(gridname.encode(),ctypes.byref(nnpts),
                                            ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
                                            ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
                                            layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),facfile.encode(),
@@ -122,7 +122,7 @@ def structured_freyberg_invest():
     if retcode != 0:
         err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
         string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
-        retcode = ppu.retrieve_error_message_(string_ptr)
+        retcode = lib.retrieve_error_message_(string_ptr)
         if retcode != 0:
             print(retcode) 
             raise Exception(string_ptr[:retcode].decode())
@@ -139,14 +139,14 @@ def structured_freyberg_invest():
     ntime = ctypes.c_int(-1)
 
     # todo: read output file to get a mapping of what var-times are available
-    retcode = ppu.inquire_modflow_binary_file_specs_(depvar_fname.encode(),depvar_contents_fname.encode(),
+    retcode = lib.inquire_modflow_binary_file_specs_(depvar_fname.encode(),depvar_contents_fname.encode(),
                                           ctypes.byref(isim),ctypes.byref(itype),ctypes.byref(iprec),
                                           ctypes.byref(narray),ctypes.byref(ntime))
     
     if retcode != 0:
         err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
         string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
-        retcode = ppu.retrieve_error_message_(string_ptr)
+        retcode = lib.retrieve_error_message_(string_ptr)
         if retcode != 0:
             print(retcode) 
             raise Exception(string_ptr[:retcode].decode())
@@ -160,7 +160,7 @@ def structured_freyberg_invest():
        
     simtime = np.zeros(int(ntime.value),dtype=ctypes.c_double)
     simstate = np.zeros((int(ntime.value),npts[0]),dtype=ctypes.c_double,order='F')
-    retcode = ppu.interp_from_mf6_depvar_file_(depvar_fname.encode(),facfile.encode(),ctypes.byref(factype),
+    retcode = lib.interp_from_mf6_depvar_file_(depvar_fname.encode(),facfile.encode(),ctypes.byref(factype),
                                                ctypes.byref(ntime),vartype.ctypes.data_as(ctypes.POINTER(ctypes.c_char)),
                                                ctypes.byref(hdry),ctypes.byref(reapportion),ctypes.byref(hdry),
                                                ctypes.byref(nnpts),ctypes.byref(nproctime),
@@ -172,7 +172,7 @@ def structured_freyberg_invest():
     if retcode != 0:
         err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
         string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
-        retcode = ppu.retrieve_error_message_(string_ptr)
+        retcode = lib.retrieve_error_message_(string_ptr)
         if retcode != 0:
             print(retcode) 
             raise Exception(string_ptr[:retcode].decode())
@@ -183,13 +183,13 @@ def structured_freyberg_invest():
     # commenting out for now - something is up with get file specs...
     # cbc_fname = os.path.join(test_d,"freyberg6_freyberg.cbc")
     # cbc_contents_fname = cbc_fname+".out"
-    # retcode = ppu.inquire_modflow_binary_file_specs_(cbc_fname.encode(),cbc_contents_fname.encode(),
+    # retcode = lib.inquire_modflow_binary_file_specs_(cbc_fname.encode(),cbc_contents_fname.encode(),
     #                                       ctypes.byref(isim),ctypes.byref(itype),ctypes.byref(iprec),
     #                                       ctypes.byref(narray),ctypes.byref(ntime))
     # if retcode != 0:
     #     err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
     #     string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
-    #     retcode = ppu.retrieve_error_message_(string_ptr)
+    #     retcode = lib.retrieve_error_message_(string_ptr)
     #     if retcode != 0:
     #         print(retcode) 
     #         raise Exception(string_ptr[:retcode].decode())
@@ -208,7 +208,7 @@ def structured_freyberg_invest():
     # simflow = np.zeros((int(ntime.value),int(nzone.value)),dtype=ctypes.c_double,order="F")
     
 
-    # retcode = ppu.extract_flows_from_cbc_file(cbc_fname.encode(),
+    # retcode = lib.extract_flows_from_cbc_file(cbc_fname.encode(),
     #                                           vartype.ctypes.data_as(ctypes.POINTER(ctypes.c_char)),
     #                                           ctypes.byref(isim), ctypes.byref(iprec), 
     #                                           ctypes.byref(ncell),zone_array.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
@@ -222,7 +222,7 @@ def structured_freyberg_invest():
     # if retcode != 0:
     #     err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
     #     string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
-    #     retcode = ppu.retrieve_error_message_(string_ptr)
+    #     retcode = lib.retrieve_error_message_(string_ptr)
     #     if retcode != 0:
     #         print(retcode) 
     #         raise Exception(string_ptr[:retcode].decode())
@@ -252,10 +252,10 @@ def unstructured_freyberg_invest():
     ndim2 = ctypes.c_int(-1)
     ndim3 = ctypes.c_int(-1)
     
-    ppu = ctypes.CDLL(os.path.join(test_d,lib_name))
+    lib = ctypes.CDLL(os.path.join(test_d,lib_name))
     
     gridname = "freyberg"
-    ppu.install_mf6_grid_from_file_(gridname.encode(),grb_fname.encode(),ctypes.byref(idis),
+    lib.install_mf6_grid_from_file_(gridname.encode(),grb_fname.encode(),ctypes.byref(idis),
         ctypes.byref(ncells),ctypes.byref(ndim1),ctypes.byref(ndim2),ctypes.byref(ndim3))
     print(idis.value,ncells.value,ndim1.value,ndim2.value,ndim3.value)
     assert idis.value == 2
@@ -275,25 +275,25 @@ def unstructured_freyberg_invest():
     print(isuccess)
 
 
-    ppu.dummy_test_(gridname.encode(),npts.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+    lib.dummy_test_(gridname.encode(),npts.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
         isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
 
     nnpts = ctypes.c_int(npts[0])
-    ppu.dummy_test_(gridname.encode(),ctypes.byref(nnpts),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+    lib.dummy_test_(gridname.encode(),ctypes.byref(nnpts),ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
         isuccess.ctypes.data_as(ctypes.POINTER(ctypes.c_int)))
     
-    get_err = ppu.retrieve_error_message_
+    get_err = lib.retrieve_error_message_
     err_str = np.array([' ' for _ in range(1000)],dtype=np.dtype('a1'))
 
     #string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
-    #retcode = ppu.retrieve_error_message_(string_ptr)
+    #retcode = lib.retrieve_error_message_(string_ptr)
 
     factype = ctypes.c_int(1)
-    retcode = ppu.calc_mf6_interp_factors_(gridname.encode(),ctypes.byref(nnpts),
+    retcode = lib.calc_mf6_interp_factors_(gridname.encode(),ctypes.byref(nnpts),
                                            ecoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
                                            ncoord.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
                                            layer.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),facfile.encode(),
@@ -302,7 +302,7 @@ def unstructured_freyberg_invest():
     if retcode != 0:
         err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
         string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
-        retcode = ppu.retrieve_error_message_(string_ptr)
+        retcode = lib.retrieve_error_message_(string_ptr)
         if retcode != 0:
             print(retcode) 
             raise Exception(string_ptr[:retcode].decode())
@@ -343,17 +343,17 @@ def output_driver1_test():
         narray = ctypes.c_int(-1)
         ntime = ctypes.c_int(-1)
 
-        ppu = ctypes.CDLL(os.path.join(test_d,lib_name))
+        lib = ctypes.CDLL(os.path.join(test_d,lib_name))
 
         # todo: read output file to get a mapping of what var-times are available
-        retcode = ppu.inquire_modflow_binary_file_specs_(depvar_fname.encode(),depvar_contents_fname.encode(),
+        retcode = lib.inquire_modflow_binary_file_specs_(depvar_fname.encode(),depvar_contents_fname.encode(),
                                               ctypes.byref(isim),ctypes.byref(itype),ctypes.byref(iprec),
                                               ctypes.byref(narray),ctypes.byref(ntime))
 
         if retcode != 0:
             err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
             string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
-            retcode = ppu.retrieve_error_message_(string_ptr)
+            retcode = lib.retrieve_error_message_(string_ptr)
             if retcode != 0:
                 print(retcode) 
                 raise Exception(string_ptr[:retcode].decode())
@@ -381,4 +381,3 @@ def output_driver1_test():
 if __name__ == "__main__":
     #structured_freyberg_invest()
     output_driver1_test()
-    

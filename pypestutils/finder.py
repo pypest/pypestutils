@@ -1,4 +1,4 @@
-"""Locate `libppu` shared library by any means necessary."""
+"""Locate pestutils shared library by any means necessary."""
 import ctypes
 import os
 import platform
@@ -9,9 +9,9 @@ from ctypes.util import find_library
 pkg_dir = Path(__file__).parent
 
 # generate a bunch of candidate locations where the
-# libppu shared library *might* be hanging out
+# shared library *might* be hanging out
 _candidates = [
-    os.environ.get("PPU_LIBRARY", None),
+    os.environ.get("PESTUTILS_LIBRARY", None),
     str(pkg_dir / "lib"),  # see scripts/build_lib.sh
     str(pkg_dir.parent / "inst" / ("bin" if os.name == "nt" else "lib")),
     ".",
@@ -19,7 +19,7 @@ _candidates = [
 
 
 def load() -> ctypes.CDLL:
-    """Load the `libppu` shared library.
+    """Load the pestutils shared library.
 
     Returns
     -------
@@ -27,7 +27,7 @@ def load() -> ctypes.CDLL:
         Loaded shared library
     """
     if os.name == "nt":
-        lib_name = "libppu.dll"
+        lib_name = "pestutils.dll"
 
         # get the current PATH
         oldenv = os.environ.get("PATH", "").strip().rstrip(";")
@@ -55,10 +55,10 @@ def load() -> ctypes.CDLL:
         # use the extension for the specific platform
         if platform.system() == "Darwin":
             # macos shared libraries are `.dylib`
-            lib_name = "libppu.dylib"
+            lib_name = "libpestutils.dylib"
         else:
             # linux shared libraries are `.so`
-            lib_name = "libppu.so"
+            lib_name = "libpestutils.so"
 
         # get the starting working directory
         cwd = os.getcwd()
@@ -93,11 +93,11 @@ def load() -> ctypes.CDLL:
 
     try:
         # try loading library using LD path search
-        path = find_library("ppu")
+        path = find_library("libpestutils")
         if path is not None:
             return ctypes.cdll.LoadLibrary(path)
 
     except BaseException:
         pass
 
-    raise OSError("Could not load libppu library")
+    raise OSError("Could not load pestutils library")
