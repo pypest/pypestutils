@@ -12,15 +12,15 @@ bin_path = None
 lib_path = None
 if "darwin" in platform.platform().lower() or "mac" in platform.platform().lower():
     bin_path = os.path.join("bin","mac")
-    lib_path = os.path.join("..","builddir","src","libppu.dylib")
+    lib_path = os.path.join("..","builddir","src","libpestutils.dylib")
     
 elif "win" in platform.platform().lower():
     bin_path = os.path.join("bin","win")
-    lib_path = os.path.join("..","builddir","src","libppu.dll")
+    lib_path = os.path.join("..","builddir","src","libpestutils.dll")
     
 else:
     bin_path = os.path.join("bin","linux")
-    lib_path = os.path.join("..","builddir","src","libppu.so")
+    lib_path = os.path.join("..","builddir","src","libpestutils.so")
     
 
 
@@ -315,6 +315,7 @@ def output_driver1_test():
     if os.path.exists(test_d):
         shutil.rmtree(test_d)
     shutil.copytree(org_d,test_d)
+    print(lib_path)
     lib_name = os.path.split(lib_path)[-1]
     shutil.copy2(lib_path,os.path.join(test_d,lib_name)) 
 

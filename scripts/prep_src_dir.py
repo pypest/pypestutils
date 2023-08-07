@@ -42,7 +42,7 @@ lib_sources = files(
 {fmt_lib_files}
 )
 
-shared_library('ppu', lib_sources, install : true)
+shared_library('pestutils', lib_sources, install : true)
 
 ppucore = static_library('ppucore', lib_sources)
 
