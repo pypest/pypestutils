@@ -19,7 +19,7 @@ driver_files = []
 lib_files = []
 for pth in sorted(org_d.iterdir()):
     name = pth.name
-    if pth.suffix in [".f90", ".F90"]:
+    if pth.suffix in [".f90", ".F90",".F"] and "gslib" not in name.lower():
         f90_files.append(name)
         # rewrite, normalizing line endings
         txt = pth.read_text()
