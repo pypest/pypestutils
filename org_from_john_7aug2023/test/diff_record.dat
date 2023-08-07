@@ -1,0 +1,150 @@
+Comparing files driver1a.out and DRIVER1A.OUT.STD
+FC: no differences encountered
+
+Comparing files driver1b.out and DRIVER1B.OUT.STD
+FC: no differences encountered
+
+Comparing files driver1c.out and DRIVER1C.OUT.STD
+FC: no differences encountered
+
+Comparing files driver1d.out and DRIVER1D.OUT.STD
+FC: no differences encountered
+
+Comparing files driver1e.out and DRIVER1E.OUT.STD
+FC: no differences encountered
+
+Comparing files driver1f.out and DRIVER1F.OUT.STD
+FC: no differences encountered
+
+Comparing files driver1g.out and DRIVER1G.OUT.STD
+FC: no differences encountered
+
+Comparing files umodel_usg_wel.contents and UMODEL_USG_WEL.CONTENTS.STD
+FC: no differences encountered
+
+Comparing files heads_interp1.dat and HEADS_INTERP1.DAT.STD
+FC: no differences encountered
+
+Comparing files heads_interp1_sgl.dat and HEADS_INTERP1_SGL.DAT.STD
+FC: no differences encountered
+
+Comparing files coast_heads_wells.dat and COAST_HEADS_WELLS.DAT.STD
+FC: no differences encountered
+
+Comparing files lock_heads_wells.dat and LOCK_HEADS_WELLS.DAT.STD
+FC: no differences encountered
+
+Comparing files coast_heads_wells_time_interp.dat and COAST_HEADS_WELLS_TIME_INTERP.DAT.STD
+FC: no differences encountered
+
+Comparing files lock_heads_wells_time_interp.dat and LOCK_HEADS_WELLS_TIME_INTERP.DAT.STD
+FC: no differences encountered
+
+Comparing files hd1h.fac and HD1H.FAC.STD
+FC: no differences encountered
+
+Comparing files hd1h.bln and HD1H.BLN.STD
+FC: no differences encountered
+
+Comparing files hd1h_wells_sim.dat and HD1H_WELLS_SIM.DAT.STD
+FC: no differences encountered
+
+Comparing files vdl.fac and VDL.FAC.STD
+FC: no differences encountered
+
+Comparing files vdl_interp.bln and VDL_INTERP.BLN.STD
+FC: no differences encountered
+
+Comparing files vdl_well_heads.dat and VDL_WELL_HEADS.DAT.STD
+FC: no differences encountered
+
+Comparing files sop_flow_contents.dat and SOP_FLOW_CONTENTS.DAT.STD
+FC: no differences encountered
+
+Comparing files sop_chd_flows.dat and SOP_CHD_FLOWS.DAT.STD
+FC: no differences encountered
+
+Comparing files inflows.dat and INFLOWS.DAT.STD
+FC: no differences encountered
+
+Comparing files rchflow.dat and RCHFLOW.DAT.STD
+FC: no differences encountered
+
+Comparing files umodel_wellflow.dat and UMODEL_WELLFLOW.DAT.STD
+FC: no differences encountered
+
+Comparing files umodel_wellflow_interp.dat and UMODEL_WELLFLOW_INTERP.DAT.STD
+FC: no differences encountered
+
+Comparing files nfseg.cbb.contents and NFSEG.CBB.CONTENTS.STD
+FC: no differences encountered
+
+Comparing files nfseg_rech.dat and NFSEG_RECH.DAT.STD
+FC: no differences encountered
+
+Comparing files factors.dat and FACTORS.DAT.STD
+FC: no differences encountered
+
+Comparing files interpolated.ref and INTERPOLATED.REF.STD
+FC: no differences encountered
+
+Comparing files factors1.dat and FACTORS1.DAT.STD
+FC: no differences encountered
+
+Comparing files interpolated1.ref and INTERPOLATED1.REF.STD
+FC: no differences encountered
+
+Comparing files factors3da.dat and FACTORS3DA.DAT.STD
+FC: no differences encountered
+
+Comparing files factors3da.dat and FACTORS3DA.DAT.STD
+FC: no differences encountered
+
+Comparing files factors3db.dat and FACTORS3DB.DAT.STD
+FC: no differences encountered
+
+Comparing files interptabb.dat and INTERPTABB.DAT.STD
+FC: no differences encountered
+
+Comparing files cov2d.mat and COV2D.MAT.STD
+FC: no differences encountered
+
+Comparing files cov2d_unif.mat and COV2D_UNIF.MAT.STD
+FC: no differences encountered
+
+Comparing files cov3d.mat and COV3D.MAT.STD
+FC: no differences encountered
+
+Comparing files cov3d_unif.mat and COV3D_UNIF.MAT.STD
+FC: no differences encountered
+
+Comparing files fac_linear.dat and FAC_LINEAR.DAT.STD
+FC: no differences encountered
+
+Comparing files targ1.dat and TARG1.DAT.STD
+FC: no differences encountered
+
+Comparing files fac_poly.dat and FAC_POLY.DAT.STD
+FC: no differences encountered
+
+Comparing files targ2.dat and TARG2.DAT.STD
+FC: no differences encountered
+
+Comparing files targ2.dat and TARG2.DAT.STD
+FC: no differences encountered
+
+Comparing files interp_ipd.ref and INTERP_IPD.REF.STD
+FC: no differences encountered
+
+Comparing files interptaba_ipd.dat and INTERPTABA_IPD.DAT.STD
+FC: no differences encountered
+
+Comparing files interptabb_ipd.dat and INTERPTABB_IPD.DAT.STD
+FC: no differences encountered
+
+Comparing files random1_2d.csv and RANDOM1_2D.CSV.STD
+FC: no differences encountered
+
+Comparing files random1_3d.csv and RANDOM1_3D.CSV.STD
+FC: no differences encountered
+

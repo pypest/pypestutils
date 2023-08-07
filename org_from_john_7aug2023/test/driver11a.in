@@ -1,0 +1,11 @@
+grid_cell_centres.dat
+y
+1.00
+fault_details.dat
+y
+l                      /l=polylinear; p=polygonal
+2.0                    /inverse power of distance
+fac_linear.dat
+t                      /t=text;b=binary
+n                      /n-natural;l=log
+targ1.dat

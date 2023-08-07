@@ -1,0 +1,18 @@
+rectmodel.spc
+aa.ref
+mean.ref
+anis.ref
+bearing.ref
+zones.inf
+pp.dat
+1                  /variogram type
+1e20
+10
+20
+1                  /kriging type
+factors.dat
+t
+l
+1.1e30
+interpolated.ref
+

@@ -1,0 +1,15 @@
+coast.spc
+15
+grid1
+coastwells.crd
+coast.hds
+grid1
+36
+1
+1e20
+head
+coast_heads_wells.dat
+coastwells_meastime.dat
+L
+50
+coast_heads_wells_time_interp.dat
