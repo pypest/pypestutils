@@ -2,6 +2,7 @@ src_dir = '.'
 lib_sources = files(
   'deftypes.f90',
   'dimvar.f90',
+  'dimvar_c.f90',
   'funcproc1.f90',
   'function_interfaces.f90',
   'utl.f90',

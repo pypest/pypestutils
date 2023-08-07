@@ -1,0 +1,32 @@
+module dimvar_c
+  use iso_c_binding, only: c_int
+  use dimvar, only: LENCLINE, LENFILENAME, LENMESSAGE, LENGRIDNAME, &
+                    LENFUNCNAME, MAXSTRUCMODGRID, MAXMF6MODGRID, &
+                    MAXINTERPVERT
+  implicit none
+
+  integer(c_int), bind(C, name="LENCLINE_") :: LENCLINE_ = LENCLINE
+  !DIR$ ATTRIBUTES DLLEXPORT :: LENCLINE_
+
+  integer(c_int), bind(C, name="LENFILENAME_") :: LENFILENAME_ = LENFILENAME
+  !DIR$ ATTRIBUTES DLLEXPORT :: LENFILENAME_
+
+  integer(c_int), bind(C, name="LENMESSAGE_") :: LENMESSAGE_ = LENMESSAGE
+  !DIR$ ATTRIBUTES DLLEXPORT :: LENMESSAGE_
+
+  integer(c_int), bind(C, name="LENGRIDNAME_") :: LENGRIDNAME_ = LENGRIDNAME
+  !DIR$ ATTRIBUTES DLLEXPORT :: LENGRIDNAME_
+
+  integer(c_int), bind(C, name="LENFUNCNAME_") :: LENFUNCNAME_ = LENFUNCNAME
+  !DIR$ ATTRIBUTES DLLEXPORT :: LENFUNCNAME_
+
+  integer(c_int), bind(C, name="MAXSTRUCMODGRID_") :: MAXSTRUCMODGRID_ = MAXSTRUCMODGRID
+  !DIR$ ATTRIBUTES DLLEXPORT :: MAXSTRUCMODGRID_
+
+  integer(c_int), bind(C, name="MAXMF6MODGRID_") :: MAXMF6MODGRID_ = MAXMF6MODGRID
+  !DIR$ ATTRIBUTES DLLEXPORT :: MAXMF6MODGRID_
+
+  integer(c_int), bind(C, name="MAXINTERPVERT_") :: MAXINTERPVERT_ = MAXINTERPVERT
+  !DIR$ ATTRIBUTES DLLEXPORT :: MAXINTERPVERT_
+
+end module dimvar_c
