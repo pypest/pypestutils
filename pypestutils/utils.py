@@ -85,9 +85,57 @@ class PyPestUtils(object):
         return pd.DataFrame({"interpolation_success":isuccess,"interpolation_order":np.arange(isuccess.shape[0],dtype=np.int32)},index=df.index)
 
 
+    @staticmethod
+    def get_file_type_map():
+        mapping = {1:"mf5",21:"struct_usg",22:"unstruct_usg",31:"dis_mf6",32:"disv_mf6",33:"disu_mf6"}
+        revese_mapping = {v:k for k,v in mapping.items()}
+        return mapping,revese_mapping
 
 
-    def read_mf6_output_file():
+    def inquire_modflow_binary_file_specs(self,depvar_fname,file_type,is_state=True):
         #todo: make this a one-stop-shop to read a binary file to a dataframe - make
         # all the underlying calls here to hide to gory details..
-        pass  
+        mapping, revese_mapping = PyPestUtils.get_file_type_map()
+        file_type = file_type.lower()
+        if file_type not in revese_mapping:
+            expected = ",".join(list(revese_mapping.keys()))
+            self.throw("inquire: file_type '{0}' not support, looking for {1}".format(file_type,excepted))
+        if is_state:
+            itype = ctypes.c_int(1)
+        else:
+            itype = ctypes.c_int(2)
+
+        isim = ctypes.c_int(int(revese_mapping[file_type]))
+        iprec = ctypes.c_int(-1)
+        narray = ctypes.c_int(-1)
+        ntime = ctypes.c_int(-1)
+
+        depvar_contents_fname = "temp.csv"
+        
+
+        # todo: read output file to get a mapping of what var-times are available
+        # retcode = lib.inquire_modflow_binary_file_specs_(depvar_fname.encode(),depvar_contents_fname.encode(),
+        #                                       ctypes.byref(iisim),ctypes.byref(iitype),ctypes.byref(iprec),
+        #                                       ctypes.byref(narray),ctypes.byref(ntime))
+
+        self.try_call(self.lib.inquire_modflow_binary_file_specs_,depvar_fname.encode(),depvar_contents_fname.encode(),
+                                              ctypes.byref(isim),ctypes.byref(itype),ctypes.byref(iprec),
+                                              ctypes.byref(narray),ctypes.byref(ntime))
+
+
+        df = pd.read_csv(depvar_contents_fname)
+        #todo: some checks here that df at least has narray and ntime coherence
+        
+        return df
+
+    def throw(self,message):
+        message = "PyPestUtils error: " + message
+        raise Exception(message)
+
+
+
+
+
+
+
+

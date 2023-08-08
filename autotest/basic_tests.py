@@ -310,6 +310,9 @@ def unstructured_freyberg_invest():
 
 
 def output_driver1_test():
+
+    sys.path.append(os.path.join(".."))
+    from pypestutils import PyPestUtils
     org_d = "output_driver_test"
     test_d = org_d+"1"
     if os.path.exists(test_d):
@@ -337,8 +340,8 @@ def output_driver1_test():
         depvar_fname = os.path.join(test_d,dp_fname)
         depvar_contents_fname = os.path.join(test_d,test_name)
         depvar_contents_fname_org = os.path.join(test_d,out_name)
-        isim = ctypes.c_int(int(isim))
-        itype = ctypes.c_int(int(itype))
+        iisim = ctypes.c_int(int(isim))
+        iitype = ctypes.c_int(int(itype))
         iprec = ctypes.c_int(-1)
         narray = ctypes.c_int(-1)
         ntime = ctypes.c_int(-1)
@@ -347,7 +350,7 @@ def output_driver1_test():
 
         # todo: read output file to get a mapping of what var-times are available
         retcode = lib.inquire_modflow_binary_file_specs_(depvar_fname.encode(),depvar_contents_fname.encode(),
-                                              ctypes.byref(isim),ctypes.byref(itype),ctypes.byref(iprec),
+                                              ctypes.byref(iisim),ctypes.byref(iitype),ctypes.byref(iprec),
                                               ctypes.byref(narray),ctypes.byref(ntime))
 
         if retcode != 0:
@@ -359,18 +362,41 @@ def output_driver1_test():
                 raise Exception(string_ptr[:retcode].decode())
         assert os.path.exists(depvar_contents_fname)
         use_cols = None
-        if "driver1d" in out_name:
-            continue
+        #if "driver1d" in out_name:
+        #    continue
 
-        org_df = pd.read_csv(depvar_contents_fname_org,sep="\s+").dropna(axis=1)
-        new_df = pd.read_csv(depvar_contents_fname,sep="\s+").dropna(axis=1)
+        org_df = pd.read_fwf(depvar_contents_fname_org).dropna(axis=1)
+        new_df = pd.read_csv(depvar_contents_fname).dropna(axis=1)
         #print(org_df.dtypes)
         comp_cols = [c for c in org_df.columns if org_df.dtypes[c] != object]
         diff = org_df.loc[:,comp_cols] - new_df.loc[:,comp_cols]
         assert diff.shape == diff.dropna(axis=0).shape
+        #print(diff)
         mx = np.abs(diff.values).max()
+
         print(mx)
         assert mx < 1.0e-7
+
+        p = PyPestUtils(os.path.join(test_d,lib_name))
+
+        mapping,_ = PyPestUtils.get_file_type_map()
+        print(isim)
+        if itype == 1:
+            is_state=True
+        elif itype == 2:
+            is_state = False
+        else:
+            raise Exception("huh")
+        df = p.inquire_modflow_binary_file_specs(depvar_fname,mapping[int(isim)],is_state=is_state)
+        diff = org_df.loc[:,comp_cols] - df.loc[:,comp_cols]
+        assert diff.shape == diff.dropna(axis=0).shape
+        #print(diff)
+        mx = np.abs(diff.values).max()
+
+        print(mx)
+        assert mx < 1.0e-7
+
+
 
 
     

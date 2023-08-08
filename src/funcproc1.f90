@@ -116,24 +116,19 @@ integer (kind=c_int) function inquire_modflow_binary_file_specs(FileIn,FileOut,i
          end if
          if((isim.eq.1).or.(isim.eq.21).or.(isim.eq.31))then
            write(outunit,40,err=9100)
-40         format(t2,'    KSTP',t12,'    KPER',t22,'  PERTIM',  &
-           t40,'  TOTIM',t58,'            TEXT',t78,'    NCOL',t88,'    NROW',t98,'    ILAY')
+40         format('KSTP,KPER,PERTIM,TOTIM,TEXT,NCOL,NROW,ILAY')
          else if(isim.eq.22)then
            write(outunit,41,err=9100)
-41         format(t2,'    KSTP',t12,'    KPER',t22,'  PERTIM',  &
-           t40,'  TOTIM',t58,'            TEXT',t78,'   NSTRT',t88,'    NVAL',t98,'    ILAY')
+41         format('KSTP,KPER,PERTIM,TOTIM,TEXT,NSTRT,NVAL,ILAY')
          else if(isim.eq.32)then
            write(outunit,42,err=9100)
-42         format(t2,'    KSTP',t12,'    KPER',t22,'  PERTIM',  &
-           t40,'  TOTIM',t58,'            TEXT',t78,'    NCPL',t88,'    INT1',t98,'    ILAY')
+42         format('KSTP,KPER,PERTIM,TOTIM,TEXT,NCPL,INT1,ILAY')
          else if(isim.eq.33)then
            write(outunit,43,err=9100)
-43         format(t2,'    KSTP',t12,'    KPER',t22,'  PERTIM',  &
-           t40,'  TOTIM',t58,'            TEXT',t78,'   NODES',t88,'    INT1',t98,'    INT2')
+43         format('KSTP,KPER,PERTIM,TOTIM,TEXT,NODES,INT1,INT2')
          else
            write(outunit,44,err=9100)
-44         format(t2,'    KSTP',t12,'    KPER',t22,'  PERTIM',  &
-           t40,'  TOTIM',t58,'            TEXT',t78,'    INT1',t88,'    INT2',t98,'    INT3')
+44         format('KSTP,KPER,PERTIM,TOTIM,TEXT,INT1,INT2,INT3')
          end if
        end if
        narray=0
@@ -176,10 +171,10 @@ integer (kind=c_int) function inquire_modflow_binary_file_specs(FileIn,FileOut,i
          end if
          if(lout)then
            if(iprec.eq.1)then
-             write(outunit,120) kstp,kper,pertim,totim,text,itemp1,itemp2,ilay
-120          format(t2,i8,t12,i8,t22,1pg16.9,t40,1pg16.9,t58,a16,t78,i8,t88,i8,t98,i8)
+             write(outunit,120) kstp,kper,pertim,totim,trim(adjustl(text)),itemp1,itemp2,ilay
+120          format(i0,',',i0,',',1pg0.9,',',1pg0.9,',',a,',',i0,',',i0,',',i0)
            else
-             write(outunit,120) kstp,kper,dpertim,dtotim,text,itemp1,itemp2,ilay
+             write(outunit,120) kstp,kper,dpertim,dtotim,trim(adjustl(text)),itemp1,itemp2,ilay
            end if
          end if
        end do
@@ -199,38 +194,23 @@ integer (kind=c_int) function inquire_modflow_binary_file_specs(FileIn,FileOut,i
          if((isim.eq.1).or.(isim.eq.21).or.(isim.eq.31))then
            if(isim.eq.31)then
              write(outunit,239)
-239          format(t2,'    KSTP',t12,'    KPER',t22,'            TEXT',t42,'    NCOL',  &
-                   t52,'    NROW',t62,'    NLAY',t72,'   IMETH',t82,'    DELT',          &
-                  t100,'   PERTIM',t118,'   TOTIM',t136,'         TXT1ID1',              &
-                  t156,'         TXT2ID1',t176,'         TXT1ID2',t196,'         TXT2ID2')
+239          format('KSTP,KPER,TEXT,NCOL,NROW,NLAY,IMETH,DELT,PERTIM,TOTIM,TXT1ID1,TXT2ID1,TXT1ID2,TXT2ID2')
            else
              write(outunit,240)
-240          format(t2,'    KSTP',t12,'    KPER',t22,'            TEXT',t42,'    NCOL',  &
-                   t52,'    NROW',t62,'    NLAY',t72,'   IMETH',t82,'    DELT',          &
-                  t100,'   PERTIM',t118,'   TOTIM')
+240          format('KSTP,KPER,TEXT,NCOL,NROW,NLAY,IMETH,DELT,PERTIM,TOTIM')
            end if
          else if(isim.eq.22)then
            write(outunit,241)
-241        format(t2,'    KSTP',t12,'    KPER',t22,'            TEXT',t42,'    NVAL',    &
-                 t52,'    INT1',t62,'   ICODE',t72,'   IMETH',t82,'    DELT',            &
-                t100,'   PERTIM',t118,'   TOTIM')
+241        format('KSTP,KPER,TEXT,NVAL,INT1,ICODE,IMETH,DELT,PERTIM,TOTIM')
          else if(isim.eq.32)then
            write(outunit,242)
-242        format(t2,'    KSTP',t12,'    KPER',t22,'            TEXT',t42,'    NCPL',    &
-                 t52,'    INT1',t62,'    INT2',t72,'   IMETH',t82,'    DELT',            &
-                t100,'   PERTIM',t118,'   TOTIM',t136,'         TXT1ID1',                &
-                t156,'         TXT2ID1',t176,'         TXT1ID2',t196,'         TXT2ID2')
+242        format('KSTP,KPER,TEXT,NCPL,INT1,INT2,IMETH,DELT,PERTIM,TOTIM,TXT1ID1,TXT2ID1,TXT1ID2,TXT2ID2')
          else if(isim.eq.33)then
            write(outunit,2431)
-2431       format(t2,'    KSTP',t12,'    KPER',t22,'            TEXT',t42,'   NDIM1',    &
-                 t52,'   NDIM2',t62,'   NDIM3',t72,'   IMETH',t82,'    DELT',            &
-                t100,'   PERTIM',t118,'   TOTIM',t136,'         TXT1ID1',                &
-                t156,'         TXT2ID1',t176,'         TXT1ID2',t196,'         TXT2ID2')
+2431       format('KSTP,KPER,TEXT,NDIM1,NDIM2,NDIM3,IMETH,DELT,PERTIM,TOTIM,TXT1ID1,TXT2ID1,TXT1ID2,TXT2ID2')
          else
            write(outunit,243)
-243        format(t2,'    KSTP',t12,'    KPER',t22,'            TEXT',t42,'   NDIM1',    &
-                 t52,'   NDIM2',t62,'   NDIM3',t72,'   IMETH',t82,'    DELT',            &
-                t100,'   PERTIM',t118,'   TOTIM')
+243        format('KSTP,KPER,TEXT,NDIM1,NDIM2,NDIM3,IMETH,DELT,PERTIM,TOTIM')
          end if
        end if
        kperold=huge(kperold)
@@ -245,8 +225,8 @@ integer (kind=c_int) function inquire_modflow_binary_file_specs(FileIn,FileOut,i
                           .or.(abs(ndim3).gt.ibig))go to 800
          if(ndim3.gt.0)then
            if(lout)then
-             write(outunit,250) kstp,kper,text,ndim1,ndim2,ndim3
-250          format(t2,i8,t12,i8,t22,a16,t42,i8,t52,i8,t62,i8)
+             write(outunit,250) kstp,kper,trim(adjustl(text)),ndim1,ndim2,ndim3
+250          format(i0,',',i0,',',a,',',i0,',',i0,',',i0)
              if(iprec.eq.1)then
                read(inunit,err=800,end=800) (rtemp,i=1,ndim1*ndim2*ndim3)
              else
@@ -287,17 +267,17 @@ integer (kind=c_int) function inquire_modflow_binary_file_specs(FileIn,FileOut,i
            end if
            if(lout)then
              if(imeth.eq.6)then    ! mf6 and therefore double precision
-               write(outunit,2601) kstp,kper,text,ndim1,ndim2,ndim3,imeth,ddelt,dpertim,dtotim,  &
-               adjustr(txt1id1),adjustr(txt2id1),adjustr(txt1id2),adjustr(txt2id2)
-2601           format(t2,i8,t12,i8,t22,a16,t42,i8,t52,i8,t62,i8,t72,i8,t82,1pg16.9,              &
-                      t100,1pg16.9,t118,1pg16.9,t136,a16,t156,a16,t176,a16,t196,a16)
+               write(outunit,2601) kstp,kper,trim(adjustl(text)),ndim1,ndim2,ndim3,imeth,ddelt,dpertim,dtotim,  &
+               trim(txt1id1),trim(txt2id1),trim(txt1id2),trim(txt2id2)
+2601           format(i0,',',i0,',',a,',',i0,',',i0,',',i0,',',i0,',',1pg0.9,              &
+                      ',',1pg0.9,',',1pg0.9,',',a,',',a,',',a,',',a)
              else
                if(iprec.eq.1)then
-                 write(outunit,260) kstp,kper,text,ndim1,ndim2,ndim3,imeth,delt,pertim,totim
-260              format(t2,i8,t12,i8,t22,a16,t42,i8,t52,i8,t62,i8,t72,i8,t82,1pg16.9,            &
-                        t100,1pg16.9,t118,1pg16.9)
+                 write(outunit,260) kstp,kper,trim(adjustl(text)),ndim1,ndim2,ndim3,imeth,delt,pertim,totim
+260              format(i0,',',i0,',',a,',',i0,',',i0,',',i0,',',i0,',',1pg0.9,            &
+                        ',',1pg0.9,',',1pg0.9)
                else
-                 write(outunit,260) kstp,kper,text,ndim1,ndim2,ndim3,imeth,ddelt,dpertim,dtotim
+                 write(outunit,260) kstp,kper,trim(adjustl(text)),ndim1,ndim2,ndim3,imeth,ddelt,dpertim,dtotim
                end if
              end if
            end if
