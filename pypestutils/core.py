@@ -133,8 +133,6 @@ class PestUtilsLib:
         delc: float | npt.NDArray[np.float64],
     ) -> None:
         """Install specifications for a structured grid."""
-        if not gridname:
-            raise ValueError("gridname cannot be blank")
         delr = np.array(delr)
         if delr.ndim == 0:
             delr = np.repeat(delr, ncol)
@@ -161,6 +159,21 @@ class PestUtilsLib:
             raise PestUtilsLibException(self.retrieve_error_message())
         self.logger.info("installed strictured grid %r from specs", gridname)
 
+    def uninstall_structured_grid(self, gridname: str) -> None:
+        """Uninstall strictured grid set by :meth:`install_structured_grid`.
+
+        Parameters
+        ----------
+        gridname : str
+            Unique non-blank grid name.
+        """
+        res = self.lib.uninstall_structured_grid(
+            byref(self.create_char_array(gridname, "LENGRIDNAME"))
+        )
+        if res != 0:
+            raise PestUtilsLibException(self.retrieve_error_message())
+        self.logger.info("uninstalled strictured grid %r", gridname)
+
     def install_mf6_grid_from_file(
         self, gridname: str, grbfile: str | PathLike
     ) -> dict:
@@ -180,8 +193,6 @@ class PestUtilsLib:
         ndim1 : int
         ndim3 : int
         """
-        if not gridname:
-            raise ValueError("gridname cannot be blank")
         grbfile = Path(grbfile)
         if not grbfile.is_file():
             raise FileNotFoundError(f"could not find grbfile {grbfile}")
@@ -212,7 +223,14 @@ class PestUtilsLib:
             "ndim3": ndim3.value,
         }
 
-    def uninstall_mf6_grid(self, gridname: str):
+    def uninstall_mf6_grid(self, gridname: str) -> None:
+        """Uninstall MF6 grid set by :meth:`install_mf6_grid_from_file`.
+
+        Parameters
+        ----------
+        gridname : str
+            Unique non-blank grid name.
+        """
         res = self.lib.uninstall_mf6_grid(
             byref(self.create_char_array(gridname, "LENGRIDNAME"))
         )
@@ -231,11 +249,7 @@ class PestUtilsLib:
         blnfile: str | PathLike,
     ) -> npt.NDArray[np.int32]:
         """Calculate interpolation factors from a MODFLOW 6 DIS or DISV."""
-        if not gridname:
-            raise ValueError("gridname cannot be blank")
         c_gridname = self.create_char_array(gridname, "LENGRIDNAME")
-        if not factorfile:
-            raise ValueError("factorfile cannot be blank")
         factorfile = Path(factorfile)  # TODO
         blnfile = Path(blnfile)  # TODO
         if layer.ndim != 1:
@@ -246,8 +260,6 @@ class PestUtilsLib:
             raise ValueError("expected 'layer' with length greater than zero")
         elif not np.issubdtype(layer.dtype, np.integer):
             raise ValueError("expected 'layer' to be integer type")
-        elif ecoord.shape != expected_shape:
-            raise ValueError(f"expected 'ecoord' shape to be {expected_shape}")
         elif ecoord.shape != expected_shape:
             raise ValueError(f"expected 'ecoord' shape to be {expected_shape}")
         elif ncoord.shape != expected_shape:
