@@ -27,9 +27,14 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "numpy",
+    "numpy >=1.20",
     "pandas",
     "pyemu",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
 ]
 
 [project.readme]

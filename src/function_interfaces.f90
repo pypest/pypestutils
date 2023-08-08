@@ -6,7 +6,8 @@ module function_interfaces
 
     integer (kind=c_int) function inquire_modflow_binary_file_specs(            &
                          FileIn,FileOut,isim,itype,iprec,narray,ntime)          &
-                         bind(C,name="inquire_modflow_binary_file_specs_")
+                     bind(C,name="inquire_modflow_binary_file_specs")
+    !DIR$ ATTRIBUTES DLLEXPORT :: inquire_modflow_binary_file_specs
        use iso_c_binding, only: c_int,c_char
        character (kind=c_char), intent(in)        :: FileIn(*)
        character (kind=c_char), intent(in)        :: FileOut(*)
@@ -17,15 +18,17 @@ module function_interfaces
        integer(kind=c_int), intent(out)           :: ntime
     end function inquire_modflow_binary_file_specs
 
-    integer(kind=c_int) function retrieve_error_message(errormessage)             &
-                        bind(c, name="retrieve_error_message_")
+    integer (kind=c_int) function retrieve_error_message(errormessage)             &
+                    bind(c, name="retrieve_error_message")
+    !DIR$ ATTRIBUTES DLLEXPORT :: retrieve_error_message
        use iso_c_binding, only: c_int,c_char
        character (kind=c_char), intent(out) :: errormessage(*)
     end function retrieve_error_message
 
     integer (kind=c_int) function install_structured_grid                            &
                        (gridname,ncol,nrow,nlay,icorner,e0,n0,rotation,delr,delc)    &
-                        bind(c,name="install_structured_grid_")
+                     bind(c,name="install_structured_grid")
+    !DIR$ ATTRIBUTES DLLEXPORT :: install_structured_grid
        use iso_c_binding, only: c_int,c_char,c_double
        character (kind=c_char), intent(in)  :: gridname(*)
        integer (kind=c_int), intent(in)     :: ncol,nrow,nlay
@@ -35,12 +38,15 @@ module function_interfaces
     end function install_structured_grid
 
     integer (kind=c_int) function uninstall_structured_grid(gridname)                &
-                         bind(c,name="uninstall_structured_grid_")
+                     bind(c,name="uninstall_structured_grid")
+    !DIR$ ATTRIBUTES DLLEXPORT :: uninstall_structured_grid
        use iso_c_binding, only: c_int,c_char
        character (kind=c_char), intent(in)  :: gridname(*)
     end function uninstall_structured_grid
 
-    integer (kind=c_int) function free_all_memory() bind(c,name="free_all_memory_")
+    integer (kind=c_int) function free_all_memory() &
+                     bind(c,name="free_all_memory")
+    !DIR$ ATTRIBUTES DLLEXPORT :: free_all_memory
        use iso_c_binding, only: c_int
     end function free_all_memory
 
@@ -49,7 +55,8 @@ module function_interfaces
                              VarType,InterpThresh,NoInterpVal,               &
                              npts,ecoord,ncoord,layer,                       &
                              nproctime,simtime,simstate)                     &
-                             bind(c,name="interp_from_structured_grid_")
+                     bind(c,name="interp_from_structured_grid")
+    !DIR$ ATTRIBUTES DLLEXPORT :: interp_from_structured_grid
        use iso_c_binding, only: c_int,c_double,c_char
        character (kind=c_char), intent(in)  :: gridname(*)
        character (kind=c_char), intent(in)  :: depvarfile(*)
@@ -71,7 +78,8 @@ module function_interfaces
                              nsimtime,nproctime,npts,simtime,simval,           &
                              interpthresh,how_extrap,time_extrap,nointerpval,  &
                              nobs,obspoint,obstime,obssimval)                  &
-                             bind(c,name="interp_to_obstime_")
+                     bind(c,name="interp_to_obstime")
+    !DIR$ ATTRIBUTES DLLEXPORT :: interp_to_obstime
        use iso_c_binding, only: c_int,c_double,c_char
        integer(kind=c_int), intent(in)         :: nsimtime
        integer(kind=c_int), intent(in)         :: nproctime
@@ -91,7 +99,8 @@ module function_interfaces
     integer (kind=c_int) function install_mf6_grid_from_file(         &
                          gridname,grbfile,                            &
                          idis,ncells,ndim1,ndim2,ndim3)               &
-                         bind(c,name="install_mf6_grid_from_file_")
+                     bind(c,name="install_mf6_grid_from_file")
+    !DIR$ ATTRIBUTES DLLEXPORT :: install_mf6_grid_from_file
        use iso_c_binding, only: c_int,c_char
        character (kind=c_char,len=1), intent(in)  :: gridname(*)
        character (kind=c_char,len=1), intent(in)  :: grbfile(*)
@@ -101,7 +110,8 @@ module function_interfaces
     end function install_mf6_grid_from_file
 
     integer (kind=c_int) function uninstall_mf6_grid(gridname)         &
-                         bind(c,name="uninstall_mf6_grid_")
+                     bind(c,name="uninstall_mf6_grid")
+    !DIR$ ATTRIBUTES DLLEXPORT :: uninstall_mf6_grid
        use iso_c_binding, only: c_int,c_char
        character (kind=c_char,len=1), intent(in)  :: gridname(*)
     end function uninstall_mf6_grid
@@ -111,7 +121,8 @@ module function_interfaces
                               npts,ecoord,ncoord,layer,                &
                               factorfile, factorfiletype,              &
                               blnfile,interp_success)                  &
-                              bind(c,name="calc_mf6_interp_factors_")
+                     bind(c,name="calc_mf6_interp_factors")
+    !DIR$ ATTRIBUTES DLLEXPORT :: calc_mf6_interp_factors
        use iso_c_binding, only: c_int,c_double,c_char
        character (kind=c_char,len=1), intent(in)   :: gridname(*)
        integer(kind=c_int), intent(in)             :: npts
@@ -127,7 +138,8 @@ module function_interfaces
                          depvarfile,factorfile,factorfiletype,                 &
                          ntime,vartype,interpthresh,reapportion,nointerpval,   &
                          npts,nproctime,simtime,simstate)                      &
-                         bind(c,name="interp_from_mf6_depvar_file_")
+                     bind(c,name="interp_from_mf6_depvar_file")
+    !DIR$ ATTRIBUTES DLLEXPORT :: interp_from_mf6_depvar_file
            use iso_c_binding, only: c_int,c_char,c_double
            character(kind=c_char,len=1), intent(in)   :: depvarfile(*)
            character(kind=c_char,len=1), intent(in)   :: factorfile(*)
@@ -149,7 +161,8 @@ module function_interfaces
                          numzone,zonenumber,                       &
                          ntime,nproctime,                          &
                          timestep,stressperiod,simtime,simflow)    &
-                         bind(c,name="extract_flows_from_cbc_file_")
+                     bind(c,name="extract_flows_from_cbc_file")
+    !DIR$ ATTRIBUTES DLLEXPORT :: extract_flows_from_cbc_file
        use iso_c_binding, only: c_int,c_char,c_double
        character (kind=c_char,len=1), intent(in)  :: cbcfile(*)
        character (kind=c_char,len=1), intent(in)  :: flowtype(*)

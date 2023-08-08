@@ -31,7 +31,7 @@ class PyPestUtils(object):
     def get_error_message(self,):
         err_str = np.array([' ' for _ in range(100)],dtype=np.dtype('a1'))
         string_ptr = err_str.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
-        retcode = self.lib.retrieve_error_message_(string_ptr)
+        retcode = self.lib.retrieve_error_message(string_ptr)
         if retcode != 0:
             return string_ptr[:retcode].decode()
         else:
@@ -48,7 +48,7 @@ class PyPestUtils(object):
         if gridname.lower() in self.gridnames:
             raise Exception("gridname '{0}' already installed")
 
-        self.try_call(self.lib.install_mf6_grid_from_file_,gridname.encode(),grb_fname.encode(),ctypes.byref(idis),
+        self.try_call(self.lib.install_mf6_grid_from_file,gridname.encode(),grb_fname.encode(),ctypes.byref(idis),
             ctypes.byref(ncells),ctypes.byref(ndim1),ctypes.byref(ndim2),ctypes.byref(ndim3))
         #print(idis.value,ncells.value,ndim1.value,ndim2.value,ndim3.value)
         self.gridnames.append(gridname.lower())
@@ -74,7 +74,7 @@ class PyPestUtils(object):
 
         nnpts = ctypes.c_int(df.shape[0])
         isuccess = np.zeros(df.shape[0],dtype=np.int32)
-        self.try_call(self.lib.calc_mf6_interp_factors_,gridname.encode(),ctypes.byref(nnpts),
+        self.try_call(self.lib.calc_mf6_interp_factors,gridname.encode(),ctypes.byref(nnpts),
                                         df.x.values.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
                                         df.y.values.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
                                         df.layer.values.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),facfile.encode(),
@@ -114,11 +114,11 @@ class PyPestUtils(object):
         
 
         # todo: read output file to get a mapping of what var-times are available
-        # retcode = lib.inquire_modflow_binary_file_specs_(depvar_fname.encode(),depvar_contents_fname.encode(),
+        # retcode = lib.inquire_modflow_binary_file_specs(depvar_fname.encode(),depvar_contents_fname.encode(),
         #                                       ctypes.byref(iisim),ctypes.byref(iitype),ctypes.byref(iprec),
         #                                       ctypes.byref(narray),ctypes.byref(ntime))
 
-        self.try_call(self.lib.inquire_modflow_binary_file_specs_,depvar_fname.encode(),depvar_contents_fname.encode(),
+        self.try_call(self.lib.inquire_modflow_binary_file_specs,depvar_fname.encode(),depvar_contents_fname.encode(),
                                               ctypes.byref(isim),ctypes.byref(itype),ctypes.byref(iprec),
                                               ctypes.byref(narray),ctypes.byref(ntime))
 
