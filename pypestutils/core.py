@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from ctypes import byref, c_double, c_int, create_string_buffer
+from ctypes import byref, c_char, c_double, c_int, create_string_buffer
 from os import PathLike
 from pathlib import Path
 
@@ -73,18 +73,35 @@ class PestUtilsLib:
         return get_dimvar_int(self.lib, name)
 
     def inquire_modflow_binary_file_specs(
-        self, filein: str | PathLike, fileout: str | PathLike, isim: int, itype: int
+        self,
+        filein: str | PathLike,
+        *,
+        fileout: str | PathLike | None,
+        isim: int,
+        itype: int,
     ) -> dict:
         """Report some of the details of a MODFLOW-written binary file.
 
         Parameters
         ----------
         filein : str or PathLike
-        fileout : str or PathLike
+            MODFLOW-generated binary file to be read.
+        fileout : str, PathLike, None
+            Output file with with table of array headers. Use None or "" for
+            no output file.
         isim : int
-            Simulator.
+            Inform the function the simulator that generated the binary file:
+
+             * 1 = traditional MODFLOW
+             * 21 = MODFLOW-USG with structured grid
+             * 22 = MODFLOW-USG with unstructured grid
+             * 31 = MODFLOW 6 with DIS grid
+             * 32 = MODFLOW 6 with DISV grid
+             * 33 = MODFLOW 6 with DISU grid
+
         itype : int
-            Where 1 = system state; 2 = flows.
+            Where 1 = system state or dependent variable;
+            2 = cell-by-cell flows.
 
         Returns
         -------
@@ -98,13 +115,14 @@ class PestUtilsLib:
         filein = Path(filein)
         if not filein.is_file():
             raise FileNotFoundError(f"could not find filein {filein}")
-        fileout = Path(fileout)  # TODO
+        if fileout:
+            fileout = Path(fileout)
         iprec = c_int()
         narray = c_int()
         ntime = c_int()
         res = self.lib.inquire_modflow_binary_file_specs(
             byref(self.create_char_array(bytes(filein), "LENFILENAME")),
-            byref(self.create_char_array(bytes(fileout), "LENFILENAME")),
+            byref(self.create_char_array(bytes(fileout) or b"", "LENFILENAME")),
             byref(c_int(isim)),
             byref(c_int(itype)),
             byref(iprec),
@@ -134,6 +152,7 @@ class PestUtilsLib:
     def install_structured_grid(
         self,
         gridname: str,
+        *,
         ncol: int,
         nrow: int,
         nlay: int,
@@ -141,16 +160,16 @@ class PestUtilsLib:
         e0: float,
         n0: float,
         rotation: float,
-        delr: float | npt.NDArray[np.float64],
-        delc: float | npt.NDArray[np.float64],
+        delr: float | npt.ArrayLike,
+        delc: float | npt.ArrayLike,
     ) -> None:
         """Install specifications for a structured grid."""
-        delr = np.array(delr)
+        delr = np.array(delr, dtype=np.float64, copy=False)
         if delr.ndim == 0:
             delr = np.repeat(delr, ncol)
         elif delr.shape != (ncol,):
             raise ValueError(f"expected 'delr' array with shape {(ncol,)}")
-        delc = np.array(delc)
+        delc = np.array(delc, dtype=np.float64, copy=False)
         if delc.ndim == 0:
             delc = np.repeat(delc, nrow)
         elif delc.shape != (nrow,):
@@ -164,8 +183,8 @@ class PestUtilsLib:
             byref(c_double(e0)),
             byref(c_double(n0)),
             byref(c_double(rotation)),
-            delr.astype(np.float64),
-            delc.astype(np.float64),
+            delr,
+            delc,
         )
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
@@ -195,16 +214,16 @@ class PestUtilsLib:
 
     def _check_interp_arrays(
         self,
-        ecoord: npt.NDArray[np.float64],
-        ncoord: npt.NDArray[np.float64],
-        layer: npt.NDArray[np.int32],
+        ecoord: npt.ArrayLike,
+        ncoord: npt.ArrayLike,
+        layer: npt.ArrayLike,
     ) -> int:
         """Check point interpolation arrays before passing to Fortran.
 
         Returns
         -------
         int
-            npts
+            Number of points (npts).
         """
         if layer.ndim != 1:
             raise ValueError("expected 'layer' to have ndim=1")
@@ -225,6 +244,7 @@ class PestUtilsLib:
     def interp_from_structured_grid(
         self,
         gridname: str,
+        *,
         depvarfile: str | PathLike,
         isim: int,
         iprec: int,
@@ -232,9 +252,10 @@ class PestUtilsLib:
         vartype: str,
         interpthresh: float,
         nointerpval: float,
-        ecoord: npt.NDArray[np.float64],
-        ncoord: npt.NDArray[np.float64],
-        layer: npt.NDArray[np.int32],
+        # npts: int,  # determined from layer array shape
+        ecoord: npt.ArrayLike,
+        ncoord: npt.ArrayLike,
+        layer: npt.ArrayLike,
     ) -> dict:
         """Spatial interpolate points from a structured grid.
 
@@ -287,9 +308,9 @@ class PestUtilsLib:
             byref(c_double(interpthresh)),
             byref(c_double(nointerpval)),
             byref(c_int(npts)),
-            ecoord.astype(np.float64),
-            ncoord.astype(np.float64),
-            layer.astype(np.int32),
+            ecoord.astype(np.float64, copy=False),
+            ncoord.astype(np.float64, copy=False),
+            layer.astype(np.int32, copy=False),
             byref(c_nproctime),
             simtime,
             simstate,
@@ -304,6 +325,90 @@ class PestUtilsLib:
             "simtime": simtime,
             "simstate": simstate,
         }
+
+    def interp_to_obstime(
+        self,
+        *,
+        # nsimtime: int,  # determined from simval.shape[0]
+        nproctime: int,
+        # npts: int,  # determined from simval.shape[1]
+        simtime: npt.ArrayLike,
+        simval: npt.ArrayLike,
+        interpthresh: float,
+        how_extrap: str,
+        time_extrap: float,
+        nointerpval: float,
+        # nobs: int,  # determined from obspoint.shape[0]
+        obspoint: npt.ArrayLike,
+        obstime: npt.ArrayLike,
+    ) -> npt.NDArray[np.float64]:
+        """Temporal interpolation for simulation times to observed times.
+
+        Parameters
+        ----------
+        nproctime : int
+            Number of times featured in simtime and simval.
+        simtime : array_like
+            1D array of simulation times with shape (nsimtime,).
+        simval : array_like
+            2D array of simulated values with shape (nsimtime, npts).
+        interpthresh : float
+            Values equal or above this in simval have no meaning.
+        how_extrap : str
+            Method, where 'L'=linear; 'C'=constant.
+        time_extrap : float
+            Permitted extrapolation time.
+        nointerpval : float
+            Value to use where interpolation is not possible.
+        obspoint : array_like
+            1D integer array of indices of observation points,
+            where start at 0 and -1 means no index. Shape is (nobs,).
+        obstime : array_like
+            1D array of observation times with shape (nobs,).
+
+        Returns
+        -------
+        np.ndarray
+            Time-interpolated simulation values with shape (nobs,).
+        """
+        simtime = np.array(simtime, dtype=np.float64, copy=False)
+        simval = np.array(simval, dtype=np.float64, copy=False, order="F")
+        obspoint = np.array(obspoint, copy=False)
+        obstime = np.array(obstime, dtype=np.float64, copy=False)
+        if simtime.ndim != 1:
+            raise ValueError("expected 'simtime' to have ndim=1")
+        elif simval.ndim != 2:
+            raise ValueError("expected 'simval' to have ndim=2")
+        elif obspoint.ndim != 1:
+            raise ValueError("expected 'obspoint' to have ndim=1")
+        elif obstime.ndim != 1:
+            raise ValueError("expected 'obstime' to have ndim=1")
+        elif not np.issubdtype(obspoint.dtype, np.integer):
+            raise ValueError(
+                f"expected 'obspoint' to be integer type; found {obspoint.dtype}"
+            )
+        nsimtime, npts = simval.shape
+        nobs = len(obspoint)
+        obssimval = np.zeros(nobs, np.float64)
+        res = self.lib.interp_to_obstime(
+            byref(c_int(nsimtime)),
+            byref(c_int(nproctime)),
+            byref(c_int(npts)),
+            simtime,
+            simval,
+            byref(c_double(interpthresh)),
+            byref(c_char(how_extrap.encode())),
+            byref(c_double(time_extrap)),
+            byref(c_double(nointerpval)),
+            byref(c_int(nobs)),
+            obspoint.astype(np.int32, copy=False),
+            obstime,
+            obssimval,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("interpolated %d time points to %d observations", npts, nobs)
+        return obssimval
 
     def install_mf6_grid_from_file(
         self, gridname: str, grbfile: str | PathLike
@@ -372,9 +477,11 @@ class PestUtilsLib:
     def calc_mf6_interp_factors(
         self,
         gridname: str,
-        ecoord: npt.NDArray[np.float64],
-        ncoord: npt.NDArray[np.float64],
-        layer: npt.NDArray[np.int32],
+        *,
+        # npts: int,  # determined from layer array shape
+        ecoord: npt.ArrayLike,
+        ncoord: npt.ArrayLike,
+        layer: npt.ArrayLike,
         factorfile: str | PathLike,
         factorfiletype: int,
         blnfile: str | PathLike,
@@ -387,9 +494,9 @@ class PestUtilsLib:
         res = self.lib.calc_mf6_interp_factors(
             byref(self.create_char_array(gridname, "LENGRIDNAME")),
             byref(c_int(npts)),
-            ecoord.astype(np.float64),
-            ncoord.astype(np.float64),
-            layer.astype(np.int32),
+            ecoord.astype(np.float64, copy=False),
+            ncoord.astype(np.float64, copy=False),
+            layer.astype(np.int32, copy=False),
             byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
             byref(c_int(factorfiletype)),
             byref(self.create_char_array(bytes(blnfile), "LENFILENAME")),

@@ -44,10 +44,10 @@ def prototype(lib):
     lenvartype_t = get_char_array(lib, "LENVARTYPE")
 
     # inquire_modflow_binary_file_specs(
-    #   FileIn,FileOut,isim,itype,iprec,narray,ntime)
+    #   filein,fileout,isim,itype,iprec,narray,ntime)
     lib.inquire_modflow_binary_file_specs.argtypes = (
-        POINTER(lenfilename_t),  # FileIn, in
-        POINTER(lenfilename_t),  # FileOut, in
+        POINTER(lenfilename_t),  # filein, in
+        POINTER(lenfilename_t),  # fileout, in
         POINTER(c_int),  # isim, in
         POINTER(c_int),  # itype, in
         POINTER(c_int),  # iprec, out
@@ -85,17 +85,17 @@ def prototype(lib):
     lib.free_all_memory.restype = c_int
 
     # interp_from_structured_grid(
-    #   GridName,DepVarFile,isim,iprec,ntime,VarType,InterpThresh,NoInterpVal,
+    #   gridname,depvarfile,isim,iprec,ntime,vartype,interpthresh,nointerpval,
     #   npts,ecoord,ncoord,layer,nproctime,simtime,simstate)
     lib.interp_from_structured_grid.argtypes = (
-        POINTER(lengridname_t),  # GridName, in
-        POINTER(lenfilename_t),  # DepVarFile, in
+        POINTER(lengridname_t),  # gridname, in
+        POINTER(lenfilename_t),  # depvarfile, in
         POINTER(c_int),  # isim, in
         POINTER(c_int),  # iprec, in
         POINTER(c_int),  # ntime, in
-        POINTER(lenvartype_t),  # VarType, in
-        POINTER(c_double),  # InterpThresh, in
-        POINTER(c_double),  # NoInterpVal, in
+        POINTER(lenvartype_t),  # vartype, in
+        POINTER(c_double),  # interpthresh, in
+        POINTER(c_double),  # nointerpval, in
         POINTER(c_int),  # npts, in
         ndpointer(c_double, ndim=1),  # ecoord, in
         ndpointer(c_double, ndim=1),  # ncoord, in
@@ -105,6 +105,26 @@ def prototype(lib):
         ndpointer(c_double, ndim=2, flags="F"),  # simstate(ntime,npts), out
     )
     lib.interp_from_structured_grid.restype = c_int
+
+    # interp_to_obstime(
+    #   nsimtime,nproctime,npts,simtime,simval,interpthresh,how_extrap,
+    #   time_extrap,nointerpval,nobs,obspoint,obstime,obssimval)
+    lib.interp_to_obstime.argtypes = (
+        POINTER(c_int),  # nsimtime, in
+        POINTER(c_int),  # nproctime, in
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1),  # simtime(nsimtime), in
+        ndpointer(c_double, ndim=2, flags="F"),  # simval(nsimtime,npts), in
+        POINTER(c_double),  # interpthresh, in
+        POINTER(c_char),  # how_extrap, in
+        POINTER(c_double),  # time_extrap, in
+        POINTER(c_double),  # nointerpval, in
+        POINTER(c_int),  # nobs, in
+        ndpointer(c_int, ndim=1),  # obspoint(nobs), in
+        ndpointer(c_double, ndim=1),  # obstime(nobs), in
+        ndpointer(c_double, ndim=1),  # obssimval(nobs), out
+    )
+    lib.interp_to_obstime.restype = c_int
 
     # install_mf6_grid_from_file(
     #   gridname,grbfile,idis,ncells,ndim1,ndim2,ndim3)
