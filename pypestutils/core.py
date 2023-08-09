@@ -297,7 +297,7 @@ class PestUtilsLib:
         npts = self._check_interp_arrays(ecoord, ncoord, layer)
         simtime = np.zeros(ntime, np.float64)
         simstate = np.zeros((ntime, npts), np.float64, "F")
-        c_nproctime = c_int()
+        nproctime = c_int()
         res = self.lib.interp_from_structured_grid(
             byref(self.create_char_array(gridname, "LENGRIDNAME")),
             byref(self.create_char_array(bytes(depvarfile), "LENFILENAME")),
@@ -311,7 +311,7 @@ class PestUtilsLib:
             ecoord,
             ncoord,
             layer.astype(np.int32, copy=False),
-            byref(c_nproctime),
+            byref(nproctime),
             simtime,
             simstate,
         )
@@ -321,7 +321,7 @@ class PestUtilsLib:
             "interpolated %d points from structured grid %r", npts, gridname
         )
         return {
-            "nproctime": c_nproctime.value,
+            "nproctime": nproctime.value,
             "simtime": simtime,
             "simstate": simstate,
         }
@@ -562,7 +562,7 @@ class PestUtilsLib:
         factorfile = Path(factorfile)  # TODO
         simtime = np.zeros(ntime, np.float64)
         simstate = np.zeros((ntime, npts), np.float64, "F")
-        c_nproctime = c_int()
+        nproctime = c_int()
         res = self.lib.interp_from_mf6_depvar_file(
             byref(self.create_char_array(bytes(depvarfile), "LENFILENAME")),
             byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
@@ -573,7 +573,7 @@ class PestUtilsLib:
             byref(c_int(reapportion)),
             byref(c_double(nointerpval)),
             byref(c_int(npts)),
-            byref(c_nproctime),
+            byref(nproctime),
             simtime,
             simstate,
         )
@@ -583,7 +583,103 @@ class PestUtilsLib:
             "interpolated points from mf6 depvar file %r", npts, depvarfile.name
         )
         return {
-            "nproctime": c_nproctime.value,
+            "nproctime": nproctime.value,
             "simtime": simtime,
             "simstate": simstate,
+        }
+
+    def extract_flows_from_cbc_file(
+        self,
+        cbcfile: str | PathLike,
+        flowtype: str,
+        isim: int,
+        iprec: int,
+        # ncell: int,  # from izone.shape[0]
+        izone: npt.ArrayLike,
+        nzone: int,
+        ntime: int,
+    ) -> dict:
+        """
+        Read and accumulates flows from a CBC flow file to a user-specified BC.
+
+        Parameters
+        ----------
+        cbcfile : str | PathLike
+            Cell-by-cell flow term file written by any MF version.
+        flowtype : str
+            Type of flow to read.
+        isim : int
+            Simulator type.
+        iprec : int
+            Precision used to record real variables in cbc file.
+        izone : array_like
+            Zonation of model domain, with shape (ncell,).
+        nzone : int
+            Equals or exceeds number of zones; zone 0 doesn't count.
+        ntime : int
+            Equals or exceed number of model output times for flow type.
+
+        Returns
+        -------
+        numzone : int
+            Number of non-zero-valued zones.
+        zonenumber : npt.NDArray[np.int32]
+            Zone numbers, with shape (nzone,).
+        nproctime : int
+            Number of processed simulation times.
+        timestep : npt.NDArray[np.int32]
+            Simulation time step, with shape (ntime,).
+        stressperiod : npt.NDArray[np.int32]
+            Simulation stress period, with shape (ntime,).
+        simtime : npt.NDArray[np.int32]
+            Simulation time, with shape (ntime,).
+            A time of -1.0 indicates unknown.
+        simflow : npt.NDArray[np.int32]
+            Interpolated flows, with shape (ntime, nzone).
+        """
+        cbcfile = Path(cbcfile)
+        if not cbcfile.is_file():
+            raise FileNotFoundError(f"could not find cbcfile {cbcfile}")
+        izone = np.array(izone, copy=False)
+        if izone.ndim != 1:
+            raise ValueError("expected 'izone' to have ndim=1")
+        elif not np.issubdtype(izone.dtype, np.integer):
+            raise ValueError(
+                f"expected 'izone' to be integer type; found {izone.dtype}"
+            )
+        ncell = izone.shape[0]
+        numzone = c_int()
+        zonenumber = np.zeros(nzone, np.int32)
+        nproctime = c_int()
+        timestep = np.zeros(ntime, np.int32)
+        stressperiod = np.zeros(ntime, np.int32)
+        simtime = np.zeros(ntime, np.float64)
+        simflow = np.zeros((ntime, nzone), np.float64, "F")
+        res = self.lib.extract_flows_from_cbc_file(
+            byref(self.create_char_array(bytes(cbcfile), "LENFILENAME")),
+            byref(self.create_char_array(flowtype, "LENFLOWTYPE")),
+            byref(c_int(isim)),
+            byref(c_int(iprec)),
+            byref(c_int(ncell)),
+            izone.astype(np.int32, copy=False),
+            byref(c_int(nzone)),
+            byref(numzone),
+            zonenumber,
+            byref(c_int(ntime)),
+            byref(nproctime),
+            timestep,
+            stressperiod,
+            simtime,
+            simflow,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        return {
+            "numzone": numzone.value,
+            "zonenumber": zonenumber,
+            "nproctime": nproctime.value,
+            "timestep": timestep,
+            "stressperiod": stressperiod,
+            "simtime": simtime,
+            "simflow": simflow,
         }

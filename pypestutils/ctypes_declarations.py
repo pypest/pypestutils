@@ -8,8 +8,10 @@ from numpy.ctypeslib import ndpointer
 # Cache variables by uppercase dimvar name
 _dimvar_cache = {}
 _char_array_cache = {}
+# other lengths not defined in dimvar
 _misc_lengths = {
     "LENVARTYPE": 17,
+    "LENFLOWTYPE": 17,
 }
 
 
@@ -42,6 +44,7 @@ def prototype(lib):
     lenmessage_t = get_char_array(lib, "LENMESSAGE")
     lengridname_t = get_char_array(lib, "LENGRIDNAME")
     lenvartype_t = get_char_array(lib, "LENVARTYPE")
+    lenflowtype_t = get_char_array(lib, "LENFLOWTYPE")
 
     # inquire_modflow_binary_file_specs(
     #   filein,fileout,isim,itype,iprec,narray,ntime)
@@ -177,3 +180,25 @@ def prototype(lib):
         ndpointer(c_double, ndim=2, flags="F"),  # simstate(ntime,npts), out
     )
     lib.interp_from_mf6_depvar_file.restype = c_int
+
+    # extract_flows_from_cbc_file(
+    #   cbcfile,flowtype,isim,iprec,ncell,izone,nzone,numzone,zonenumber,
+    #   ntime,nproctime,timestep,stressperiod,simtime,simflow)
+    lib.extract_flows_from_cbc_file.argtypes = (
+        POINTER(lenfilename_t),  # cbcfile, in
+        POINTER(lenflowtype_t),  # flowtype, in
+        POINTER(c_int),  # isim, in
+        POINTER(c_int),  # iprec, in
+        POINTER(c_int),  # ncell, in
+        ndpointer(c_int, ndim=1),  # izone(ncell), in
+        POINTER(c_int),  # nzone, in
+        POINTER(c_int),  # numzone, out
+        ndpointer(c_int, ndim=1),  # zonenumber(nzone), out
+        POINTER(c_int),  # ntime, in
+        POINTER(c_int),  # nproctime, out
+        ndpointer(c_int, ndim=1),  # timestep(ntime), out
+        ndpointer(c_int, ndim=1),  # stressperiod(ntime), out
+        ndpointer(c_double, ndim=1),  # simtime(ntime), out
+        ndpointer(c_double, ndim=2, flags="F"),  # simflow(ntime,nzone), out
+    )
+    lib.extract_flows_from_cbc_file.restype = c_int
