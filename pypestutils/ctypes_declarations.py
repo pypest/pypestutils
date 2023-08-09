@@ -158,3 +158,22 @@ def prototype(lib):
         ndpointer(c_int, ndim=1),  # interp_success, out
     )
     lib.calc_mf6_interp_factors.restype = c_int
+
+    # interp_from_mf6_depvar_file(
+    #   depvarfile,factorfile,factorfiletype,ntime,vartype,interpthresh,
+    #   reapportion,nointerpval,npts,nproctime,simtime,simstate)
+    lib.interp_from_mf6_depvar_file.argtypes = (
+        POINTER(lenfilename_t),  # depvarfile, in
+        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # ntime, in
+        POINTER(lenvartype_t),  # vartype(17), in
+        POINTER(c_double),  # interpthresh, in
+        POINTER(c_int),  # reapportion, in
+        POINTER(c_double),  # nointerpval, in
+        POINTER(c_int),  # npts, in
+        POINTER(c_int),  # nproctime, out
+        ndpointer(c_double, ndim=1),  # simtime(ntime), out
+        ndpointer(c_double, ndim=2, flags="F"),  # simstate(ntime,npts), out
+    )
+    lib.interp_from_mf6_depvar_file.restype = c_int

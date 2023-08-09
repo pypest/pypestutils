@@ -75,7 +75,6 @@ class PestUtilsLib:
     def inquire_modflow_binary_file_specs(
         self,
         filein: str | PathLike,
-        *,
         fileout: str | PathLike | None,
         isim: int,
         itype: int,
@@ -152,7 +151,6 @@ class PestUtilsLib:
     def install_structured_grid(
         self,
         gridname: str,
-        *,
         ncol: int,
         nrow: int,
         nlay: int,
@@ -244,7 +242,6 @@ class PestUtilsLib:
     def interp_from_structured_grid(
         self,
         gridname: str,
-        *,
         depvarfile: str | PathLike,
         isim: int,
         iprec: int,
@@ -252,7 +249,7 @@ class PestUtilsLib:
         vartype: str,
         interpthresh: float,
         nointerpval: float,
-        # npts: int,  # determined from layer array shape
+        # npts: int,  # determined from layer.shape[0]
         ecoord: npt.ArrayLike,
         ncoord: npt.ArrayLike,
         layer: npt.ArrayLike,
@@ -278,22 +275,25 @@ class PestUtilsLib:
         nointerpval : float
             Value to use where interpolation is not possible.
         ecoord, ncoord : array_like
-            X/Y or Easting/Northing coordinates for points.
+            X/Y or Easting/Northing coordinates for points with shape (npts,).
         layer : array_like
-            Layers of points.
+            Layers of points with shape (npts,).
 
         Returns
         -------
         nproctime : int
             Number of processed simulation times.
-        simtime : np.ndarray
-            Simulation time.
-        simstate : np.ndarray
-            Interpolated system state with dimensions (ntime,npts).
+        simtime : npt.NDArray[np.float64]
+            Simulation times, with shape (ntime,).
+        simstate : npt.NDArray[np.float64]
+            Interpolated system states, with shape (ntime, npts).
         """
         depvarfile = Path(depvarfile)
         if not depvarfile.is_file():
             raise FileNotFoundError(f"could not find depvarfile {depvarfile}")
+        ecoord = np.array(ecoord, dtype=np.float64, copy=False)
+        ncoord = np.array(ncoord, dtype=np.float64, copy=False)
+        layer = np.array(layer, copy=False)
         npts = self._check_interp_arrays(ecoord, ncoord, layer)
         simtime = np.zeros(ntime, np.float64)
         simstate = np.zeros((ntime, npts), np.float64, "F")
@@ -308,8 +308,8 @@ class PestUtilsLib:
             byref(c_double(interpthresh)),
             byref(c_double(nointerpval)),
             byref(c_int(npts)),
-            ecoord.astype(np.float64, copy=False),
-            ncoord.astype(np.float64, copy=False),
+            ecoord,
+            ncoord,
             layer.astype(np.int32, copy=False),
             byref(c_nproctime),
             simtime,
@@ -328,7 +328,6 @@ class PestUtilsLib:
 
     def interp_to_obstime(
         self,
-        *,
         # nsimtime: int,  # determined from simval.shape[0]
         nproctime: int,
         # npts: int,  # determined from simval.shape[1]
@@ -425,9 +424,11 @@ class PestUtilsLib:
         Returns
         -------
         idis : int
+            Where 1=DIS; 2=DISV
         ncells : int
-        ndim1 : int
-        ndim3 : int
+            Number of cells in the grid.
+        ndim1, ndim2, ndim3 : int
+            Grid dimensions.
         """
         grbfile = Path(grbfile)
         if not grbfile.is_file():
@@ -477,8 +478,7 @@ class PestUtilsLib:
     def calc_mf6_interp_factors(
         self,
         gridname: str,
-        *,
-        # npts: int,  # determined from layer array shape
+        # npts: int,  # determined from layer.shape[0]
         ecoord: npt.ArrayLike,
         ncoord: npt.ArrayLike,
         layer: npt.ArrayLike,
@@ -487,15 +487,18 @@ class PestUtilsLib:
         blnfile: str | PathLike,
     ) -> npt.NDArray[np.int32]:
         """Calculate interpolation factors from a MODFLOW 6 DIS or DISV."""
+        ecoord = np.array(ecoord, dtype=np.float64, copy=False)
+        ncoord = np.array(ncoord, dtype=np.float64, copy=False)
+        layer = np.array(layer, copy=False)
+        npts = self._check_interp_arrays(ecoord, ncoord, layer)
         factorfile = Path(factorfile)  # TODO
         blnfile = Path(blnfile)  # TODO
-        npts = self._check_interp_arrays(ecoord, ncoord, layer)
         interp_success = np.zeros(npt, np.int32)
         res = self.lib.calc_mf6_interp_factors(
             byref(self.create_char_array(gridname, "LENGRIDNAME")),
             byref(c_int(npts)),
-            ecoord.astype(np.float64, copy=False),
-            ncoord.astype(np.float64, copy=False),
+            ecoord,
+            ncoord,
             layer.astype(np.int32, copy=False),
             byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
             byref(c_int(factorfiletype)),
@@ -506,3 +509,81 @@ class PestUtilsLib:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("calculated mf6 interp factors for %r", gridname)
         return interp_success
+
+    def interp_from_mf6_depvar_file(
+        self,
+        depvarfile: str | PathLike,
+        factorfile: str | PathLike,
+        factorfiletype: int,
+        ntime: int,
+        vartype: str,
+        interpthresh: float,
+        reapportion: int | bool,
+        nointerpval: float,
+        npts: int,
+    ) -> dict:
+        """
+        Interpolate points using previously-calculated interpolation factors.
+
+        Parameters
+        ----------
+        depvarfile : str or PathLike
+            Name of binary file to read.
+        factorfile : str or PathLike
+            File containing spatial interpolation factors, written by
+            :meth:`calc_mf6_interp_factors`.
+        factorfiletype : int
+            Use 0 for binary; 1 for ascii.
+        ntime : int
+            Number of output times.
+        vartype : str
+            Only read arrays of this type.
+        interpthresh : float
+            Absolute threshold for dry or inactive.
+        reapportion : int or bool
+            Use 0 for no (False); 1 for yes (True).
+        nointerpval : float
+            Value to use where interpolation is not possible.
+        npts : int
+            Number of points for interpolation.
+
+        Returns
+        -------
+        nproctime : int
+            Number of processed simulation times.
+        simtime : npt.NDArray[np.float64]
+            Simulation times, with shape (ntime,).
+        simstate : npt.NDArray[np.float64]
+            Interpolated system states, with shape (ntime, npts).
+        """
+        depvarfile = Path(depvarfile)
+        if not depvarfile.is_file():
+            raise FileNotFoundError(f"could not find depvarfile {depvarfile}")
+        factorfile = Path(factorfile)  # TODO
+        simtime = np.zeros(ntime, np.float64)
+        simstate = np.zeros((ntime, npts), np.float64, "F")
+        c_nproctime = c_int()
+        res = self.lib.interp_from_mf6_depvar_file(
+            byref(self.create_char_array(bytes(depvarfile), "LENFILENAME")),
+            byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
+            byref(c_int(factorfiletype)),
+            byref(c_int(ntime)),
+            byref(self.create_char_array(vartype, "LENVARTYPE")),
+            byref(c_double(interpthresh)),
+            byref(c_int(reapportion)),
+            byref(c_double(nointerpval)),
+            byref(c_int(npts)),
+            byref(c_nproctime),
+            simtime,
+            simstate,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info(
+            "interpolated points from mf6 depvar file %r", npts, depvarfile.name
+        )
+        return {
+            "nproctime": c_nproctime.value,
+            "simtime": simtime,
+            "simstate": simstate,
+        }
