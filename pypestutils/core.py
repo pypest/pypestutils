@@ -741,3 +741,547 @@ class PestUtilsLib:
             "simtime": simtime,
             "simflow": simflow,
         }
+
+    def calc_kriging_factors_2d(
+        self,
+        # npts: int,  # determined from ecs.shape[0]
+        ecs: npt.ArrayLike,
+        ncs: npt.ArrayLike,
+        zns: int | npt.ArrayLike,
+        # mpts: int,  # determined from ect.shape[0]
+        ect: npt.ArrayLike,
+        nct: npt.ArrayLike,
+        znt: int | npt.ArrayLike,
+        vartype: int | str | enum.VarioType,
+        krigtype: int | str | enum.KrigType,
+        aa: float | npt.ArrayLike,
+        anis: float | npt.ArrayLike,
+        bearing: float | npt.ArrayLike,
+        searchrad: float,
+        maxpts: int,
+        minpts: int,
+        factorfile: str | PathLike,
+        factorfiletype: int | str | enum.FactorFileType,
+    ) -> int:
+        """
+        Calculate 2D kriging factors.
+
+        Parameters
+        ----------
+        ecs, ncs : array_like
+            Source point coordinates, each 1D array with shape (npts,).
+        zns : int or array_like
+            Source point zones, integer or 1D integer array with shape (npts,).
+        ect, nct : array_like
+            Target point coordinates, each 1D array with shape (mpts,).
+        znt : int or array_like
+            Target point zones, integer or 1D integer array with shape (mpts,).
+        vartype : int, str or enum.VarioType
+            Variogram type, where 1:spher, 2:exp, 3:gauss, 4:pow.
+        krigtype : int, str, or enum.KrigType,
+            Kriging type, where 0:simple, 1:ordinary.
+        aa : float or array_like
+            Variogram "a" value, float or 1D array with shape (mpts,).
+        anis : float or array_like
+            Variogram anisotropies, float or 1D array with shape (mpts,).
+        bearing : float or array_like
+            Variogram bearings, float or 1D array with shape (mpts,).
+        searchrad : float
+            Search radius.
+        maxpts, minpts : int
+            Search specifications.
+        factorfile : str or PathLike
+            File for kriging factors.
+        factorfiletype : int, str or enum.FactorFileType
+            Factor file type, where 0:binary, 1:text.
+
+        Returns
+        -------
+        int
+            Number of interp points.
+        """
+        npts = _MultiArrays({"ecs": ecs, "ncs": ncs}, int_any={"zns": zns})
+        mpts = _MultiArrays(
+            {"ect": ect, "nct": nct},
+            {"aa": aa, "anis": anis, "bearing": bearing},
+            {"znt": znt},
+        )
+        if isinstance(vartype, str):
+            vartype = enum.VarioType.get_value(vartype)
+        if isinstance(krigtype, str):
+            krigtype = enum.KrigType.get_value(krigtype)
+        factorfile = Path(factorfile)
+        if isinstance(factorfiletype, str):
+            factorfiletype = enum.FactorFileType.get_value(factorfiletype)
+        icount_interp = c_int()
+        res = self.lib.calc_kriging_factors_2d(
+            byref(c_int(len(npts))),
+            npts.ecs,
+            npts.ncs,
+            npts.zns,
+            byref(c_int(len(mpts))),
+            mpts.ect,
+            mpts.nct,
+            mpts.znt,
+            byref(c_int(vartype)),
+            byref(c_int(krigtype)),
+            mpts.aa,
+            mpts.anis,
+            mpts.bearing,
+            byref(c_double(searchrad)),
+            byref(c_int(maxpts)),
+            byref(c_int(minpts)),
+            byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
+            byref(c_int(factorfiletype)),
+            byref(icount_interp),
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("calculated 2D kriging factors to %r", factorfile.name)
+        return icount_interp.value
+
+    def calc_kriging_factors_auto_2d(
+        self,
+        # npts: int,  # determined from ecs.shape[0]
+        ecs: npt.ArrayLike,
+        ncs: npt.ArrayLike,
+        zns: int | npt.ArrayLike,
+        # mpts: int,  # determined from ect.shape[0]
+        ect: npt.ArrayLike,
+        nct: npt.ArrayLike,
+        znt: int | npt.ArrayLike,
+        krigtype: int | str | enum.KrigType,
+        anis: float | npt.ArrayLike,
+        bearing: float | npt.ArrayLike,
+        factorfile: str | PathLike,
+        factorfiletype: int | str | enum.FactorFileType,
+    ) -> int:
+        """
+        Calculate 2D kriging factors, with automatic variogram properties.
+
+        Parameters
+        ----------
+        ecs, ncs : array_like
+            Source point coordinates, each 1D array with shape (npts,).
+        zns : int or array_like
+            Source point zones, integer or 1D integer array with shape (npts,).
+        ect, nct : array_like
+            Target point coordinates, each 1D array with shape (mpts,).
+        znt : int or array_like
+            Target point zones, integer or 1D integer array with shape (mpts,).
+        krigtype : int, str, enum.KrigType
+            Kriging type, where 0:simple, 1:ordinary.
+        anis : float or array_like
+            Variogram anisotropies, float or 1D array with shape (mpts,).
+        bearing : float or array_like
+            Variogram bearings, float or 1D array with shape (mpts,).
+        factorfile : str or PathLike
+            File for kriging factors.
+        factorfiletype : int, str or enum.FactorFileType
+            Factor file type, where 0:binary, 1:text.
+
+        Returns
+        -------
+        int
+            Number of interp points.
+        """
+        npts = _MultiArrays({"ecs": ecs, "ncs": ncs}, int_d={"zns": zns})
+        mpts = _MultiArrays(
+            {"ect": ect, "nct": nct}, {"anis": anis, "bearing": bearing}, {"znt": znt}
+        )
+        if isinstance(krigtype, str):
+            krigtype = enum.KrigType.get_value(krigtype)
+        factorfile = Path(factorfile)
+        if isinstance(factorfiletype, str):
+            factorfiletype = enum.FactorFileType.get_value(factorfiletype)
+        icount_interp = c_int()
+        res = self.lib.calc_kriging_factors_auto_2d(
+            byref(c_int(len(npts))),
+            npts.ecs,
+            npts.ncs,
+            npts.zns,
+            byref(c_int(len(mpts))),
+            mpts.ect,
+            mpts.nct,
+            mpts.znt,
+            byref(c_int(krigtype)),
+            mpts.anis,
+            mpts.bearing,
+            byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
+            byref(c_int(factorfiletype)),
+            byref(icount_interp),
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("calculated 2D auto kriging factors to %r", factorfile.name)
+        return icount_interp.value
+
+    def calc_kriging_factors_3d(
+        self,
+        # npts: int,  # determined from ecs.shape[0]
+        ecs: npt.ArrayLike,
+        ncs: npt.ArrayLike,
+        zcs: npt.ArrayLike,
+        zns: int | npt.ArrayLike,
+        # mpts: int,  # determined from ect.shape[0]
+        ect: npt.ArrayLike,
+        nct: npt.ArrayLike,
+        zct: npt.ArrayLike,
+        znt: int | npt.ArrayLike,
+        zonenum: int | npt.ArrayLike,
+        krigtype: int | str | enum.KrigType,
+        # nzone: int,  # determined from shape[0] from any zonenum..rake else 1
+        vartype: int | str | enum.VarioType | npt.ArrayLike,
+        ahmax: float | npt.ArrayLike,
+        ahmin: float | npt.ArrayLike,
+        avert: float | npt.ArrayLike,
+        bearing: float | npt.ArrayLike,
+        dip: float | npt.ArrayLike,
+        rake: float | npt.ArrayLike,
+        srhmax: float,
+        srhmin: float,
+        srvert: float,
+        maxpts: int,
+        minpts: int,
+        factorfile: str | PathLike,
+        factorfiletype: int | str | enum.FactorFileType,
+    ) -> int:
+        """
+        Calculate 3D kriging factors.
+
+        Parameters
+        ----------
+        ecs, ncs, zcs : array_like
+            Source point coordinates, each 1D array with shape (npts,).
+        zns : int or array_like
+            Source point zones, integer or 1D integer array with shape (npts,).
+        ect, nct, zct : array_like
+            Target point coordinates, each 1D array with shape (mpts,).
+        znt : int or array_like
+            Target point zones, integer or 1D integer array with shape (mpts,).
+        krigtype : int, str, or enum.KrigType,
+            Kriging type, where 0:simple, 1:ordinary.
+        zonenum : int, or array_like
+            Zone numbers, inteter or 1D integer array with shape (nzone,).
+        vartype : int, str, enum.VarioType or array_like
+            Variogram type, where 1:spher, 2:exp, 3:gauss, 4:pow. If array,
+            then it should have shape (nzone,).
+        ahmax, ahmin, avert : float or array_like
+            Variogram "a" values in 3 orthogonal directions (hmax, hmin, vert).
+            Each can be a float or 1D array with shape (nzone,).
+        bearing : float or array_like
+            Bearing of hmax, float or 1D array with shape (nzone,).
+        dip : float or array_like
+            Dip of hmax, float or 1D array with shape (nzone,).
+        rake : float or array_like
+            Twist about hmax axis, float or 1D array with shape (nzone,).
+        srhmax, srhmin, srvert : float
+            Search radius in hmax, hmin, and vert directions.
+        maxpts, minpts : int
+            Search specifications.
+        factorfile : str or PathLike
+            File for kriging factors.
+        factorfiletype : int, str or enum.FactorFileType
+            Factor file type, where 0:binary, 1:text.
+
+        Returns
+        -------
+        int
+            Number of interp points.
+        """
+        npts = _MultiArrays({"ecs": ecs, "ncs": ncs, "zcs": zcs}, int_any={"zns": zns})
+        mpts = _MultiArrays({"ect": ect, "nct": nct, "zct": zct}, int_any={"znt": znt})
+        if isinstance(krigtype, str):
+            krigtype = enum.KrigType.get_value(krigtype)
+        vartype = np.array(vartype)
+        if np.issubdtype(vartype.dtype, str):
+            vartype = np.vectorize(enum.VarioType.get_value)(vartype)
+        if not np.issubdtype(vartype.dtype, np.integer):
+            raise ValueError("expected 'vartype' to be integer, str or enum.VarioType")
+        nzone = _MultiArrays(
+            float_any={
+                "ahmax": ahmax,
+                "ahmin": ahmin,
+                "avert": avert,
+                "bearing": bearing,
+                "dip": dip,
+                "rake": rake,
+            },
+            int_any={"zonenum": zonenum, "vartype": vartype},
+        )
+        factorfile = Path(factorfile)
+        if isinstance(factorfiletype, str):
+            factorfiletype = enum.FactorFileType.get_value(factorfiletype)
+        icount_interp = c_int()
+        res = self.lib.calc_kriging_factors_3d(
+            byref(c_int(len(npts))),
+            npts.ecs,
+            npts.ncs,
+            npts.zcs,
+            npts.zns,
+            byref(c_int(len(mpts))),
+            mpts.ect,
+            mpts.nct,
+            mpts.zct,
+            mpts.znt,
+            byref(c_int(krigtype)),
+            byref(c_int(len(nzone))),
+            nzone.zonenum,
+            nzone.vartype,
+            nzone.ahmax,
+            nzone.ahmin,
+            nzone.avert,
+            nzone.bearing,
+            nzone.dip,
+            nzone.rake,
+            byref(c_double(srhmax)),
+            byref(c_double(srhmin)),
+            byref(c_double(srvert)),
+            byref(c_int(maxpts)),
+            byref(c_int(minpts)),
+            byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
+            byref(c_int(factorfiletype)),
+            byref(icount_interp),
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("calculated 3D kriging factors to %r", factorfile.name)
+        return icount_interp.value
+
+    def krige_using_file(
+        self,
+        factorfile: str | PathLike,
+        factorfiletype: int | str | enum.FactorFileType,
+        # npts: int,  # determined from sourceval.shape[0]
+        mpts: int,
+        krigtype: int | str | enum.KrigType,
+        transtype: int | str | enum.TransType,
+        sourceval: npt.ArrayLike,
+        meanval: float | npt.ArrayLike | None,
+    ) -> dict:
+        """
+        Apply interpolation factors calculated by other functions.
+
+        Parameters
+        ----------
+        factorfile : str or PathLike
+            Input file with kriging factors.
+        factorfiletype : int, str or enum.FactorFileType
+            Factor file type, where 0:binary, 1:text.
+        mpts : int
+            Number of target points, used to compare with value in factor file.
+        krigtype : int, str, or enum.KrigType,
+            Kriging type, where 0:simple, 1:ordinary.
+        transtype : int, str, enum.TransType
+            Tranformation type, where 0 is none and 1 is log.
+        sourceval : array_like
+            Values at sources, 1D array with shape (npts,).
+        meanval : float, array_like, optional
+            Mean values are required if simple kriging, described as a float
+            or 1D array with shape (mpts,).
+
+        Returns
+        -------
+        targval : npt.NDArray[np.float64]
+            Values calculated for targets.
+        icount_interp : int
+            Number of interpolation pts.
+        """
+        factorfile = Path(factorfile)
+        if not factorfile.is_file():
+            raise FileNotFoundError(f"could not find factorfile {factorfile}")
+        if isinstance(factorfiletype, str):
+            factorfiletype = enum.FactorFileType.get_value(factorfiletype)
+        if isinstance(krigtype, str):
+            krigtype = enum.KrigType.get_value(krigtype)
+        if isinstance(transtype, str):
+            transtype = enum.TransType.get_value(transtype)
+        float_arrays = {"sourceval": sourceval}
+        meanval_is_None = meanval is None
+        if meanval_is_None:
+            if krigtype == enum.KrigType.simple:
+                self.logger.error(
+                    "simple kriging requires 'meanval'; assuming zero for now"
+                )
+                meanval = np.zeros(mpts, np.float64)
+            else:
+                meanval = np.zeros(0, np.float64)  # dummy pointer
+        else:
+            float_arrays["meanval"] = meanval
+        pts = _MultiArrays(float_arrays)
+        if not meanval_is_None:
+            meanval = pts.meanval
+        targval = np.zeros(mpts, np.float64)
+        icount_interp = c_int()
+        res = self.lib.krige_using_file(
+            byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
+            byref(c_int(factorfiletype)),
+            byref(c_int(len(pts))),
+            byref(c_int(mpts)),
+            byref(c_int(krigtype)),
+            byref(c_int(transtype)),
+            pts.sourceval,
+            targval,
+            byref(icount_interp),
+            meanval,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("kriged using factor file %r", factorfile.name)
+        return {
+            "targval": targval,
+            "icount_interp": icount_interp.value,
+        }
+
+    def build_covar_matrix_2d(
+        self,
+        # npts: int,  # determined from ec.shape[0]
+        ec: npt.ArrayLike,
+        nc: npt.ArrayLike,
+        zn: int | npt.ArrayLike,
+        vartype: int | str | enum.VarioType,
+        nugget: float | npt.ArrayLike,
+        aa: float | npt.ArrayLike,
+        sill: float | npt.ArrayLike,
+        anis: float | npt.ArrayLike,
+        bearing: float | npt.ArrayLike,
+        ldcovmat: int,
+    ) -> npt.NDArray[np.float64]:
+        """
+        Calculate a covariance matrix for a set of 2D pilot points.
+
+        Parameters
+        ----------
+        ec, nc : array_like
+            Pilot point coordinates, each 1D array with shape (npts,).
+        zn : int or array_like
+            Pilot point zones, integer or 1D array with shape (npts,).
+        vartype : int, str or enum.VarioType
+            Variogram type, where 1:spher, 2:exp, 3:gauss, 4:pow.
+        nugget, aa, sill, anis, bearing : float or array_like
+            Variogram parameters, each float or 1D array with shape (npts,).
+        ldcovmat : int
+            Leading dimension of covmat.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            2D matrix covmat(ldcovmat, npts).
+        """
+        pts = _MultiArrays(
+            {"ec": ec, "nc": nc},
+            {
+                "nugget": nugget,
+                "aa": aa,
+                "sill": sill,
+                "anis": anis,
+                "bearing": bearing,
+            },
+            {"zn": zn},
+        )
+        npts = len(pts)
+        if isinstance(vartype, str):
+            vartype = enum.VarioType.get_value(vartype)
+        covmat = np.zeros((ldcovmat, npts), np.float64, order="F")
+        res = self.lib.build_covar_matrix_2d(
+            byref(c_int(npts)),
+            pts.ec,
+            pts.nc,
+            pts.zn,
+            byref(c_int(vartype)),
+            pts.nugget,
+            pts.aa,
+            pts.sill,
+            pts.anis,
+            pts.bearing,
+            byref(c_int(ldcovmat)),
+            covmat,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("calculated covariance matrix for %d 2D pilot points", npts)
+        return covmat
+
+    def build_covar_matrix_3d(
+        self,
+        # npts: int,  # determined from ec.shape[0]
+        ec: npt.ArrayLike,
+        nc: npt.ArrayLike,
+        zc: npt.ArrayLike,
+        zn: int | npt.ArrayLike,
+        vartype: int | str | enum.VarioType,
+        nugget: float | npt.ArrayLike,
+        sill: float | npt.ArrayLike,
+        ahmax: float | npt.ArrayLike,
+        ahmin: float | npt.ArrayLike,
+        avert: float | npt.ArrayLike,
+        bearing: float | npt.ArrayLike,
+        dip: float | npt.ArrayLike,
+        rake: float | npt.ArrayLike,
+        ldcovmat: int,
+    ) -> npt.NDArray[np.float64]:
+        """
+        Calculate a covariance matrix for a set of 3D pilot points.
+
+        Parameters
+        ----------
+        ec, nc, zc: array_like
+            Pilot point coordinates, each 1D array with shape (npts,).
+        zn : int or array_like
+            Pilot point zones, integer or 1D array with shape (npts,).
+        vartype : int, str or enum.VarioType
+            Variogram type, where 1:spher, 2:exp, 3:gauss, 4:pow.
+        nugget, sill : float or array_like
+            Variogram parameters, each float or 1D array with shape (npts,).
+        ahmax, ahmin, avert : float or array_like
+            Variogram a parameters, each float or 1D array with shape (npts,).
+        bearing, dip, rake : float or array_like
+            Variogram angles, each float or 1D array with shape (npts,).
+        ldcovmat : int
+            Leading dimension of covmat.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            2D matrix covmat(ldcovmat, npts).
+        """
+        pts = _MultiArrays(
+            {"ec": ec, "nc": nc, "zc": zc},
+            {
+                "nugget": nugget,
+                "sill": sill,
+                "ahmax": ahmax,
+                "ahmin": ahmin,
+                "avert": avert,
+                "bearing": bearing,
+                "dip": dip,
+                "rake": rake,
+            },
+            {"zn": zn},
+        )
+        npts = len(pts)
+        if isinstance(vartype, str):
+            vartype = enum.VarioType.get_value(vartype)
+        covmat = np.zeros((ldcovmat, npts), np.float64, order="F")
+        res = self.lib.build_covar_matrix_3d(
+            byref(c_int(npts)),
+            pts.ec,
+            pts.nc,
+            pts.zc,
+            pts.zn,
+            byref(c_int(vartype)),
+            pts.nugget,
+            pts.sill,
+            pts.ahmax,
+            pts.ahmin,
+            pts.avert,
+            pts.bearing,
+            pts.dip,
+            pts.rake,
+            byref(c_int(ldcovmat)),
+            covmat,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("calculated covariance matrix for %d 3D pilot points", npts)
+        return covmat

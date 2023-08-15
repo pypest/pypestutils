@@ -202,3 +202,144 @@ def prototype(lib):
         ndpointer(c_double, ndim=2, flags="F"),  # simflow(ntime,nzone), out
     )
     lib.extract_flows_from_cbc_file.restype = c_int
+
+    # calc_kriging_factors_2d(
+    #   npts,ecs,ncs,zns,mpts,ect,nct,znt,vartype,krigtype,aa,anis,bearing,
+    #   searchrad,maxpts,minpts,factorfile,factorfiletype,icount_interp)
+    lib.calc_kriging_factors_2d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1),  # ecs(npts), in
+        ndpointer(c_double, ndim=1),  # ncs(npts), in
+        ndpointer(c_int, ndim=1),  # zns(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1),  # ect(mpts), in
+        ndpointer(c_double, ndim=1),  # nct(mpts), in
+        ndpointer(c_int, ndim=1),  # znt(mpts), in
+        POINTER(c_int),  # vartype, in
+        POINTER(c_int),  # krigtype, in
+        ndpointer(c_double, ndim=1),  # aa(mpts), in
+        ndpointer(c_double, ndim=1),  # anis(mpts), in
+        ndpointer(c_double, ndim=1),  # bearing(mpts), in
+        POINTER(c_double),  # searchrad, in
+        POINTER(c_int),  # maxpts, in
+        POINTER(c_int),  # minpts, in
+        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.calc_kriging_factors_2d.restype = c_int
+
+    # calc_kriging_factors_auto_2d(
+    #   npts,ecs,ncs,zns,mpts,ect,nct,znt,krigtype,anis,bearing,
+    #   factorfile,factorfiletype,icount_interp)
+    lib.calc_kriging_factors_auto_2d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1),  # ecs(npts), in
+        ndpointer(c_double, ndim=1),  # ncs(npts), in
+        ndpointer(c_int, ndim=1),  # zns(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1),  # ect(mpts), in
+        ndpointer(c_double, ndim=1),  # nct(mpts), in
+        ndpointer(c_int, ndim=1),  # znt(mpts), in
+        POINTER(c_int),  # krigtype, in
+        ndpointer(c_double, ndim=1),  # anis(mpts), in
+        ndpointer(c_double, ndim=1),  # bearing(mpts), in
+        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.calc_kriging_factors_auto_2d.restype = c_int
+
+    # calc_kriging_factors_3d(
+    #   npts,ecs,ncs,zcs,zns,mpts,ect,nct,zct,znt,krigtype,nzone,zonenum,
+    #   vartype,ahmax,ahmin,avert,bearing,dip,rake,srhmax,srhmin,srvert,
+    #   maxpts,minpts,factorfile,factorfiletype,icount_interp)
+    lib.calc_kriging_factors_3d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1),  # ecs(npts), in
+        ndpointer(c_double, ndim=1),  # ncs(npts), in
+        ndpointer(c_double, ndim=1),  # zcs(npts), in
+        ndpointer(c_int, ndim=1),  # zns(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1),  # ect(mpts), in
+        ndpointer(c_double, ndim=1),  # nct(mpts), in
+        ndpointer(c_double, ndim=1),  # zct(mpts), in
+        ndpointer(c_int, ndim=1),  # znt(mpts), in
+        POINTER(c_int),  # krigtype, in
+        POINTER(c_int),  # nzone, in
+        ndpointer(c_int, ndim=1),  # zonenum(nzone), in
+        ndpointer(c_int, ndim=1),  # vartype(nzone), in
+        ndpointer(c_double, ndim=1),  # ahmax(nzone), in
+        ndpointer(c_double, ndim=1),  # ahmin(nzone), in
+        ndpointer(c_double, ndim=1),  # avert(nzone), in
+        ndpointer(c_double, ndim=1),  # bearing(nzone), in
+        ndpointer(c_double, ndim=1),  # dip(nzone), in
+        ndpointer(c_double, ndim=1),  # rake(nzone), in
+        POINTER(c_double),  # srhmax, in
+        POINTER(c_double),  # srhmin, in
+        POINTER(c_double),  # srvert, in
+        POINTER(c_int),  # maxpts, in
+        POINTER(c_int),  # minpts, in
+        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.calc_kriging_factors_3d.restype = c_int
+
+    # krige_using_file(
+    #   factorfile,factorfiletype,npts,mpts,krigtype,transtype,
+    #   sourceval,targval,icount_interp,meanval)
+    lib.krige_using_file.argtypes = (
+        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # npts, in
+        POINTER(c_int),  # mpts, in
+        POINTER(c_int),  # krigtype, in
+        POINTER(c_int),  # transtype, in
+        ndpointer(c_double, ndim=1),  # sourceval(npts), in
+        ndpointer(c_double, ndim=1),  # targval(mpts), out
+        POINTER(c_int),  # icount_interp, out
+        ndpointer(c_double, ndim=1),  # meanval(mpts), in, optional
+    )
+    lib.krige_using_file.restype = c_int
+
+    # build_covar_matrix_2d(
+    #   npts,ec,nc,zn,vartype,nugget,aa,sill,anis,bearing,ldcovmat,covmat)
+    lib.build_covar_matrix_2d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1),  # ec(npts), in
+        ndpointer(c_double, ndim=1),  # nc(npts), in
+        ndpointer(c_int, ndim=1),  # zn(npts), in
+        POINTER(c_int),  # vartype, in
+        ndpointer(c_double, ndim=1),  # nugget(npts), in
+        ndpointer(c_double, ndim=1),  # aa(npts), in
+        ndpointer(c_double, ndim=1),  # sill(npts), in
+        ndpointer(c_double, ndim=1),  # anis(npts), in
+        ndpointer(c_double, ndim=1),  # bearing(npts), in
+        POINTER(c_int),  # ldcovmat, in
+        ndpointer(c_double, ndim=2, flags="F"),  # covmat(ldcovmat,npts), out
+    )
+    lib.build_covar_matrix_2d.restype = c_int
+
+    # build_covar_matrix_3d(
+    #   npts,ec,nc,zc,zn,vartype,
+    # nugget,sill,ahmax,ahmin,avert,bearing,dip,rake,ldcovmat,covmat)
+    lib.build_covar_matrix_3d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1),  # ec(npts), in
+        ndpointer(c_double, ndim=1),  # nc(npts), in
+        ndpointer(c_double, ndim=1),  # zc(npts), in
+        ndpointer(c_int, ndim=1),  # zn(npts), in
+        POINTER(c_int),  # vartype, in
+        ndpointer(c_double, ndim=1),  # nugget(npts), in
+        ndpointer(c_double, ndim=1),  # sill(npts), in
+        ndpointer(c_double, ndim=1),  # ahmax(npts), in
+        ndpointer(c_double, ndim=1),  # ahmin(npts), in
+        ndpointer(c_double, ndim=1),  # avert(npts), in
+        ndpointer(c_double, ndim=1),  # bearing(npts), in
+        ndpointer(c_double, ndim=1),  # dip(npts), in
+        ndpointer(c_double, ndim=1),  # rake(npts), in
+        POINTER(c_int),  # ldcovmat, in
+        ndpointer(c_double, ndim=2, flags="F"),  # covmat(ldcovmat,npts), out
+    )
+    lib.build_covar_matrix_3d.restype = c_int
