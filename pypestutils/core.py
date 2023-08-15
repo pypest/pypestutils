@@ -9,11 +9,95 @@ from pathlib import Path
 import numpy as np
 import numpy.typing as npt
 
+from . import enum
 from .ctypes_declarations import get_char_array, get_dimvar_int, prototype
 from .finder import load
 from .logger import get_logger
 
-_dimvar_cache = {}
+
+class _MultiArrays:
+    """Check arrays and, if needed, fill-out scalars.
+
+    Parameters
+    ----------
+    float_arrays : dict of array_like, optional
+        Dict of 1D arrays, assume to have same shape.
+    float_any : dict of array_like or float, optional
+        Dict of float or 1D arrays.
+    int_any : dict of array_like or int, optional
+        Dict of int or 1D arrays.
+    """
+
+    def __init__(
+        self,
+        float_arrays: dict[str, npt.ArrayLike] = {},
+        float_any: dict[str, float | npt.ArrayLike] = {},
+        int_any: dict[str, int | npt.ArrayLike] = {},
+    ) -> None:
+        # find common array size
+        self.shape = None
+        self._keys = []
+        for name in float_arrays.keys():
+            if name in self._keys:
+                raise KeyError(f"'{name}' defined more than once")
+            self._keys.append(name)
+            # Each must be 1D and the same shape
+            ar = np.array(float_arrays[name], np.float64, copy=False)
+            if ar.ndim != 1:
+                raise ValueError(f"expected '{name}' ndim to be 1; found {ar.ndim}")
+            if self.shape is None:
+                self.shape = ar.shape
+            elif ar.shape != self.shape:
+                raise ValueError(
+                    f"expected '{name}' shape to be {self.shape}; found {ar.shape}"
+                )
+            setattr(self, name, ar)
+        for name in float_any.keys():
+            if name in self._keys:
+                raise KeyError(f"'{name}' defined more than once")
+            self._keys.append(name)
+            float_any[name] = ar = np.array(float_any[name], np.float64, copy=False)
+            if self.shape is None and ar.ndim == 1:
+                self.shape = ar.shape
+        for name in int_any.keys():
+            if name in self._keys:
+                raise KeyError(f"'{name}' defined more than once")
+            self._keys.append(name)
+            int_any[name] = ar = np.array(int_any[name], copy=False)
+            if self.shape is None and ar.ndim == 1:
+                self.shape = ar.shape
+        if self.shape is None:
+            self.shape = (1,)  # if all scalars, assume this size
+        for name in float_any.keys():
+            ar = float_any[name]
+            if ar.ndim == 0:
+                ar = np.full(self.shape, ar)
+            elif ar.ndim != 1:
+                raise ValueError(f"expected '{name}' ndim to be 1; found {ar.ndim}")
+            elif ar.shape != self.shape:
+                raise ValueError(
+                    f"expected '{name}' shape to be {self.shape}; found {ar.shape}"
+                )
+            setattr(self, name, ar)
+        for name in int_any.keys():
+            ar = int_any[name]
+            if ar.ndim == 0:
+                ar = np.full(self.shape, ar)
+            elif ar.ndim != 1:
+                raise ValueError(f"expected '{name}' ndim to be 1; found {ar.ndim}")
+            elif ar.shape != self.shape:
+                raise ValueError(
+                    f"expected '{name}' shape to be {self.shape}; found {ar.shape}"
+                )
+            if not np.issubdtype(ar.dtype, np.integer):
+                raise ValueError(
+                    f"expected '{name}' to be integer type; found {ar.dtype}"
+                )
+            setattr(self, name, ar.astype(np.int32, copy=False))
+
+    def __len__(self):
+        """Return length of dimension from shape[0]."""
+        return self.shape[0]
 
 
 class PestUtilsLibError(BaseException):
@@ -164,12 +248,12 @@ class PestUtilsLib:
         """Install specifications for a structured grid."""
         delr = np.array(delr, dtype=np.float64, copy=False)
         if delr.ndim == 0:
-            delr = np.repeat(delr, ncol)
+            delr = np.full(ncol, delr)
         elif delr.shape != (ncol,):
             raise ValueError(f"expected 'delr' array with shape {(ncol,)}")
         delc = np.array(delc, dtype=np.float64, copy=False)
         if delc.ndim == 0:
-            delc = np.repeat(delc, nrow)
+            delc = np.full(nrow, delc)
         elif delc.shape != (nrow,):
             raise ValueError(f"expected 'delc' array with shape {(nrow,)}")
         res = self.lib.install_structured_grid(
@@ -210,41 +294,12 @@ class PestUtilsLib:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("all memory was freed up")
 
-    def _check_interp_arrays(
-        self,
-        ecoord: npt.ArrayLike,
-        ncoord: npt.ArrayLike,
-        layer: npt.ArrayLike,
-    ) -> int:
-        """Check point interpolation arrays before passing to Fortran.
-
-        Returns
-        -------
-        int
-            Number of points (npts).
-        """
-        if layer.ndim != 1:
-            raise ValueError("expected 'layer' to have ndim=1")
-        npts = len(layer)
-        expected_shape = layer.shape
-        if npts <= 0:
-            raise ValueError("expected 'layer' with length greater than zero")
-        elif not np.issubdtype(layer.dtype, np.integer):
-            raise ValueError(
-                f"expected 'layer' to be integer type; found {layer.dtype}"
-            )
-        elif ecoord.shape != expected_shape:
-            raise ValueError(f"expected 'ecoord' shape to be {expected_shape}")
-        elif ncoord.shape != expected_shape:
-            raise ValueError(f"expected 'ncoord' shape to be {expected_shape}")
-        return npts
-
     def interp_from_structured_grid(
         self,
         gridname: str,
         depvarfile: str | PathLike,
         isim: int,
-        iprec: int,
+        iprec: int | str | enum.Prec,
         ntime: int,
         vartype: str,
         interpthresh: float,
@@ -252,7 +307,7 @@ class PestUtilsLib:
         # npts: int,  # determined from layer.shape[0]
         ecoord: npt.ArrayLike,
         ncoord: npt.ArrayLike,
-        layer: npt.ArrayLike,
+        layer: int | npt.ArrayLike,
     ) -> dict:
         """Spatial interpolate points from a structured grid.
 
@@ -264,8 +319,8 @@ class PestUtilsLib:
             Name of binary file to read.
         isim : int
             Specify -1 for MT3D; 1 for MODFLOW.
-        iprec : int
-            Specify -1 for MT3D; 1 for MODFLOW.
+        iprec : int, str or enum.Prec
+            Specify 1 or "single", 2 or "double", or use enum.Prec.
         ntime : int
             Number of output times.
         vartype : str
@@ -276,7 +331,7 @@ class PestUtilsLib:
             Value to use where interpolation is not possible.
         ecoord, ncoord : array_like
             X/Y or Easting/Northing coordinates for points with shape (npts,).
-        layer : array_like
+        layer : int or array_like
             Layers of points with shape (npts,).
 
         Returns
@@ -291,10 +346,12 @@ class PestUtilsLib:
         depvarfile = Path(depvarfile)
         if not depvarfile.is_file():
             raise FileNotFoundError(f"could not find depvarfile {depvarfile}")
-        ecoord = np.array(ecoord, dtype=np.float64, copy=False)
-        ncoord = np.array(ncoord, dtype=np.float64, copy=False)
-        layer = np.array(layer, copy=False)
-        npts = self._check_interp_arrays(ecoord, ncoord, layer)
+        if isinstance(iprec, str):
+            iprec = enum.Prec.get_value(iprec)
+        pts = _MultiArrays(
+            {"ecoord": ecoord, "ncoord": ncoord}, int_any={"layer": layer}
+        )
+        npts = len(pts)
         simtime = np.zeros(ntime, np.float64)
         simstate = np.zeros((ntime, npts), np.float64, "F")
         nproctime = c_int()
@@ -308,9 +365,9 @@ class PestUtilsLib:
             byref(c_double(interpthresh)),
             byref(c_double(nointerpval)),
             byref(c_int(npts)),
-            ecoord,
-            ncoord,
-            layer.astype(np.int32, copy=False),
+            pts.ecoord,
+            pts.ncoord,
+            pts.layer,
             byref(nproctime),
             simtime,
             simstate,
@@ -478,28 +535,30 @@ class PestUtilsLib:
     def calc_mf6_interp_factors(
         self,
         gridname: str,
-        # npts: int,  # determined from layer.shape[0]
+        # npts: int,  # determined from ecoord.shape[0]
         ecoord: npt.ArrayLike,
         ncoord: npt.ArrayLike,
-        layer: npt.ArrayLike,
+        layer: int | npt.ArrayLike,
         factorfile: str | PathLike,
-        factorfiletype: int,
+        factorfiletype: int | str | enum.FactorFileType,
         blnfile: str | PathLike,
     ) -> npt.NDArray[np.int32]:
         """Calculate interpolation factors from a MODFLOW 6 DIS or DISV."""
-        ecoord = np.array(ecoord, dtype=np.float64, copy=False)
-        ncoord = np.array(ncoord, dtype=np.float64, copy=False)
-        layer = np.array(layer, copy=False)
-        npts = self._check_interp_arrays(ecoord, ncoord, layer)
-        factorfile = Path(factorfile)  # TODO
+        pts = _MultiArrays(
+            {"ecoord": ecoord, "ncoord": ncoord}, int_any={"layer": layer}
+        )
+        npts = len(pts)
+        factorfile = Path(factorfile)
+        if isinstance(factorfiletype, str):
+            factorfiletype = enum.FactorFileType.get_value(factorfiletype)
         blnfile = Path(blnfile)  # TODO
-        interp_success = np.zeros(npt, np.int32)
+        interp_success = np.zeros(npts, np.int32)
         res = self.lib.calc_mf6_interp_factors(
             byref(self.create_char_array(gridname, "LENGRIDNAME")),
             byref(c_int(npts)),
-            ecoord,
-            ncoord,
-            layer.astype(np.int32, copy=False),
+            pts.ecoord,
+            pts.ncoord,
+            pts.layer,
             byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
             byref(c_int(factorfiletype)),
             byref(self.create_char_array(bytes(blnfile), "LENFILENAME")),
@@ -514,7 +573,7 @@ class PestUtilsLib:
         self,
         depvarfile: str | PathLike,
         factorfile: str | PathLike,
-        factorfiletype: int,
+        factorfiletype: int | str | enum.FactorFileType,
         ntime: int,
         vartype: str,
         interpthresh: float,
@@ -532,8 +591,8 @@ class PestUtilsLib:
         factorfile : str or PathLike
             File containing spatial interpolation factors, written by
             :meth:`calc_mf6_interp_factors`.
-        factorfiletype : int
-            Use 0 for binary; 1 for ascii.
+        factorfiletype : int, str or enum.FactorFileType
+            Use 0 for binary; 1 for text.
         ntime : int
             Number of output times.
         vartype : str
@@ -560,6 +619,8 @@ class PestUtilsLib:
         if not depvarfile.is_file():
             raise FileNotFoundError(f"could not find depvarfile {depvarfile}")
         factorfile = Path(factorfile)  # TODO
+        if isinstance(factorfiletype, str):
+            factorfiletype = enum.FactorFileType.get_value(factorfiletype)
         simtime = np.zeros(ntime, np.float64)
         simstate = np.zeros((ntime, npts), np.float64, "F")
         nproctime = c_int()
@@ -593,7 +654,7 @@ class PestUtilsLib:
         cbcfile: str | PathLike,
         flowtype: str,
         isim: int,
-        iprec: int,
+        iprec: int | str | enum.Prec,
         # ncell: int,  # from izone.shape[0]
         izone: npt.ArrayLike,
         nzone: int,
@@ -610,7 +671,7 @@ class PestUtilsLib:
             Type of flow to read.
         isim : int
             Simulator type.
-        iprec : int
+        iprec : int, str or enum.Prec
             Precision used to record real variables in cbc file.
         izone : array_like
             Zonation of model domain, with shape (ncell,).
@@ -640,14 +701,10 @@ class PestUtilsLib:
         cbcfile = Path(cbcfile)
         if not cbcfile.is_file():
             raise FileNotFoundError(f"could not find cbcfile {cbcfile}")
-        izone = np.array(izone, copy=False)
-        if izone.ndim != 1:
-            raise ValueError("expected 'izone' to have ndim=1")
-        elif not np.issubdtype(izone.dtype, np.integer):
-            raise ValueError(
-                f"expected 'izone' to be integer type; found {izone.dtype}"
-            )
-        ncell = izone.shape[0]
+        if isinstance(iprec, str):
+            iprec = enum.Prec.get_value(iprec)
+        cell = _MultiArrays(int_any={"izone": izone})
+        ncell = len(cell)
         numzone = c_int()
         zonenumber = np.zeros(nzone, np.int32)
         nproctime = c_int()
@@ -661,7 +718,7 @@ class PestUtilsLib:
             byref(c_int(isim)),
             byref(c_int(iprec)),
             byref(c_int(ncell)),
-            izone.astype(np.int32, copy=False),
+            cell.izone,
             byref(c_int(nzone)),
             byref(numzone),
             zonenumber,
@@ -674,6 +731,7 @@ class PestUtilsLib:
         )
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("extracted flows from %r", cbcfile.name)
         return {
             "numzone": numzone.value,
             "zonenumber": zonenumber,
