@@ -1407,14 +1407,14 @@ integer (kind=c_int) function krige_using_file(factorfile,factorfiletype,      &
        if((acode(1:2).ne.'2d').and.(acode(1:2).ne.'3d')) go to 9150
        if(acode(3:4).eq.'ks')then
          if(krigtype.ne.0)then
-           write(amessage,130) trim(function_name),'0',trim(facfile),'ordinary'
+           write(amessage,130) trim(function_name),'1',trim(facfile),'simple'
 130        format('The KRIGTYPE argument of function ',a,' is supplied as ',a,    &
            '. However the interpolation factor file ',a,' specifies ',a,' kriging.')
            go to 9890
          end if
        else if(acode(3:4).eq.'ko')then
          if(krigtype.ne.1)then
-           write(amessage,130) trim(function_name),'1',trim(facfile),'simple'
+           write(amessage,130) trim(function_name),'0',trim(facfile),'ordinary'
            go to 9890
          end if
        else
