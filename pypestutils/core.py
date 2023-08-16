@@ -42,7 +42,7 @@ class _MultiArrays:
                 raise KeyError(f"'{name}' defined more than once")
             self._keys.append(name)
             # Each must be 1D and the same shape
-            ar = np.array(float_arrays[name], np.float64, copy=False)
+            ar = np.array(float_arrays[name], np.float64, order="F", copy=False)
             if ar.ndim != 1:
                 raise ValueError(f"expected '{name}' ndim to be 1; found {ar.ndim}")
             if self.shape is None:
@@ -56,14 +56,16 @@ class _MultiArrays:
             if name in self._keys:
                 raise KeyError(f"'{name}' defined more than once")
             self._keys.append(name)
-            float_any[name] = ar = np.array(float_any[name], np.float64, copy=False)
+            float_any[name] = ar = np.array(
+                float_any[name], np.float64, order="F", copy=False
+            )
             if self.shape is None and ar.ndim == 1:
                 self.shape = ar.shape
         for name in int_any.keys():
             if name in self._keys:
                 raise KeyError(f"'{name}' defined more than once")
             self._keys.append(name)
-            int_any[name] = ar = np.array(int_any[name], copy=False)
+            int_any[name] = ar = np.array(int_any[name], order="F", copy=False)
             if self.shape is None and ar.ndim == 1:
                 self.shape = ar.shape
         if self.shape is None:
@@ -246,12 +248,12 @@ class PestUtilsLib:
         delc: float | npt.ArrayLike,
     ) -> None:
         """Install specifications for a structured grid."""
-        delr = np.array(delr, dtype=np.float64, copy=False)
+        delr = np.array(delr, dtype=np.float64, order="F", copy=False)
         if delr.ndim == 0:
             delr = np.full(ncol, delr)
         elif delr.shape != (ncol,):
             raise ValueError(f"expected 'delr' array with shape {(ncol,)}")
-        delc = np.array(delc, dtype=np.float64, copy=False)
+        delc = np.array(delc, dtype=np.float64, order="F", copy=False)
         if delc.ndim == 0:
             delc = np.full(nrow, delc)
         elif delc.shape != (nrow,):
@@ -352,8 +354,8 @@ class PestUtilsLib:
             {"ecoord": ecoord, "ncoord": ncoord}, int_any={"layer": layer}
         )
         npts = len(pts)
-        simtime = np.zeros(ntime, np.float64)
-        simstate = np.zeros((ntime, npts), np.float64, "F")
+        simtime = np.zeros(ntime, np.float64, order="F")
+        simstate = np.zeros((ntime, npts), np.float64, order="F")
         nproctime = c_int()
         res = self.lib.interp_from_structured_grid(
             byref(self.create_char_array(gridname, "LENGRIDNAME")),
@@ -427,10 +429,10 @@ class PestUtilsLib:
         np.ndarray
             Time-interpolated simulation values with shape (nobs,).
         """
-        simtime = np.array(simtime, dtype=np.float64, copy=False)
-        simval = np.array(simval, dtype=np.float64, copy=False, order="F")
-        obspoint = np.array(obspoint, copy=False)
-        obstime = np.array(obstime, dtype=np.float64, copy=False)
+        simtime = np.array(simtime, dtype=np.float64, order="F", copy=False)
+        simval = np.array(simval, dtype=np.float64, order="F", copy=False)
+        obspoint = np.array(obspoint, order="F", copy=False)
+        obstime = np.array(obstime, dtype=np.float64, order="F", copy=False)
         if simtime.ndim != 1:
             raise ValueError("expected 'simtime' to have ndim=1")
         elif simval.ndim != 2:
@@ -445,7 +447,7 @@ class PestUtilsLib:
             )
         nsimtime, npts = simval.shape
         nobs = len(obspoint)
-        obssimval = np.zeros(nobs, np.float64)
+        obssimval = np.zeros(nobs, np.float64, order="F")
         res = self.lib.interp_to_obstime(
             byref(c_int(nsimtime)),
             byref(c_int(nproctime)),
@@ -552,7 +554,7 @@ class PestUtilsLib:
         if isinstance(factorfiletype, str):
             factorfiletype = enum.FactorFileType.get_value(factorfiletype)
         blnfile = Path(blnfile)  # TODO
-        interp_success = np.zeros(npts, np.int32)
+        interp_success = np.zeros(npts, np.int32, order="F")
         res = self.lib.calc_mf6_interp_factors(
             byref(self.create_char_array(gridname, "LENGRIDNAME")),
             byref(c_int(npts)),
@@ -621,8 +623,8 @@ class PestUtilsLib:
         factorfile = Path(factorfile)  # TODO
         if isinstance(factorfiletype, str):
             factorfiletype = enum.FactorFileType.get_value(factorfiletype)
-        simtime = np.zeros(ntime, np.float64)
-        simstate = np.zeros((ntime, npts), np.float64, "F")
+        simtime = np.zeros(ntime, np.float64, order="F")
+        simstate = np.zeros((ntime, npts), np.float64, order="F")
         nproctime = c_int()
         res = self.lib.interp_from_mf6_depvar_file(
             byref(self.create_char_array(bytes(depvarfile), "LENFILENAME")),
@@ -706,12 +708,12 @@ class PestUtilsLib:
         cell = _MultiArrays(int_any={"izone": izone})
         ncell = len(cell)
         numzone = c_int()
-        zonenumber = np.zeros(nzone, np.int32)
+        zonenumber = np.zeros(nzone, np.int32, order="F")
         nproctime = c_int()
-        timestep = np.zeros(ntime, np.int32)
-        stressperiod = np.zeros(ntime, np.int32)
-        simtime = np.zeros(ntime, np.float64)
-        simflow = np.zeros((ntime, nzone), np.float64, "F")
+        timestep = np.zeros(ntime, np.int32, order="F")
+        stressperiod = np.zeros(ntime, np.int32, order="F")
+        simtime = np.zeros(ntime, np.float64, order="F")
+        simflow = np.zeros((ntime, nzone), np.float64, order="F")
         res = self.lib.extract_flows_from_cbc_file(
             byref(self.create_char_array(bytes(cbcfile), "LENFILENAME")),
             byref(self.create_char_array(flowtype, "LENFLOWTYPE")),
@@ -771,11 +773,11 @@ class PestUtilsLib:
         ecs, ncs : array_like
             Source point coordinates, each 1D array with shape (npts,).
         zns : int or array_like
-            Source point zones, integer or 1D integer array with shape (npts,).
+            Source point zones, integer or 1D array with shape (npts,).
         ect, nct : array_like
             Target point coordinates, each 1D array with shape (mpts,).
         znt : int or array_like
-            Target point zones, integer or 1D integer array with shape (mpts,).
+            Target point zones, integer or 1D array with shape (mpts,).
         vartype : int, str or enum.VarioType
             Variogram type, where 1:spher, 2:exp, 3:gauss, 4:pow.
         krigtype : int, str, or enum.KrigType,
@@ -864,11 +866,11 @@ class PestUtilsLib:
         ecs, ncs : array_like
             Source point coordinates, each 1D array with shape (npts,).
         zns : int or array_like
-            Source point zones, integer or 1D integer array with shape (npts,).
+            Source point zones, integer or 1D array with shape (npts,).
         ect, nct : array_like
             Target point coordinates, each 1D array with shape (mpts,).
         znt : int or array_like
-            Target point zones, integer or 1D integer array with shape (mpts,).
+            Target point zones, integer or 1D array with shape (mpts,).
         krigtype : int, str, enum.KrigType
             Kriging type, where 0:simple, 1:ordinary.
         anis : float or array_like
@@ -954,15 +956,15 @@ class PestUtilsLib:
         ecs, ncs, zcs : array_like
             Source point coordinates, each 1D array with shape (npts,).
         zns : int or array_like
-            Source point zones, integer or 1D integer array with shape (npts,).
+            Source point zones, integer or 1D array with shape (npts,).
         ect, nct, zct : array_like
             Target point coordinates, each 1D array with shape (mpts,).
         znt : int or array_like
-            Target point zones, integer or 1D integer array with shape (mpts,).
+            Target point zones, integer or 1D array with shape (mpts,).
         krigtype : int, str, or enum.KrigType,
             Kriging type, where 0:simple, 1:ordinary.
         zonenum : int, or array_like
-            Zone numbers, inteter or 1D integer array with shape (nzone,).
+            Zone numbers, inteter or 1D array with shape (nzone,).
         vartype : int, str, enum.VarioType or array_like
             Variogram type, where 1:spher, 2:exp, 3:gauss, 4:pow. If array,
             then it should have shape (nzone,).
@@ -1103,15 +1105,15 @@ class PestUtilsLib:
                 self.logger.error(
                     "simple kriging requires 'meanval'; assuming zero for now"
                 )
-                meanval = np.zeros(mpts, np.float64)
+                meanval = np.zeros(mpts, np.float64, order="F")
             else:
-                meanval = np.zeros(0, np.float64)  # dummy pointer
+                meanval = np.zeros(0, np.float64, order="F")  # dummy pointer
         else:
             float_arrays["meanval"] = meanval
         pts = _MultiArrays(float_arrays)
         if not meanval_is_None:
             meanval = pts.meanval
-        targval = np.zeros(mpts, np.float64)
+        targval = np.zeros(mpts, np.float64, order="F")
         icount_interp = c_int()
         res = self.lib.krige_using_file(
             byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
