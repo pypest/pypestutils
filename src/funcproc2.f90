@@ -3042,7 +3042,7 @@ integer (kind=c_int) function ipd_interpolate_3d(npts,                &
                  bind(C,name="ipd_interpolate_3d")
 !DIR$ ATTRIBUTES DLLEXPORT :: ipd_interpolate_3d
 
-! -- This function undertakes 2D inverse-power-of-distance spatial interpolation.
+! -- This function undertakes 3D inverse-power-of-distance spatial interpolation.
 
        use iso_c_binding, only: c_int,c_double
        use dimvar
@@ -3408,7 +3408,7 @@ integer (kind=c_int) function fieldgen2d_sva(                &
          varname='NREAL'
          go to 9000
        end if
-       if(ldrand.lt.nreal)then
+       if(ldrand.lt.nnode)then
          write(amessage,107) trim(function_name)
 107      format(' LDRAND must equal or exceed NNODE in call to function ',a,'.')
          go to 9890
@@ -3679,7 +3679,7 @@ integer (kind=c_int) function fieldgen3d_sva(                &
          varname='NREAL'
          go to 9000
        end if
-       if(ldrand.lt.nreal)then
+       if(ldrand.lt.nnode)then
          write(amessage,107) trim(function_name)
 107      format('LDRAND must equal or exceed NNODE in call to function ',a,'.')
          go to 9890
