@@ -1285,3 +1285,545 @@ class PestUtilsLib:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("calculated covariance matrix for %d 3D pilot points", npts)
         return covmat
+
+    def calc_structural_overlay_factors(
+        self,
+        # npts: int,  # determined from ecs.shape[0]
+        ecs: npt.ArrayLike,
+        ncs: npt.ArrayLike,
+        ids: int | npt.ArrayLike,
+        conwidth: npt.ArrayLike,
+        aa: npt.ArrayLike,
+        structype: int | str | enum.StrucType,
+        inverse_power: float,
+        # mpts: int,  # determined from ect.shape[0]
+        ect: npt.ArrayLike,
+        nct: npt.ArrayLike,
+        active: int | npt.ArrayLike,
+        factorfile: str | PathLike,
+        factorfiletype: int | str | enum.FactorFileType,
+    ) -> int:
+        """
+        Calculate interpolation/blending factors for structural overlay parameters.
+
+        Parameters
+        ----------
+        ecs, ncs : array_like
+            Source point coordinates, each 1D array with shape (npts,).
+        ids : int or array_like
+            Source point structure number, integer or 1D array with shape (npts,).
+        conwidth, aa : float or array_like
+            Blending parameters, float or 1D array with shape (npts,).
+        structype : int, str or enum.StrucType
+            Structure type, where 0 is polylinear and 1 is polygonal.
+        inverse_power : float
+            Inverse power of distance.
+        ect, nct : array_like
+            Target point coordinates, each 1D array with shape (mpts,).
+        active : int or array_like
+            Target point activity, integer or 1D array with shape (mpts,).
+        factorfile : str or PathLike
+            File for kriging factors.
+        factorfiletype : int, str or enum.FactorFileType
+            Factor file type, where 0:binary, 1:text.
+
+        Returns
+        -------
+        int
+            Number of interp points.
+        """
+        npts = _MultiArrays(
+            {"ecs": ecs, "ncs": ncs}, {"conwidth": conwidth, "aa": aa}, {"ids": ids}
+        )
+        mpts = _MultiArrays({"ect": ect, "nct": nct}, int_any={"active": active})
+        if isinstance(structype, str):
+            structype = enum.StrucType.get_value(structype)
+        factorfile = Path(factorfile)
+        if isinstance(factorfiletype, str):
+            factorfiletype = enum.FactorFileType.get_value(factorfiletype)
+        icount_interp = c_int()
+        res = self.lib.calc_structural_overlay_factors(
+            byref(c_int(len(npts))),
+            npts.ecs,
+            npts.ncs,
+            npts.ids,
+            npts.conwidth,
+            npts.aa,
+            byref(c_int(structype)),
+            byref(c_double(inverse_power)),
+            byref(c_int(len(mpts))),
+            mpts.ect,
+            mpts.nct,
+            mpts.active,
+            byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
+            byref(c_int(factorfiletype)),
+            byref(icount_interp),
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info(
+            "calculated interpolation/blending factors to %r", factorfile.name
+        )
+        return icount_interp.value
+
+    def interpolate_blend_using_file(
+        self,
+        factorfile: str | PathLike,
+        factorfiletype: int | str | enum.FactorFileType,
+        # npts: int,  # determined from sourceval.shape[0]
+        # mpts: int,  # determined from targval.shape[0]
+        transtype: int | str | enum.TransType,
+        lt_target: str | bool,
+        gt_target: str | bool,
+        sourceval: npt.ArrayLike,
+        targval: npt.ArrayLike,
+    ) -> dict:
+        """
+        Apply interpolation factors calculated by :meth:`calc_structural_overlay_factors`.
+
+        Parameters
+        ----------
+        factorfile : str or PathLike
+            File for kriging factors.
+        factorfiletype : int, str or enum.FactorFileType
+            Factor file type, where 0:binary, 1:text.
+        transtype : int, str, enum.TransType
+            Tranformation type, where 0 is none and 1 is log.
+        lt_target, gt_target : str or bool
+            Whether to undercut or exceed target, use "Y"/"N" or bool.
+        sourceval : array_like
+            Values at sources, 1D array with shape (npts,).
+        targval : array_like
+            Values at targets, 1D array with shape (mpts,).
+
+        Returns
+        -------
+        targval : npt.NDArray[np.float64]
+            Values calculated for targets.
+        icount_interp : int
+            Number of interpolation pts.
+        """
+        factorfile = Path(factorfile)
+        if not factorfile.is_file():
+            raise FileNotFoundError(f"could not find factorfile {factorfile}")
+        if isinstance(factorfiletype, str):
+            factorfiletype = enum.FactorFileType.get_value(factorfiletype)
+        if isinstance(transtype, str):
+            transtype = enum.TransType.get_value(transtype)
+        if isinstance(lt_target, bool):
+            lt_target = "y" if lt_target else "n"
+        if isinstance(gt_target, bool):
+            gt_target = "y" if gt_target else "n"
+        npts = _MultiArrays({"sourceval": sourceval})
+        mpts = _MultiArrays({"targval": targval})
+        icount_interp = c_int()
+        res = self.lib.interpolate_blend_using_file(
+            byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
+            byref(c_int(factorfiletype)),
+            byref(c_int(len(npts))),
+            byref(c_int(len(mpts))),
+            byref(c_int(transtype)),
+            byref(c_char(lt_target.encode())),
+            byref(c_char(gt_target.encode())),
+            npts.sourceval,
+            mpts.targval,
+            byref(icount_interp),
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("applied interpolation factors from %r", factorfile.name)
+        return {
+            "targval": mpts.targval,
+            "icount_interp": icount_interp.value,
+        }
+
+    def ipd_interpolate_2d(
+        self,
+        # npts: int,  # determined from ecs.shape[0]
+        ecs: npt.ArrayLike,
+        ncs: npt.ArrayLike,
+        zns: int | npt.ArrayLike,
+        sourceval: npt.ArrayLike,
+        # mpts: int,  # determined from ect.shape[0]
+        ect: npt.ArrayLike,
+        nct: npt.ArrayLike,
+        znt: int | npt.ArrayLike,
+        transtype: int | str | enum.TransType,
+        anis: float | npt.ArrayLike,
+        bearing: float | npt.ArrayLike,
+        invpow: float | npt.ArrayLike,
+    ) -> npt.NDArray[np.float64]:
+        """Undertake 2D inverse-power-of-distance spatial interpolation.
+
+        Parameters
+        ----------
+        ecs, ncs : array_like
+            Source point coordinates, each 1D array with shape (npts,).
+        zns : int or array_like
+            Source point zones, integer or 1D array with shape (npts,).
+        sourceval : array_like
+            Source values, 1D array with shape (npts,).
+        ect, nct : array_like
+            Target point coordinates, each 1D array with shape (mpts,).
+        znt : int or array_like
+            Target point zones, integer or 1D array with shape (mpts,).
+        transtype : int, str, enum.TransType
+            Tranformation type, where 0 is none and 1 is log.
+        anis : float or array_like
+            Local anisotropy, float or 1D array with shape (mpts,).
+        bearing : float or array_like
+            Local anisotropy bearing, float or 1D array with shape (mpts,).
+        invpow : float or array_like
+            Local inverse power of distance, float or 1D array with shape (mpts,).
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Values calculated for targets.
+        """
+        npts = _MultiArrays(
+            {"ecs": ecs, "ncs": ncs, "sourceval": sourceval}, int_any={"zns": zns}
+        )
+        mpts = _MultiArrays(
+            {"ect": ect, "nct": nct},
+            {"anis": anis, "bearing": bearing, "invpow": invpow},
+            {"znt": znt},
+        )
+        if isinstance(transtype, str):
+            transtype = enum.TransType.get_value(transtype)
+        targval = np.zeros(len(mpts), np.float64, order="F")
+        res = self.lib.ipd_interpolate_2d(
+            byref(c_int(len(npts))),
+            npts.ecs,
+            npts.ncs,
+            npts.zns,
+            npts.sourceval,
+            byref(c_int(len(mpts))),
+            mpts.ect,
+            mpts.nct,
+            mpts.znt,
+            targval,
+            byref(c_int(transtype)),
+            mpts.anis,
+            mpts.bearing,
+            mpts.invpow,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("undertook 2D inverse-power-of-distance spatial interpolation")
+        return targval
+
+    def ipd_interpolate_3d(
+        self,
+        # npts: int,  # determined from ecs.shape[0]
+        ecs: npt.ArrayLike,
+        ncs: npt.ArrayLike,
+        zcs: npt.ArrayLike,
+        zns: int | npt.ArrayLike,
+        sourceval: npt.ArrayLike,
+        # mpts: int,  # determined from ect.shape[0]
+        ect: npt.ArrayLike,
+        nct: npt.ArrayLike,
+        zct: npt.ArrayLike,
+        znt: int | npt.ArrayLike,
+        transtype: int | str | enum.TransType,
+        ahmax: float | npt.ArrayLike,
+        ahmin: float | npt.ArrayLike,
+        avert: float | npt.ArrayLike,
+        bearing: float | npt.ArrayLike,
+        dip: float | npt.ArrayLike,
+        rake: float | npt.ArrayLike,
+        invpow: float | npt.ArrayLike,
+    ) -> npt.NDArray[np.float64]:
+        """Undertake 3D inverse-power-of-distance spatial interpolation.
+
+        Parameters
+        ----------
+        ecs, ncs, zcs : array_like
+            Source point coordinates, each 1D array with shape (npts,).
+        zns : int or array_like
+            Source point zones, integer or 1D array with shape (npts,).
+        sourceval : array_like
+            Source values, 1D array with shape (npts,).
+        ect, nct, zct : array_like
+            Target point coordinates, each 1D array with shape (mpts,).
+        znt : int or array_like
+            Target point zones, integer or 1D array with shape (mpts,).
+        transtype : int, str, enum.TransType
+            Tranformation type, where 0 is none and 1 is log.
+        ahmax, ahmin, avert : float or array_like
+            Relative correlation lengths, float or 1D array with shape (mpts,).
+        bearing, dip, rake : float or array_like
+            Correlation directions, float or 1D array with shape (mpts,).
+        invpow : float or array_like
+            Local inverse power of distance, float or 1D array with shape (mpts,).
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Values calculated for targets.
+        """
+        npts = _MultiArrays(
+            {"ecs": ecs, "ncs": ncs, "zcs": zcs, "sourceval": sourceval},
+            int_any={"zns": zns},
+        )
+        mpts = _MultiArrays(
+            {"ect": ect, "nct": nct, "zct": zct},
+            {
+                "ahmax": ahmax,
+                "ahmin": ahmin,
+                "avert": avert,
+                "bearing": bearing,
+                "dip": dip,
+                "rake": rake,
+                "invpow": invpow,
+            },
+            {"znt": znt},
+        )
+        if isinstance(transtype, str):
+            transtype = enum.TransType.get_value(transtype)
+        targval = np.zeros(len(mpts), np.float64, order="F")
+        res = self.lib.ipd_interpolate_3d(
+            byref(c_int(len(npts))),
+            npts.ecs,
+            npts.ncs,
+            npts.zcs,
+            npts.zns,
+            npts.sourceval,
+            byref(c_int(len(mpts))),
+            mpts.ect,
+            mpts.nct,
+            mpts.zct,
+            mpts.znt,
+            targval,
+            byref(c_int(transtype)),
+            mpts.ahmax,
+            mpts.ahmin,
+            mpts.avert,
+            mpts.bearing,
+            mpts.dip,
+            mpts.rake,
+            mpts.invpow,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("undertook 3D inverse-power-of-distance spatial interpolation")
+        return targval
+
+    def initialize_randgen(self, iseed: int) -> None:
+        """
+        Initialize the random number generator.
+
+        Parameters
+        ----------
+        iseed : int
+            Seed value.
+        """
+        res = self.lib.initialize_randgen(byref(c_int(iseed)))
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("initialized the random number generator")
+
+    def fieldgen2d_sva(
+        self,
+        # nnode: int,  # determined from ec.shape[0]
+        ec: npt.ArrayLike,
+        nc: npt.ArrayLike,
+        area: float | npt.ArrayLike,
+        active: int | npt.ArrayLike,
+        mean: float | npt.ArrayLike,
+        var: float | npt.ArrayLike,
+        aa: float | npt.ArrayLike,
+        anis: float | npt.ArrayLike,
+        bearing: float | npt.ArrayLike,
+        transtype: int | str | enum.TransType,
+        avetype: int | str | enum.VarioType,
+        power: float,
+        # ldrand: int,  # same as nnode
+        nreal: int,
+    ) -> npt.NDArray[np.float64]:
+        """
+        Generate 2D stochastic fields based on a spatially varying variogram.
+
+        Parameters
+        ----------
+        ec, nc : array_like
+            Model grid coordinates, each 1D array with shape (nnode,).
+        area : float or array_like
+            Areas of grid cells.
+        active : int or array_like
+            Inactive grid cells are equal to zero.
+        mean : float or array_like
+            Mean value of stochastic field.
+        var : float or array_like
+            Variance of stochastic field.
+        aa : float or array_like
+            Averaging function spatial dimension.
+        anis : float or array_like
+            Anisotropy ratio.
+        bearing : float or array_like
+            Bearing of principal anisotropy axis.
+        transtype : int, str or enum.TransType
+            Stochastic field pertains to natural(0) or log(1) properties.
+        avetype : int, str or enum.VarioType
+            Averaging function type, where 1:spher, 2:exp, 3:gauss, 4:pow.
+        power : float
+            Power used if avetype is 4 (pow).
+        nreal : int
+            Number of realisations to generate.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Realisations with shape (nnode, nreal).
+        """
+        node = _MultiArrays(
+            {"ec": ec, "nc": nc},
+            {
+                "area": area,
+                "mean": mean,
+                "var": var,
+                "aa": aa,
+                "anis": anis,
+                "bearing": bearing,
+            },
+            {"active": active},
+        )
+        if isinstance(transtype, str):
+            transtype = enum.TransType.get_value(transtype)
+        if isinstance(avetype, str):
+            avetype = enum.VarioType.get_value(avetype)
+        ldrand = nnode = len(node)
+        randfield = np.zeros((ldrand, nreal), np.float64, order="F")
+        res = self.lib.fieldgen2d_sva(
+            byref(c_int(nnode)),
+            node.ec,
+            node.nc,
+            node.area,
+            node.active,
+            node.mean,
+            node.var,
+            node.aa,
+            node.anis,
+            node.bearing,
+            byref(c_int(transtype)),
+            byref(c_int(avetype)),
+            byref(c_double(power)),
+            byref(c_int(ldrand)),
+            byref(c_int(nreal)),
+            randfield,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("generated 2D stochastic fields for %d realisations", nreal)
+        return randfield
+
+    def fieldgen3d_sva(
+        self,
+        # nnode: int,  # determined from ec.shape[0]
+        ec: npt.ArrayLike,
+        nc: npt.ArrayLike,
+        zc: npt.ArrayLike,
+        area: float | npt.ArrayLike,
+        height: float | npt.ArrayLike,
+        active: int | npt.ArrayLike,
+        mean: float | npt.ArrayLike,
+        var: float | npt.ArrayLike,
+        ahmax: float | npt.ArrayLike,
+        ahmin: float | npt.ArrayLike,
+        avert: float | npt.ArrayLike,
+        bearing: float | npt.ArrayLike,
+        dip: float | npt.ArrayLike,
+        rake: float | npt.ArrayLike,
+        transtype: int | str | enum.TransType,
+        avetype: int | str | enum.VarioType,
+        power: float,
+        # ldrand: int,  # same as nnode
+        nreal: int,
+    ) -> npt.NDArray[np.float64]:
+        """
+        Generate 3D stochastic fields based on a spatially varying variogram.
+
+        Parameters
+        ----------
+        ec, nc, nz : array_like
+            Model grid coordinates, each 1D array with shape (nnode,).
+        area, height : float or array_like
+            Areas and height of grid cells.
+        active : int or array_like
+            Inactive grid cells are equal to zero.
+        mean : float or array_like
+            Mean value of stochastic field.
+        var : float or array_like
+            Variance of stochastic field.
+        ahmax, ahmin, avert : float or array_like
+            Averaging function correlation lengths.
+        bearing : float or array_like
+            Bearing of ahmax direction.
+        dip : float or array_like
+            Dip of ahmax direction.
+        rake : float or array_like
+            Rotation of ahmin direction.
+        transtype : int, str or enum.TransType
+            Stochastic field pertains to natural(0) or log(1) properties.
+        avetype : int, str or enum.VarioType
+            Averaging function type, where 1:spher, 2:exp, 3:gauss, 4:pow.
+        power : float
+            Power used if avetype is 4 (pow).
+        nreal : int
+            Number of realisations to generate.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Realisations with shape (nnode, nreal).
+        """
+        node = _MultiArrays(
+            {"ec": ec, "nc": nc, "zc": zc},
+            {
+                "area": area,
+                "height": height,
+                "mean": mean,
+                "var": var,
+                "ahmax": ahmax,
+                "ahmin": ahmin,
+                "avert": avert,
+                "bearing": bearing,
+                "dip": dip,
+                "rake": rake,
+            },
+            {"active": active},
+        )
+        if isinstance(transtype, str):
+            transtype = enum.TransType.get_value(transtype)
+        if isinstance(avetype, str):
+            avetype = enum.VarioType.get_value(avetype)
+        ldrand = nnode = len(node)
+        randfield = np.zeros((ldrand, nreal), np.float64, order="F")
+        res = self.lib.fieldgen3d_sva(
+            byref(c_int(nnode)),
+            node.ec,
+            node.nc,
+            node.zc,
+            node.area,
+            node.height,
+            node.active,
+            node.mean,
+            node.var,
+            node.ahmax,
+            node.ahmin,
+            node.avert,
+            node.bearing,
+            node.dip,
+            node.rake,
+            byref(c_int(transtype)),
+            byref(c_int(avetype)),
+            byref(c_double(power)),
+            byref(c_int(ldrand)),
+            byref(c_int(nreal)),
+            randfield,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("generated 3D stochastic fields for %d realisations", nreal)
+        return randfield

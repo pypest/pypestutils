@@ -343,3 +343,143 @@ def prototype(lib):
         ndpointer(c_double, ndim=2, flags="F"),  # covmat(ldcovmat,npts), out
     )
     lib.build_covar_matrix_3d.restype = c_int
+
+    # calc_structural_overlay_factors(
+    #   npts,ecs,ncs,ids,conwidth,aa,structype,inverse_power,
+    #   mpts,ect,nct,active,factorfile,factorfiletype,icount_interp)
+    lib.calc_structural_overlay_factors.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags="F"),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # ncs(npts), in
+        ndpointer(c_int, ndim=1, flags="F"),  # ids(npts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # conwidth(npts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # aa(npts), in
+        POINTER(c_int),  # structype, in
+        POINTER(c_double),  # inverse_power, in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags="F"),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # nct(mpts), in
+        ndpointer(c_int, ndim=1, flags="F"),  # active(mpts), in
+        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.calc_structural_overlay_factors.restype = c_int
+
+    # interpolate_blend_using_file(
+    #   factorfile,factorfiletype,npts,mpts,transtype,
+    #   lt_target,gt_target,sourceval,targval,icount_interp)
+    lib.interpolate_blend_using_file.argtypes = (
+        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # npts, in
+        POINTER(c_int),  # mpts, in
+        POINTER(c_int),  # transtype, in
+        POINTER(c_char),  # lt_target, in
+        POINTER(c_char),  # gt_target, in
+        ndpointer(c_double, ndim=1, flags="F"),  # sourceval(npts), in
+        ndpointer(c_double, ndim=1, flags=("F", "W")),  # targval(mpts), inout
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.interpolate_blend_using_file.restype = c_int
+
+    # ipd_interpolate_2d(npts,ecs,ncs,zns,sourceval,
+    #   mpts,ect,nct,znt,targval,transtype,anis,bearing,invpow)
+    lib.ipd_interpolate_2d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags="F"),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # ncs(npts), in
+        ndpointer(c_int, ndim=1, flags="F"),  # zns(npts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # sourceval(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags="F"),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # nct(mpts), in
+        ndpointer(c_int, ndim=1, flags="F"),  # znt(mpts), in
+        ndpointer(c_double, ndim=1, flags=("F", "W")),  # targval(mpts), out
+        POINTER(c_int),  # transtype, in
+        ndpointer(c_double, ndim=1, flags="F"),  # anis(mpts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # bearing(mpts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # invpow(mpts), in
+    )
+    lib.ipd_interpolate_2d.restype = c_int
+
+    # ipd_interpolate_3d(npts,ecs,ncs,zcs,zns,sourceval,mpts,ect,nct,zct,znt,
+    #   targval,transtype,ahmax,ahmin,avert,bearing,dip,rake,invpow)
+    lib.ipd_interpolate_3d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags="F"),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # ncs(npts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # zcs(npts), in
+        ndpointer(c_int, ndim=1, flags="F"),  # zns(npts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # sourceval(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags="F"),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # nct(mpts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # zct(mpts), in
+        ndpointer(c_int, ndim=1, flags="F"),  # znt(mpts), in
+        ndpointer(c_double, ndim=1, flags=("F", "W")),  # targval(mpts), out
+        POINTER(c_int),  # transtype, in
+        ndpointer(c_double, ndim=1, flags="F"),  # ahmax(mpts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # ahmin(mpts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # avert(mpts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # bearing(mpts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # dip(mpts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # rake(mpts), in
+        ndpointer(c_double, ndim=1, flags="F"),  # invpow(mpts), in
+    )
+    lib.ipd_interpolate_3d.restype = c_int
+
+    # initialize_randgen(iseed)
+    lib.initialize_randgen.argtypes = (POINTER(c_int),)  # iseed, in
+    lib.initialize_randgen.restype = c_int
+
+    # fieldgen2d_sva(
+    #   nnode,ec,nc,area,active,mean,var,aa,anis,bearing,
+    #   transtype,avetype,power,ldrand,nreal,randfield)
+    lib.fieldgen2d_sva.argtypes = (
+        POINTER(c_int),  # nnode, in
+        ndpointer(c_double, ndim=1, flags="F"),  # ec(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # nc(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # area(nnode), in
+        ndpointer(c_int, ndim=1, flags="F"),  # active(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # mean(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # var(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # aa(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # anis(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # bearing(nnode), in
+        POINTER(c_int),  # transtype, in
+        POINTER(c_int),  # avetype, in
+        POINTER(c_double),  # power, in
+        POINTER(c_int),  # ldrand, in
+        POINTER(c_int),  # nreal, in
+        ndpointer(c_double, ndim=2, flags=("F", "W")),  # randfield(ldrand,nreal), out
+    )
+    lib.fieldgen2d_sva.restype = c_int
+
+    # fieldgen3d_sva(
+    #   nnode,ec,nc,zc,area,height,active,mean,var,ahmax,ahmin,avert,
+    #   bearing,dip,rake,transtype,avetype,power,ldrand,nreal,randfield)
+    lib.fieldgen3d_sva.argtypes = (
+        POINTER(c_int),  # nnode, in
+        ndpointer(c_double, ndim=1, flags="F"),  # ec(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # nc(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # zc(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # area(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # height(nnode), in
+        ndpointer(c_int, ndim=1, flags="F"),  # active(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # mean(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # var(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # ahmax(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # ahmin(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # avert(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # bearing(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # dip(nnode), in
+        ndpointer(c_double, ndim=1, flags="F"),  # rake(nnode), in
+        POINTER(c_int),  # transtype, in
+        POINTER(c_int),  # avetype, in
+        POINTER(c_double),  # power, in
+        POINTER(c_int),  # ldrand, in
+        POINTER(c_int),  # nreal, in
+        ndpointer(c_double, ndim=2, flags=("F", "W")),  # randfield(ldrand,nreal), out
+    )
+    lib.fieldgen3d_sva.restype = c_int
