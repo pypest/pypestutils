@@ -26,16 +26,24 @@ class _MultiArrays:
         Dict of float or 1D arrays.
     int_any : dict of array_like or int, optional
         Dict of int or 1D arrays.
+    ar_len : int, optional
+        If specified, this is used for the expected array size and shape.
     """
+    shape = ()  # type: tuple | tuple[int]
+    _keys = []  # type: list[str]
 
     def __init__(
         self,
         float_arrays: dict[str, npt.ArrayLike] = {},
         float_any: dict[str, float | npt.ArrayLike] = {},
         int_any: dict[str, int | npt.ArrayLike] = {},
+        ar_len: int | None = None,
     ) -> None:
         # find common array size
-        self.shape = None
+        if ar_len is not None:
+            if not isinstance(ar_len, int):
+                raise TypeError("'ar_len' must be int")
+            self.shape = (ar_len,)
         self._keys = []
         for name in float_arrays.keys():
             if name in self._keys:
@@ -45,7 +53,7 @@ class _MultiArrays:
             ar = np.array(float_arrays[name], np.float64, order="F", copy=False)
             if ar.ndim != 1:
                 raise ValueError(f"expected '{name}' ndim to be 1; found {ar.ndim}")
-            if self.shape is None:
+            if not self.shape:
                 self.shape = ar.shape
             elif ar.shape != self.shape:
                 raise ValueError(
@@ -59,16 +67,16 @@ class _MultiArrays:
             float_any[name] = ar = np.array(
                 float_any[name], np.float64, order="F", copy=False
             )
-            if self.shape is None and ar.ndim == 1:
+            if not self.shape and ar.ndim == 1:
                 self.shape = ar.shape
         for name in int_any.keys():
             if name in self._keys:
                 raise KeyError(f"'{name}' defined more than once")
             self._keys.append(name)
             int_any[name] = ar = np.array(int_any[name], order="F", copy=False)
-            if self.shape is None and ar.ndim == 1:
+            if not self.shape and ar.ndim == 1:
                 self.shape = ar.shape
-        if self.shape is None:
+        if not self.shape:
             self.shape = (1,)  # if all scalars, assume this size
         for name in float_any.keys():
             ar = float_any[name]
@@ -97,7 +105,7 @@ class _MultiArrays:
                 )
             setattr(self, name, ar.astype(np.int32, copy=False))
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return length of dimension from shape[0]."""
         return self.shape[0]
 
@@ -116,7 +124,7 @@ class PestUtilsLib:
     logger_level : int, str, default 20 (INFO)
     """
 
-    def __init__(self, *, logger_level=logging.INFO):
+    def __init__(self, *, logger_level=logging.INFO) -> None:
         self.logger = get_logger(self.__class__.__name__, logger_level)
         self.lib = load()
         self.logger.debug("loaded %s", self.lib)
@@ -154,8 +162,14 @@ class PestUtilsLib:
         size = self.get_dimvar_int(name)
         return create_string_buffer(init, size)
 
-    def get_dimvar_int(self, name: str):
-        """Get dimvar constant integer from library instance."""
+    def get_dimvar_int(self, name: str) -> int:
+        """Get dimvar constant integer from library instance.
+
+        Parameters
+        ----------
+        name : str
+            Name of variable in dimvar or other custom name.
+        """
         return get_dimvar_int(self.lib, name)
 
     def inquire_modflow_binary_file_specs(
@@ -247,17 +261,23 @@ class PestUtilsLib:
         delr: float | npt.ArrayLike,
         delc: float | npt.ArrayLike,
     ) -> None:
-        """Install specifications for a structured grid."""
-        delr = np.array(delr, dtype=np.float64, order="F", copy=False)
-        if delr.ndim == 0:
-            delr = np.full(ncol, delr)
-        elif delr.shape != (ncol,):
-            raise ValueError(f"expected 'delr' array with shape {(ncol,)}")
-        delc = np.array(delc, dtype=np.float64, order="F", copy=False)
-        if delc.ndim == 0:
-            delc = np.full(nrow, delc)
-        elif delc.shape != (nrow,):
-            raise ValueError(f"expected 'delc' array with shape {(nrow,)}")
+        """Install specifications for a structured grid.
+
+        Parameters
+        ----------
+        gridname : str
+            Unique non-blank grid name.
+        ncol, nrow, nlay : int
+            Grid dimensions.
+        icorner : int
+            Reference corner, use 1 for top left and 2 for bottom left.
+        e0, n0 : float
+            Reference offsets.
+        rotation : float
+            Grid rotation, counter-clockwise degrees.
+        """
+        col = _MultiArrays(float_any={"delr": delr}, ar_len=ncol)
+        row = _MultiArrays(float_any={"delc": delc}, ar_len=nrow)
         res = self.lib.install_structured_grid(
             byref(self.create_char_array(gridname, "LENGRIDNAME")),
             byref(c_int(ncol)),
@@ -267,15 +287,15 @@ class PestUtilsLib:
             byref(c_double(e0)),
             byref(c_double(n0)),
             byref(c_double(rotation)),
-            delr,
-            delc,
+            col.delr,
+            row.delc,
         )
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
-        self.logger.info("installed strictured grid %r from specs", gridname)
+        self.logger.info("installed structured grid %r from specs", gridname)
 
     def uninstall_structured_grid(self, gridname: str) -> None:
-        """Uninstall strictured grid set by :meth:`install_structured_grid`.
+        """Uninstall structured grid set by :meth:`install_structured_grid`.
 
         Parameters
         ----------
@@ -287,7 +307,7 @@ class PestUtilsLib:
         )
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
-        self.logger.info("uninstalled strictured grid %r", gridname)
+        self.logger.info("uninstalled structured grid %r", gridname)
 
     def free_all_memory(self) -> None:
         """Deallocate all memory that is being used."""
@@ -420,7 +440,7 @@ class PestUtilsLib:
             Value to use where interpolation is not possible.
         obspoint : array_like
             1D integer array of indices of observation points,
-            where start at 0 and -1 means no index. Shape is (nobs,).
+            which start at 0 and -1 means no index. Shape is (nobs,).
         obstime : array_like
             1D array of observation times with shape (nobs,).
 
@@ -483,7 +503,7 @@ class PestUtilsLib:
         Returns
         -------
         idis : int
-            Where 1=DIS; 2=DISV
+            Where 1 is for DIS and 2 is for DISV.
         ncells : int
             Number of cells in the grid.
         ndim1, ndim2, ndim3 : int
@@ -545,7 +565,28 @@ class PestUtilsLib:
         factorfiletype: int | str | enum.FactorFileType,
         blnfile: str | PathLike,
     ) -> npt.NDArray[np.int32]:
-        """Calculate interpolation factors from a MODFLOW 6 DIS or DISV."""
+        """Calculate interpolation factors from a MODFLOW 6 DIS or DISV.
+
+        Parameters
+        ----------
+        gridname : str
+            Unique non-blank grid name.
+        ecoord, ncoord : array_like
+            X/Y or Easting/Northing coordinates for points with shape (npts,).
+        layer : int or array_like
+            Layers of points with shape (npts,).
+        factorfile : str or PathLike
+            File for kriging factors.
+        factorfiletype : int, str or enum.FactorFileType
+            Factor file type, where 0:binary, 1:text.
+        blnfile : str or PathLike
+            Name of bln file to write.
+
+        Returns
+        -------
+        npt.NDArray[np.int32]
+            Array interp_success(npts), where 1 is success and 0 is failure.
+        """
         pts = _MultiArrays(
             {"ecoord": ecoord, "ncoord": ncoord}, int_any={"layer": layer}
         )
