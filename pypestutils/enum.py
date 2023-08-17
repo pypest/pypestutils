@@ -1,4 +1,6 @@
 """Enumeration module."""
+from __future__ import annotations
+
 from enum import IntEnum
 
 
@@ -11,17 +13,21 @@ class ParamEnum(IntEnum):
     """
 
     @classmethod
-    def get_value(cls, item: str):
-        """Validate item and raise a ValueError with valid options."""
+    def get_valid_options(cls) -> dict[int, str]:
+        """Get valid options as a dict."""
+        return dict((e.value, e.name) for e in cls)
+
+    @classmethod
+    def get_value(cls, item: str) -> int:
+        """Get integer value from str key.
+
+        Validate item and raise a ValueError with valid options.
+        """
         try:
             return cls[item].value
         except KeyError:
-            valid_options = dict((e.value, e.name) for e in cls)
             valid_options_list = [
-                f"'{n}' ({v})"
-                for (v, n) in dict(
-                    sorted(valid_options.items(), key=lambda item: item[0])
-                ).items()
+                f"'{n}' ({v})" for (v, n) in cls.get_valid_options().items()
             ]
             raise ValueError(
                 "{}: '{}' is not a valid option, must be one of {}".format(

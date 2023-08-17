@@ -11,103 +11,9 @@ import numpy.typing as npt
 
 from . import enum
 from .ctypes_declarations import get_char_array, get_dimvar_int, prototype
+from .data import ManyArrays, validate_scalar
 from .finder import load
 from .logger import get_logger
-
-
-class _MultiArrays:
-    """Check arrays and, if needed, fill-out scalars.
-
-    Parameters
-    ----------
-    float_arrays : dict of array_like, optional
-        Dict of 1D arrays, assume to have same shape.
-    float_any : dict of array_like or float, optional
-        Dict of float or 1D arrays.
-    int_any : dict of array_like or int, optional
-        Dict of int or 1D arrays.
-    ar_len : int, optional
-        If specified, this is used for the expected array size and shape.
-    """
-    shape = ()  # type: tuple | tuple[int]
-    _keys = []  # type: list[str]
-
-    def __init__(
-        self,
-        float_arrays: dict[str, npt.ArrayLike] = {},
-        float_any: dict[str, float | npt.ArrayLike] = {},
-        int_any: dict[str, int | npt.ArrayLike] = {},
-        ar_len: int | None = None,
-    ) -> None:
-        # find common array size
-        if ar_len is not None:
-            if not isinstance(ar_len, int):
-                raise TypeError("'ar_len' must be int")
-            self.shape = (ar_len,)
-        self._keys = []
-        for name in float_arrays.keys():
-            if name in self._keys:
-                raise KeyError(f"'{name}' defined more than once")
-            self._keys.append(name)
-            # Each must be 1D and the same shape
-            ar = np.array(float_arrays[name], np.float64, order="F", copy=False)
-            if ar.ndim != 1:
-                raise ValueError(f"expected '{name}' ndim to be 1; found {ar.ndim}")
-            if not self.shape:
-                self.shape = ar.shape
-            elif ar.shape != self.shape:
-                raise ValueError(
-                    f"expected '{name}' shape to be {self.shape}; found {ar.shape}"
-                )
-            setattr(self, name, ar)
-        for name in float_any.keys():
-            if name in self._keys:
-                raise KeyError(f"'{name}' defined more than once")
-            self._keys.append(name)
-            float_any[name] = ar = np.array(
-                float_any[name], np.float64, order="F", copy=False
-            )
-            if not self.shape and ar.ndim == 1:
-                self.shape = ar.shape
-        for name in int_any.keys():
-            if name in self._keys:
-                raise KeyError(f"'{name}' defined more than once")
-            self._keys.append(name)
-            int_any[name] = ar = np.array(int_any[name], order="F", copy=False)
-            if not self.shape and ar.ndim == 1:
-                self.shape = ar.shape
-        if not self.shape:
-            self.shape = (1,)  # if all scalars, assume this size
-        for name in float_any.keys():
-            ar = float_any[name]
-            if ar.ndim == 0:
-                ar = np.full(self.shape, ar)
-            elif ar.ndim != 1:
-                raise ValueError(f"expected '{name}' ndim to be 1; found {ar.ndim}")
-            elif ar.shape != self.shape:
-                raise ValueError(
-                    f"expected '{name}' shape to be {self.shape}; found {ar.shape}"
-                )
-            setattr(self, name, ar)
-        for name in int_any.keys():
-            ar = int_any[name]
-            if ar.ndim == 0:
-                ar = np.full(self.shape, ar)
-            elif ar.ndim != 1:
-                raise ValueError(f"expected '{name}' ndim to be 1; found {ar.ndim}")
-            elif ar.shape != self.shape:
-                raise ValueError(
-                    f"expected '{name}' shape to be {self.shape}; found {ar.shape}"
-                )
-            if not np.issubdtype(ar.dtype, np.integer):
-                raise ValueError(
-                    f"expected '{name}' to be integer type; found {ar.dtype}"
-                )
-            setattr(self, name, ar.astype(np.int32, copy=False))
-
-    def __len__(self) -> int:
-        """Return length of dimension from shape[0]."""
-        return self.shape[0]
 
 
 class PestUtilsLibError(BaseException):
@@ -126,9 +32,9 @@ class PestUtilsLib:
 
     def __init__(self, *, logger_level=logging.INFO) -> None:
         self.logger = get_logger(self.__class__.__name__, logger_level)
-        self.lib = load()
-        self.logger.debug("loaded %s", self.lib)
-        prototype(self.lib)
+        self.pestutils = load()
+        self.logger.debug("loaded %s", self.pestutils)
+        prototype(self.pestutils)
         self.logger.debug("added prototypes")
 
     def __del__(self):
@@ -141,7 +47,7 @@ class PestUtilsLib:
 
     def get_char_array(self, name: str):
         """Get c_char Array with a fixed size from dimvar."""
-        return get_char_array(self.lib, name)
+        return get_char_array(self.pestutils, name)
 
     def create_char_array(self, init: str | bytes, name: str):
         """Create c_char Array with a fixed size from dimvar and intial value.
@@ -170,7 +76,7 @@ class PestUtilsLib:
         name : str
             Name of variable in dimvar or other custom name.
         """
-        return get_dimvar_int(self.lib, name)
+        return get_dimvar_int(self.pestutils, name)
 
     def inquire_modflow_binary_file_specs(
         self,
@@ -216,10 +122,12 @@ class PestUtilsLib:
             raise FileNotFoundError(f"could not find filein {filein}")
         if fileout:
             fileout = Path(fileout)
+        validate_scalar("isim", isim, isin=[1, 21, 22, 31, 32, 33])
+        validate_scalar("itype", itype, isin=[1, 2])
         iprec = c_int()
         narray = c_int()
         ntime = c_int()
-        res = self.lib.inquire_modflow_binary_file_specs(
+        res = self.pestutils.inquire_modflow_binary_file_specs(
             byref(self.create_char_array(bytes(filein), "LENFILENAME")),
             byref(self.create_char_array(bytes(fileout) or b"", "LENFILENAME")),
             byref(c_int(isim)),
@@ -245,7 +153,7 @@ class PestUtilsLib:
         str
         """
         charray = self.get_char_array("LENMESSAGE")()
-        res = self.lib.retrieve_error_message(byref(charray))
+        res = self.pestutils.retrieve_error_message(byref(charray))
         return charray[:res].rstrip(b"\x00").decode()
 
     def install_structured_grid(
@@ -276,9 +184,15 @@ class PestUtilsLib:
         rotation : float
             Grid rotation, counter-clockwise degrees.
         """
-        col = _MultiArrays(float_any={"delr": delr}, ar_len=ncol)
-        row = _MultiArrays(float_any={"delc": delc}, ar_len=nrow)
-        res = self.lib.install_structured_grid(
+        validate_scalar("ncol", ncol, gt=0)
+        validate_scalar("nrow", nrow, gt=0)
+        validate_scalar("nlay", nlay, gt=0)
+        col = ManyArrays(float_any={"delr": delr}, ar_len=ncol)
+        row = ManyArrays(float_any={"delc": delc}, ar_len=nrow)
+        col.validate("delr", gt=0.0)
+        row.validate("delc", gt=0.0)
+        validate_scalar("icorner", icorner, isin=[1, 2])
+        res = self.pestutils.install_structured_grid(
             byref(self.create_char_array(gridname, "LENGRIDNAME")),
             byref(c_int(ncol)),
             byref(c_int(nrow)),
@@ -302,7 +216,7 @@ class PestUtilsLib:
         gridname : str
             Unique non-blank grid name.
         """
-        res = self.lib.uninstall_structured_grid(
+        res = self.pestutils.uninstall_structured_grid(
             byref(self.create_char_array(gridname, "LENGRIDNAME"))
         )
         if res != 0:
@@ -311,7 +225,7 @@ class PestUtilsLib:
 
     def free_all_memory(self) -> None:
         """Deallocate all memory that is being used."""
-        ret = self.lib.free_all_memory()
+        ret = self.pestutils.free_all_memory()
         if ret != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("all memory was freed up")
@@ -370,14 +284,14 @@ class PestUtilsLib:
             raise FileNotFoundError(f"could not find depvarfile {depvarfile}")
         if isinstance(iprec, str):
             iprec = enum.Prec.get_value(iprec)
-        pts = _MultiArrays(
+        pts = ManyArrays(
             {"ecoord": ecoord, "ncoord": ncoord}, int_any={"layer": layer}
         )
         npts = len(pts)
         simtime = np.zeros(ntime, np.float64, order="F")
         simstate = np.zeros((ntime, npts), np.float64, order="F")
         nproctime = c_int()
-        res = self.lib.interp_from_structured_grid(
+        res = self.pestutils.interp_from_structured_grid(
             byref(self.create_char_array(gridname, "LENGRIDNAME")),
             byref(self.create_char_array(bytes(depvarfile), "LENFILENAME")),
             byref(c_int(isim)),
@@ -468,7 +382,7 @@ class PestUtilsLib:
         nsimtime, npts = simval.shape
         nobs = len(obspoint)
         obssimval = np.zeros(nobs, np.float64, order="F")
-        res = self.lib.interp_to_obstime(
+        res = self.pestutils.interp_to_obstime(
             byref(c_int(nsimtime)),
             byref(c_int(nproctime)),
             byref(c_int(npts)),
@@ -517,7 +431,7 @@ class PestUtilsLib:
         ndim1 = c_int()
         ndim2 = c_int()
         ndim3 = c_int()
-        res = self.lib.install_mf6_grid_from_file(
+        res = self.pestutils.install_mf6_grid_from_file(
             byref(self.create_char_array(gridname, "LENGRIDNAME")),
             byref(self.create_char_array(bytes(grbfile), "LENFILENAME")),
             byref(idis),
@@ -547,7 +461,7 @@ class PestUtilsLib:
         gridname : str
             Unique non-blank grid name.
         """
-        res = self.lib.uninstall_mf6_grid(
+        res = self.pestutils.uninstall_mf6_grid(
             byref(self.create_char_array(gridname, "LENGRIDNAME"))
         )
         if res != 0:
@@ -587,7 +501,7 @@ class PestUtilsLib:
         npt.NDArray[np.int32]
             Array interp_success(npts), where 1 is success and 0 is failure.
         """
-        pts = _MultiArrays(
+        pts = ManyArrays(
             {"ecoord": ecoord, "ncoord": ncoord}, int_any={"layer": layer}
         )
         npts = len(pts)
@@ -596,7 +510,7 @@ class PestUtilsLib:
             factorfiletype = enum.FactorFileType.get_value(factorfiletype)
         blnfile = Path(blnfile)  # TODO
         interp_success = np.zeros(npts, np.int32, order="F")
-        res = self.lib.calc_mf6_interp_factors(
+        res = self.pestutils.calc_mf6_interp_factors(
             byref(self.create_char_array(gridname, "LENGRIDNAME")),
             byref(c_int(npts)),
             pts.ecoord,
@@ -667,7 +581,7 @@ class PestUtilsLib:
         simtime = np.zeros(ntime, np.float64, order="F")
         simstate = np.zeros((ntime, npts), np.float64, order="F")
         nproctime = c_int()
-        res = self.lib.interp_from_mf6_depvar_file(
+        res = self.pestutils.interp_from_mf6_depvar_file(
             byref(self.create_char_array(bytes(depvarfile), "LENFILENAME")),
             byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
             byref(c_int(factorfiletype)),
@@ -746,7 +660,7 @@ class PestUtilsLib:
             raise FileNotFoundError(f"could not find cbcfile {cbcfile}")
         if isinstance(iprec, str):
             iprec = enum.Prec.get_value(iprec)
-        cell = _MultiArrays(int_any={"izone": izone})
+        cell = ManyArrays(int_any={"izone": izone})
         ncell = len(cell)
         numzone = c_int()
         zonenumber = np.zeros(nzone, np.int32, order="F")
@@ -755,7 +669,7 @@ class PestUtilsLib:
         stressperiod = np.zeros(ntime, np.int32, order="F")
         simtime = np.zeros(ntime, np.float64, order="F")
         simflow = np.zeros((ntime, nzone), np.float64, order="F")
-        res = self.lib.extract_flows_from_cbc_file(
+        res = self.pestutils.extract_flows_from_cbc_file(
             byref(self.create_char_array(bytes(cbcfile), "LENFILENAME")),
             byref(self.create_char_array(flowtype, "LENFLOWTYPE")),
             byref(c_int(isim)),
@@ -843,8 +757,8 @@ class PestUtilsLib:
         int
             Number of interp points.
         """
-        npts = _MultiArrays({"ecs": ecs, "ncs": ncs}, int_any={"zns": zns})
-        mpts = _MultiArrays(
+        npts = ManyArrays({"ecs": ecs, "ncs": ncs}, int_any={"zns": zns})
+        mpts = ManyArrays(
             {"ect": ect, "nct": nct},
             {"aa": aa, "anis": anis, "bearing": bearing},
             {"znt": znt},
@@ -857,7 +771,7 @@ class PestUtilsLib:
         if isinstance(factorfiletype, str):
             factorfiletype = enum.FactorFileType.get_value(factorfiletype)
         icount_interp = c_int()
-        res = self.lib.calc_kriging_factors_2d(
+        res = self.pestutils.calc_kriging_factors_2d(
             byref(c_int(len(npts))),
             npts.ecs,
             npts.ncs,
@@ -928,8 +842,8 @@ class PestUtilsLib:
         int
             Number of interp points.
         """
-        npts = _MultiArrays({"ecs": ecs, "ncs": ncs}, int_d={"zns": zns})
-        mpts = _MultiArrays(
+        npts = ManyArrays({"ecs": ecs, "ncs": ncs}, int_d={"zns": zns})
+        mpts = ManyArrays(
             {"ect": ect, "nct": nct}, {"anis": anis, "bearing": bearing}, {"znt": znt}
         )
         if isinstance(krigtype, str):
@@ -938,7 +852,7 @@ class PestUtilsLib:
         if isinstance(factorfiletype, str):
             factorfiletype = enum.FactorFileType.get_value(factorfiletype)
         icount_interp = c_int()
-        res = self.lib.calc_kriging_factors_auto_2d(
+        res = self.pestutils.calc_kriging_factors_auto_2d(
             byref(c_int(len(npts))),
             npts.ecs,
             npts.ncs,
@@ -1032,8 +946,8 @@ class PestUtilsLib:
         int
             Number of interp points.
         """
-        npts = _MultiArrays({"ecs": ecs, "ncs": ncs, "zcs": zcs}, int_any={"zns": zns})
-        mpts = _MultiArrays({"ect": ect, "nct": nct, "zct": zct}, int_any={"znt": znt})
+        npts = ManyArrays({"ecs": ecs, "ncs": ncs, "zcs": zcs}, int_any={"zns": zns})
+        mpts = ManyArrays({"ect": ect, "nct": nct, "zct": zct}, int_any={"znt": znt})
         if isinstance(krigtype, str):
             krigtype = enum.KrigType.get_value(krigtype)
         vartype = np.array(vartype)
@@ -1041,7 +955,7 @@ class PestUtilsLib:
             vartype = np.vectorize(enum.VarioType.get_value)(vartype)
         if not np.issubdtype(vartype.dtype, np.integer):
             raise ValueError("expected 'vartype' to be integer, str or enum.VarioType")
-        nzone = _MultiArrays(
+        nzone = ManyArrays(
             float_any={
                 "ahmax": ahmax,
                 "ahmin": ahmin,
@@ -1056,7 +970,7 @@ class PestUtilsLib:
         if isinstance(factorfiletype, str):
             factorfiletype = enum.FactorFileType.get_value(factorfiletype)
         icount_interp = c_int()
-        res = self.lib.calc_kriging_factors_3d(
+        res = self.pestutils.calc_kriging_factors_3d(
             byref(c_int(len(npts))),
             npts.ecs,
             npts.ncs,
@@ -1151,12 +1065,12 @@ class PestUtilsLib:
                 meanval = np.zeros(0, np.float64, order="F")  # dummy pointer
         else:
             float_arrays["meanval"] = meanval
-        pts = _MultiArrays(float_arrays)
+        pts = ManyArrays(float_arrays)
         if not meanval_is_None:
             meanval = pts.meanval
         targval = np.zeros(mpts, np.float64, order="F")
         icount_interp = c_int()
-        res = self.lib.krige_using_file(
+        res = self.pestutils.krige_using_file(
             byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
             byref(c_int(factorfiletype)),
             byref(c_int(len(pts))),
@@ -1211,7 +1125,7 @@ class PestUtilsLib:
         npt.NDArray[np.float64]
             2D matrix covmat(ldcovmat, npts).
         """
-        pts = _MultiArrays(
+        pts = ManyArrays(
             {"ec": ec, "nc": nc},
             {
                 "nugget": nugget,
@@ -1226,7 +1140,7 @@ class PestUtilsLib:
         if isinstance(vartype, str):
             vartype = enum.VarioType.get_value(vartype)
         covmat = np.zeros((ldcovmat, npts), np.float64, order="F")
-        res = self.lib.build_covar_matrix_2d(
+        res = self.pestutils.build_covar_matrix_2d(
             byref(c_int(npts)),
             pts.ec,
             pts.nc,
@@ -1288,7 +1202,7 @@ class PestUtilsLib:
         npt.NDArray[np.float64]
             2D matrix covmat(ldcovmat, npts).
         """
-        pts = _MultiArrays(
+        pts = ManyArrays(
             {"ec": ec, "nc": nc, "zc": zc},
             {
                 "nugget": nugget,
@@ -1306,7 +1220,7 @@ class PestUtilsLib:
         if isinstance(vartype, str):
             vartype = enum.VarioType.get_value(vartype)
         covmat = np.zeros((ldcovmat, npts), np.float64, order="F")
-        res = self.lib.build_covar_matrix_3d(
+        res = self.pestutils.build_covar_matrix_3d(
             byref(c_int(npts)),
             pts.ec,
             pts.nc,
@@ -1375,17 +1289,17 @@ class PestUtilsLib:
         int
             Number of interp points.
         """
-        npts = _MultiArrays(
+        npts = ManyArrays(
             {"ecs": ecs, "ncs": ncs}, {"conwidth": conwidth, "aa": aa}, {"ids": ids}
         )
-        mpts = _MultiArrays({"ect": ect, "nct": nct}, int_any={"active": active})
+        mpts = ManyArrays({"ect": ect, "nct": nct}, int_any={"active": active})
         if isinstance(structype, str):
             structype = enum.StrucType.get_value(structype)
         factorfile = Path(factorfile)
         if isinstance(factorfiletype, str):
             factorfiletype = enum.FactorFileType.get_value(factorfiletype)
         icount_interp = c_int()
-        res = self.lib.calc_structural_overlay_factors(
+        res = self.pestutils.calc_structural_overlay_factors(
             byref(c_int(len(npts))),
             npts.ecs,
             npts.ncs,
@@ -1457,10 +1371,10 @@ class PestUtilsLib:
             lt_target = "y" if lt_target else "n"
         if isinstance(gt_target, bool):
             gt_target = "y" if gt_target else "n"
-        npts = _MultiArrays({"sourceval": sourceval})
-        mpts = _MultiArrays({"targval": targval})
+        npts = ManyArrays({"sourceval": sourceval})
+        mpts = ManyArrays({"targval": targval})
         icount_interp = c_int()
-        res = self.lib.interpolate_blend_using_file(
+        res = self.pestutils.interpolate_blend_using_file(
             byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
             byref(c_int(factorfiletype)),
             byref(c_int(len(npts))),
@@ -1524,10 +1438,10 @@ class PestUtilsLib:
         npt.NDArray[np.float64]
             Values calculated for targets.
         """
-        npts = _MultiArrays(
+        npts = ManyArrays(
             {"ecs": ecs, "ncs": ncs, "sourceval": sourceval}, int_any={"zns": zns}
         )
-        mpts = _MultiArrays(
+        mpts = ManyArrays(
             {"ect": ect, "nct": nct},
             {"anis": anis, "bearing": bearing, "invpow": invpow},
             {"znt": znt},
@@ -1535,7 +1449,7 @@ class PestUtilsLib:
         if isinstance(transtype, str):
             transtype = enum.TransType.get_value(transtype)
         targval = np.zeros(len(mpts), np.float64, order="F")
-        res = self.lib.ipd_interpolate_2d(
+        res = self.pestutils.ipd_interpolate_2d(
             byref(c_int(len(npts))),
             npts.ecs,
             npts.ncs,
@@ -1606,11 +1520,11 @@ class PestUtilsLib:
         npt.NDArray[np.float64]
             Values calculated for targets.
         """
-        npts = _MultiArrays(
+        npts = ManyArrays(
             {"ecs": ecs, "ncs": ncs, "zcs": zcs, "sourceval": sourceval},
             int_any={"zns": zns},
         )
-        mpts = _MultiArrays(
+        mpts = ManyArrays(
             {"ect": ect, "nct": nct, "zct": zct},
             {
                 "ahmax": ahmax,
@@ -1626,7 +1540,7 @@ class PestUtilsLib:
         if isinstance(transtype, str):
             transtype = enum.TransType.get_value(transtype)
         targval = np.zeros(len(mpts), np.float64, order="F")
-        res = self.lib.ipd_interpolate_3d(
+        res = self.pestutils.ipd_interpolate_3d(
             byref(c_int(len(npts))),
             npts.ecs,
             npts.ncs,
@@ -1662,7 +1576,7 @@ class PestUtilsLib:
         iseed : int
             Seed value.
         """
-        res = self.lib.initialize_randgen(byref(c_int(iseed)))
+        res = self.pestutils.initialize_randgen(byref(c_int(iseed)))
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("initialized the random number generator")
@@ -1720,7 +1634,7 @@ class PestUtilsLib:
         npt.NDArray[np.float64]
             Realisations with shape (nnode, nreal).
         """
-        node = _MultiArrays(
+        node = ManyArrays(
             {"ec": ec, "nc": nc},
             {
                 "area": area,
@@ -1738,7 +1652,7 @@ class PestUtilsLib:
             avetype = enum.VarioType.get_value(avetype)
         ldrand = nnode = len(node)
         randfield = np.zeros((ldrand, nreal), np.float64, order="F")
-        res = self.lib.fieldgen2d_sva(
+        res = self.pestutils.fieldgen2d_sva(
             byref(c_int(nnode)),
             node.ec,
             node.nc,
@@ -1821,7 +1735,7 @@ class PestUtilsLib:
         npt.NDArray[np.float64]
             Realisations with shape (nnode, nreal).
         """
-        node = _MultiArrays(
+        node = ManyArrays(
             {"ec": ec, "nc": nc, "zc": zc},
             {
                 "area": area,
@@ -1843,7 +1757,7 @@ class PestUtilsLib:
             avetype = enum.VarioType.get_value(avetype)
         ldrand = nnode = len(node)
         randfield = np.zeros((ldrand, nreal), np.float64, order="F")
-        res = self.lib.fieldgen3d_sva(
+        res = self.pestutils.fieldgen3d_sva(
             byref(c_int(nnode)),
             node.ec,
             node.nc,
