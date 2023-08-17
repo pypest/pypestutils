@@ -1,21 +1,31 @@
 """Data module."""
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 import numpy.typing as npt
 
 __all__ = ["ManyArrays", "validate_scalar"]
 
 
-def validate_scalar(name, value, **kwargs):
+def validate_scalar(name: str, value: Any, **kwargs) -> None:
     """Validate scalar value according to supported kwargs.
 
-    Supported validation keywords are: isfinite, gt, ge, lt, le, isin and enum.
+    Parameters
+    ----------
+    name : str
+        Name of parameter, used for error message.
+    value : any
+        Value of parameter.
+    kwargs : dict
+        Supported validation keywords are: isfinite, gt, ge, lt, le, isin and
+        enum.
 
     Raises
     ------
     ValueError
-        When 1 or more array elements fail validation criteria.
+        When value fails validation criteria.
     NotImplementedError
         When keyword is not recognized.
     """
@@ -163,7 +173,13 @@ class ManyArrays:
     def validate(self, name, **kwargs) -> None:
         """Validate array values.
 
-        Supported keywords are: isfinite, gt, ge, lt, le, isin and enum.
+        Parameters
+        ----------
+        name : str
+            Name of parameter.
+        kwargs : dict
+            Supported validation keywords are: isfinite, gt, ge, lt, le, isin
+            and enum.
 
         Raises
         ------
