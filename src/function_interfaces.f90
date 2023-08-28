@@ -194,7 +194,9 @@ module function_interfaces
                             aa,anis,bearing,                      &
                             searchrad,maxpts,minpts,              &
                             factorfile,factorfiletype,            &
-                            icount_interp)
+                            icount_interp)                        &
+                     bind(c,name="calc_kriging_factors_2d")
+    !DIR$ ATTRIBUTES DLLEXPORT :: calc_kriging_factors_2d
        use iso_c_binding, only: c_int,c_char,c_double
        integer(kind=c_int), intent(in)           :: npts
        real(kind=c_double), intent(in)           :: ecs(npts),ncs(npts)
@@ -220,7 +222,9 @@ module function_interfaces
                                    krigtype,                        &
                                    anis,bearing,                    &
                                    factorfile,factorfiletype,       &
-                                   icount_interp)
+                                   icount_interp)                   &
+                     bind(c,name="calc_kriging_factors_auto_2d")
+    !DIR$ ATTRIBUTES DLLEXPORT :: calc_kriging_factors_auto_2d
        use iso_c_binding, only: c_int,c_char,c_double
        integer(kind=c_int), intent(in)           :: npts
        real(kind=c_double), intent(in)           :: ecs(npts),ncs(npts)
@@ -242,7 +246,9 @@ module function_interfaces
                          krigtype,transtype,             &
                          sourceval,targval,              &
                          icount_interp,                  &
-                         meanval)
+                         meanval)                        &
+                     bind(c,name="krige_using_file")
+    !DIR$ ATTRIBUTES DLLEXPORT :: krige_using_file
        use iso_c_binding, only: c_int,c_char,c_double
        character (kind=c_char,len=1), intent(in) :: factorfile(*)
        integer(kind=c_int), intent(in)           :: factorfiletype
@@ -267,7 +273,9 @@ module function_interfaces
                                    srhmax,srhmin,srvert,          &
                                    maxpts,minpts,                 &
                                    factorfile,factorfiletype,     &
-                                   icount_interp)
+                                   icount_interp)                 &
+                     bind(c,name="calc_kriging_factors_3d")
+    !DIR$ ATTRIBUTES DLLEXPORT :: calc_kriging_factors_3d
        use iso_c_binding, only: c_int,c_char,c_double
        integer(kind=c_int), intent(in)         :: npts
        real(kind=c_double), intent(in)         :: ecs(npts),ncs(npts),zcs(npts)
@@ -296,7 +304,9 @@ module function_interfaces
                               npts,ec,nc,zn,                &
                               vartype,                      &
                               nugget,aa,sill,anis,bearing,  &
-                              ldcovmat,covmat)
+                              ldcovmat,covmat)              &
+                     bind(c,name="build_covar_matrix_2d")
+    !DIR$ ATTRIBUTES DLLEXPORT :: build_covar_matrix_2d
        use iso_c_binding, only: c_int,c_double
        integer(kind=c_int), intent(in)         :: npts
        real(kind=c_double), intent(in)         :: ec(npts),nc(npts)
@@ -317,7 +327,9 @@ module function_interfaces
                                   nugget,sill,                  &
                                   ahmax,ahmin,avert,            &
                                   bearing,dip,rake,             &
-                                  ldcovmat,covmat)
+                                  ldcovmat,covmat)              &
+                     bind(c,name="build_covar_matrix_3d")
+    !DIR$ ATTRIBUTES DLLEXPORT :: build_covar_matrix_3d
        use iso_c_binding, only: c_int,c_double
        integer(kind=c_int), intent(in)         :: npts
        real(kind=c_double), intent(in)         :: ec(npts),nc(npts),zc(npts)
@@ -339,7 +351,9 @@ module function_interfaces
                          mpts,                                         &
                          ect,nct,active,                               &
                          factorfile,factorfiletype,                    &
-                         icount_interp)
+                         icount_interp)                                &
+                     bind(c,name="calc_structural_overlay_factors")
+    !DIR$ ATTRIBUTES DLLEXPORT :: calc_structural_overlay_factors
        use iso_c_binding, only: c_int,c_char,c_double
        integer(kind=c_int), intent(in)           :: npts
        real(kind=c_double), intent(in)           :: ecs(npts),ncs(npts)
@@ -361,7 +375,9 @@ module function_interfaces
                                  transtype,                        &
                                  lt_target,gt_target,              &
                                  sourceval,targval,                &
-                                 icount_interp)
+                                 icount_interp)                    &
+                    bind(c,name="interpolate_blend_using_file")
+   !DIR$ ATTRIBUTES DLLEXPORT :: interpolate_blend_using_file
        use iso_c_binding, only: c_int,c_char,c_double
        character (kind=c_char,len=1), intent(in) :: factorfile(*)
        integer(kind=c_int), intent(in)           :: factorfiletype
@@ -380,7 +396,9 @@ module function_interfaces
                               mpts,                      &
                               ect,nct,znt,targval,       &
                               transtype,                 &
-                              anis,bearing,invpow)
+                              anis,bearing,invpow)       &
+                    bind(c,name="ipd_interpolate_2d")
+   !DIR$ ATTRIBUTES DLLEXPORT :: ipd_interpolate_2d
        use iso_c_binding, only: c_int,c_double
        integer(kind=c_int), intent(in)           :: npts
        real(kind=c_double), intent(in)           :: ecs(npts),ncs(npts)
@@ -404,7 +422,9 @@ module function_interfaces
                         transtype,                    &
                         ahmax,ahmin,avert,            &
                         bearing,dip,rake,             &
-                        invpow)
+                        invpow)                       &
+                    bind(c,name="ipd_interpolate_3d")
+   !DIR$ ATTRIBUTES DLLEXPORT :: ipd_interpolate_3d
        use iso_c_binding, only: c_int,c_double
        integer(kind=c_int), intent(in)    :: npts
        real(kind=c_double), intent(in)    :: ecs(npts),ncs(npts),zcs(npts)
@@ -420,7 +440,9 @@ module function_interfaces
        real(kind=c_double), intent(in)    :: invpow(mpts)
    end function ipd_interpolate_3d
 
-   integer (kind=c_int) function initialize_randgen(iseed)
+   integer (kind=c_int) function initialize_randgen(iseed) &
+                    bind(c,name="initialize_randgen")
+   !DIR$ ATTRIBUTES DLLEXPORT :: initialize_randgen
        use iso_c_binding, only: c_int
        integer(kind=c_int), intent(in)    :: iseed
    end function initialize_randgen
@@ -430,7 +452,9 @@ module function_interfaces
                               ec,nc,area,active,             &
                               mean,var,aa,anis,bearing,      &
                               transtype,avetype,power,       &
-                              ldrand,nreal,randfield)
+                              ldrand,nreal,randfield)        &
+                    bind(c,name="fieldgen2d_sva")
+   !DIR$ ATTRIBUTES DLLEXPORT :: fieldgen2d_sva
        use iso_c_binding, only: c_int,c_double
        integer(kind=c_int), intent(in)   :: nnode
        real(kind=c_double), intent(in)   :: ec(nnode),nc(nnode)
@@ -457,7 +481,9 @@ module function_interfaces
                               ahmax,ahmin,avert,             &
                               bearing,dip,rake,              &
                               transtype,avetype,power,       &
-                              ldrand,nreal,randfield)
+                              ldrand,nreal,randfield)        &
+                    bind(c,name="fieldgen3d_sva")
+   !DIR$ ATTRIBUTES DLLEXPORT :: fieldgen3d_sva
        use iso_c_binding, only: c_int,c_double
        integer(kind=c_int), intent(in)   :: nnode
        real(kind=c_double), intent(in)   :: ec(nnode),nc(nnode),zc(nnode)
