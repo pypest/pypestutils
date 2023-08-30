@@ -36,6 +36,7 @@ if fc_id == 'gcc'
                    '-Wno-maybe-uninitialized',
                    '-Wno-unused-label',
                    '-Wno-unused-variable',
+                   '-fallow-argument-mismatch',
                    ]
 
   # Options specific to profile

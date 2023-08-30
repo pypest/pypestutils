@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -56,3 +56,34 @@ version = {attr = "pypestutils.version.__version__"}
 
 [tool.setuptools.packages.find]
 include = ["pypestutils", "pypestutils.*"]
+
+[tool.cibuildwheel]
+build = "cp39-*"  # same as requires-python
+skip = "*-musllinux*"
+before-build = [
+    "pip install meson ninja",
+    "sh {project}/scripts/build_lib.sh",
+]
+build-verbosity = "3"
+repair-wheel-command = "python scripts/repair_wheel.py -w {dest_dir} {wheel}"
+test-requires = "tox"
+test-command = "tox --conf {project} --installpkg {wheel}"
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64", "aarch64"]
+test-skip = "*aarch64"  # slow!
+
+[tool.cibuildwheel.macos]
+archs = ["x86_64", "arm64"]
+test-skip = "*-macosx_arm64"
+environment = { MACOSX_DEPLOYMENT_TARGET="10.9" }
+
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]
+before-build = [
+    "pip install meson ninja",
+    "call {project}/scripts/build_lib.bat",
+]
+
+[tool.isort]
+profile = "black"
