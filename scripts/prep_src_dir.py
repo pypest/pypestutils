@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Prepare 'src' directory and meson.build from upstream source."""
+"""Prepare 'pestutils' source directory and meson.build from upstream source."""
 import sys
 import shutil
 from pathlib import Path
@@ -9,7 +9,7 @@ org_d = Path(sys.argv[1])
 print("original directory:", org_d)
 
 root_d = Path(globals().get("__file__", ".")).parent.parent
-new_d = root_d / "src"
+new_d = root_d / "pestutils"
 
 if new_d.exists():
     shutil.rmtree(new_d)

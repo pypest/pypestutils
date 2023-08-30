@@ -93,7 +93,7 @@ endif
 add_project_arguments(fc.get_supported_arguments(compile_args), language: 'fortran')
 add_project_link_arguments(fc.get_supported_arguments(link_args), language: 'fortran')
 
-subdir('src')
+subdir('pestutils')
 
 # meson tests to evaluate installation success
 #test('Test installation version', driver1exe, args : ['-v',])

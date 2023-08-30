@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 set -e
 
 # always run from top of repo
@@ -16,7 +16,7 @@ meson install -C builddir
 
 # copy lib files to Python module
 mkdir pypestutils/lib
-if [ "$(uname)" == "Darwin" ]; then
+if [ "$(uname)" = "Darwin" ]; then
   cp inst/lib/libpestutils.dylib pypestutils/lib/
 else
   cp inst/lib/libpestutils.so pypestutils/lib/
