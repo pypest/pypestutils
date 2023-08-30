@@ -1,10 +1,10 @@
-"""Tests for core module."""
+"""Tests for pestutilslib module."""
 import logging
 from pathlib import PureWindowsPath
 
 import pytest
 
-from pypestutils.core import PestUtilsLib, PestUtilsLibError
+from pypestutils.pestutilslib import PestUtilsLib, PestUtilsLibError
 
 
 def test_init_del():
