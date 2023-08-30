@@ -1,0 +1,84 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  tests:
+    name: Run tests on ${{ matrix.os }} Py${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.9", "3.11"]  # run lower and upper versions
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Update pip
+        run: |
+          pip install --upgrade pip
+
+      - name: Install MinGW-w64 tools (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          path-type: inherit
+          install: >-
+            mingw-w64-x86_64-gcc-fortran
+            mingw-w64-x86_64-lapack
+            mingw-w64-x86_64-meson
+            mingw-w64-x86_64-ninja
+
+      - name: Install GCC Fortran (macOS)
+        if: runner.os == 'macOS'
+        uses: awvwgk/setup-fortran@main
+        with:
+          compiler: gcc
+          version: 11
+
+      - name: Install build dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          pip install meson ninja
+
+      - name: Install build dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran meson
+
+      - name: Build pestutils (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        env:
+          LDFLAGS: -static-libgcc -static-libgfortran -static-libquadmath -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive
+        run: |
+          bash scripts/build_lib.sh
+
+      - name: Build pestutils (non-Windows)
+        if: runner.os != 'Windows'
+        run: |
+          bash scripts/build_lib.sh
+
+      - name: Install package
+        run: |
+          pip install .[test]
+
+      - name: Run tests
+        run: |
+          pytest -v
