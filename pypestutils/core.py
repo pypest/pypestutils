@@ -10,10 +10,7 @@ import numpy as np
 import numpy.typing as npt
 
 from . import enum
-from .ctypes_declarations import get_char_array, get_dimvar_int, prototype
 from .data import ManyArrays, validate_scalar
-from .finder import load
-from .logger import get_logger
 
 
 class PestUtilsLibError(BaseException):
@@ -31,6 +28,10 @@ class PestUtilsLib:
     """
 
     def __init__(self, *, logger_level=logging.INFO) -> None:
+        from .ctypes_declarations import prototype
+        from .finder import load
+        from .logger import get_logger
+
         self.logger = get_logger(self.__class__.__name__, logger_level)
         self.pestutils = load()
         self.logger.debug("loaded %s", self.pestutils)
@@ -45,10 +46,6 @@ class PestUtilsLib:
             if hasattr(self, "logger"):
                 self.logger.warning("cannot call __del__: %s", err)
 
-    def get_char_array(self, name: str):
-        """Get c_char Array with a fixed size from dimvar."""
-        return get_char_array(self.pestutils, name)
-
     def create_char_array(self, init: str | bytes, name: str):
         """Create c_char Array with a fixed size from dimvar and intial value.
 
@@ -57,26 +54,18 @@ class PestUtilsLib:
         init : str or bytes
             Initial value.
         name : str
-            Variable length name, e.g. LENFILENAME or LENVARTYPE.
+            Uppercase variable length name, e.g. LENFILENAME or LENVARTYPE.
         """
+        from .ctypes_declarations import get_dimvar_int
+
         if isinstance(init, str):
             init = init.encode()
         elif isinstance(init, bytes):
             pass
         else:
             raise TypeError(f"expecting either str or bytes; found {type(init)}")
-        size = self.get_dimvar_int(name)
+        size = get_dimvar_int(self.pestutils, name)
         return create_string_buffer(init, size)
-
-    def get_dimvar_int(self, name: str) -> int:
-        """Get dimvar constant integer from library instance.
-
-        Parameters
-        ----------
-        name : str
-            Name of variable in dimvar or other custom name.
-        """
-        return get_dimvar_int(self.pestutils, name)
 
     def inquire_modflow_binary_file_specs(
         self,
@@ -152,7 +141,9 @@ class PestUtilsLib:
         -------
         str
         """
-        charray = self.get_char_array("LENMESSAGE")()
+        from .ctypes_declarations import get_char_array
+
+        charray = get_char_array(self.pestutils, "LENMESSAGE")()
         res = self.pestutils.retrieve_error_message(byref(charray))
         return charray[:res].rstrip(b"\x00").decode()
 
