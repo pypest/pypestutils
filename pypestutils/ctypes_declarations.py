@@ -16,7 +16,24 @@ _misc_lengths = {
 
 
 def get_dimvar_int(lib: CDLL, name: str) -> int:
-    """Get dimvar constant integer from library instance."""
+    """Get dimvar constant integer from library instance.
+
+    Parameters
+    ----------
+    lib : CDLL
+        Ctypes library instance.
+    name : str
+        Uppercase name of variable in dimvar or other custom name.
+
+    Returns
+    -------
+    int
+
+    Raises
+    ------
+    ValueError
+        If name is not defined in lib object.
+    """
     if name in _dimvar_cache:
         return _dimvar_cache[name]
     elif name in _misc_lengths:
@@ -28,7 +45,15 @@ def get_dimvar_int(lib: CDLL, name: str) -> int:
 
 
 def get_char_array(lib: CDLL, name: str):
-    """Get c_char array with a fixed size from dimvar."""
+    """Get c_char Array with a fixed size from dimvar.
+
+    Parameters
+    ----------
+    lib : CDLL
+        Ctypes library instance.
+    name : str
+        Uppercase name of variable in dimvar or other custom name.
+    """
     if name in _char_array_cache:
         return _char_array_cache[name]
     size = get_dimvar_int(lib, name)
@@ -37,20 +62,26 @@ def get_char_array(lib: CDLL, name: str):
     return array_type
 
 
-def prototype(lib):
-    """Add ctypes prototypes for each function."""
+def prototype(lib) -> None:
+    """Add ctypes prototypes for each function in pestutils.
+
+    Parameters
+    ----------
+    lib : CDLL
+        Ctypes library instance, which is modified in-place
+    """
     # Generate c_char Array types based on dimvar sizes
-    lenfilename_t = get_char_array(lib, "LENFILENAME")
-    lenmessage_t = get_char_array(lib, "LENMESSAGE")
-    lengridname_t = get_char_array(lib, "LENGRIDNAME")
-    lenvartype_t = get_char_array(lib, "LENVARTYPE")
-    lenflowtype_t = get_char_array(lib, "LENFLOWTYPE")
+    filename_t = get_char_array(lib, "LENFILENAME")
+    message_t = get_char_array(lib, "LENMESSAGE")
+    gridname_t = get_char_array(lib, "LENGRIDNAME")
+    vartype_t = get_char_array(lib, "LENVARTYPE")
+    flowtype_t = get_char_array(lib, "LENFLOWTYPE")
 
     # inquire_modflow_binary_file_specs(
     #   filein,fileout,isim,itype,iprec,narray,ntime)
     lib.inquire_modflow_binary_file_specs.argtypes = (
-        POINTER(lenfilename_t),  # filein, in
-        POINTER(lenfilename_t),  # fileout, in
+        POINTER(filename_t),  # filein, in
+        POINTER(filename_t),  # fileout, in
         POINTER(c_int),  # isim, in
         POINTER(c_int),  # itype, in
         POINTER(c_int),  # iprec, out
@@ -60,13 +91,13 @@ def prototype(lib):
     lib.inquire_modflow_binary_file_specs.restype = c_int
 
     # retrieve_error_message(errormessage)
-    lib.retrieve_error_message.argtypes = (POINTER(lenmessage_t),)  # errormessage, out
+    lib.retrieve_error_message.argtypes = (POINTER(message_t),)  # errormessage, out
     lib.retrieve_error_message.restype = c_int
 
     # install_structured_grid(
     #   gridname,ncol,nrow,nlay,icorner,e0,n0,rotation,delr,delc)
     lib.install_structured_grid.argtypes = (
-        POINTER(lengridname_t),  # gridname, in
+        POINTER(gridname_t),  # gridname, in
         POINTER(c_int),  # ncol, in
         POINTER(c_int),  # nrow, in
         POINTER(c_int),  # nlay, in
@@ -80,7 +111,7 @@ def prototype(lib):
     lib.install_structured_grid.restype = c_int
 
     # uninstall_structured_grid(gridname)
-    lib.uninstall_structured_grid.argtypes = (POINTER(lengridname_t),)  # gridname, in
+    lib.uninstall_structured_grid.argtypes = (POINTER(gridname_t),)  # gridname, in
     lib.uninstall_structured_grid.restype = c_int
 
     # free_all_memory()
@@ -91,12 +122,12 @@ def prototype(lib):
     #   gridname,depvarfile,isim,iprec,ntime,vartype,interpthresh,nointerpval,
     #   npts,ecoord,ncoord,layer,nproctime,simtime,simstate)
     lib.interp_from_structured_grid.argtypes = (
-        POINTER(lengridname_t),  # gridname, in
-        POINTER(lenfilename_t),  # depvarfile, in
+        POINTER(gridname_t),  # gridname, in
+        POINTER(filename_t),  # depvarfile, in
         POINTER(c_int),  # isim, in
         POINTER(c_int),  # iprec, in
         POINTER(c_int),  # ntime, in
-        POINTER(lenvartype_t),  # vartype, in
+        POINTER(vartype_t),  # vartype, in
         POINTER(c_double),  # interpthresh, in
         POINTER(c_double),  # nointerpval, in
         POINTER(c_int),  # npts, in
@@ -132,8 +163,8 @@ def prototype(lib):
     # install_mf6_grid_from_file(
     #   gridname,grbfile,idis,ncells,ndim1,ndim2,ndim3)
     lib.install_mf6_grid_from_file.argtypes = (
-        POINTER(lengridname_t),  # gridname, in
-        POINTER(lenfilename_t),  # grbfile, in
+        POINTER(gridname_t),  # gridname, in
+        POINTER(filename_t),  # grbfile, in
         POINTER(c_int),  # idis, out
         POINTER(c_int),  # ncells, out
         POINTER(c_int),  # ndim1, out
@@ -143,21 +174,21 @@ def prototype(lib):
     lib.install_mf6_grid_from_file.restype = c_int
 
     # uninstall_mf6_grid(gridname)
-    lib.uninstall_mf6_grid.argtypes = (POINTER(lengridname_t),)  # gridname, in
+    lib.uninstall_mf6_grid.argtypes = (POINTER(gridname_t),)  # gridname, in
     lib.uninstall_mf6_grid.restype = c_int
 
     # calc_mf6_interp_factors(
     #   gridname,npts,ecoord,ncoord,layer,factorfile,
     #   factorfiletype,blnfile,interp_success)
     lib.calc_mf6_interp_factors.argtypes = (
-        POINTER(lengridname_t),  # gridname, in
+        POINTER(gridname_t),  # gridname, in
         POINTER(c_int),  # npts, in
         ndpointer(c_double, ndim=1, flags="F"),  # ecoord, in
         ndpointer(c_double, ndim=1, flags="F"),  # ncoord, in
         ndpointer(c_int, ndim=1, flags="F"),  # layer, in
-        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(filename_t),  # factorfile, in
         POINTER(c_int),  # factorfiletype, in
-        POINTER(lenfilename_t),  # blnfile, in
+        POINTER(filename_t),  # blnfile, in
         ndpointer(c_int, ndim=1, flags=("F", "W")),  # interp_success, out
     )
     lib.calc_mf6_interp_factors.restype = c_int
@@ -166,11 +197,11 @@ def prototype(lib):
     #   depvarfile,factorfile,factorfiletype,ntime,vartype,interpthresh,
     #   reapportion,nointerpval,npts,nproctime,simtime,simstate)
     lib.interp_from_mf6_depvar_file.argtypes = (
-        POINTER(lenfilename_t),  # depvarfile, in
-        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(filename_t),  # depvarfile, in
+        POINTER(filename_t),  # factorfile, in
         POINTER(c_int),  # factorfiletype, in
         POINTER(c_int),  # ntime, in
-        POINTER(lenvartype_t),  # vartype(17), in
+        POINTER(vartype_t),  # vartype(17), in
         POINTER(c_double),  # interpthresh, in
         POINTER(c_int),  # reapportion, in
         POINTER(c_double),  # nointerpval, in
@@ -185,8 +216,8 @@ def prototype(lib):
     #   cbcfile,flowtype,isim,iprec,ncell,izone,nzone,numzone,zonenumber,
     #   ntime,nproctime,timestep,stressperiod,simtime,simflow)
     lib.extract_flows_from_cbc_file.argtypes = (
-        POINTER(lenfilename_t),  # cbcfile, in
-        POINTER(lenflowtype_t),  # flowtype, in
+        POINTER(filename_t),  # cbcfile, in
+        POINTER(flowtype_t),  # flowtype, in
         POINTER(c_int),  # isim, in
         POINTER(c_int),  # iprec, in
         POINTER(c_int),  # ncell, in
@@ -223,7 +254,7 @@ def prototype(lib):
         POINTER(c_double),  # searchrad, in
         POINTER(c_int),  # maxpts, in
         POINTER(c_int),  # minpts, in
-        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(filename_t),  # factorfile, in
         POINTER(c_int),  # factorfiletype, in
         POINTER(c_int),  # icount_interp, out
     )
@@ -244,7 +275,7 @@ def prototype(lib):
         POINTER(c_int),  # krigtype, in
         ndpointer(c_double, ndim=1, flags="F"),  # anis(mpts), in
         ndpointer(c_double, ndim=1, flags="F"),  # bearing(mpts), in
-        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(filename_t),  # factorfile, in
         POINTER(c_int),  # factorfiletype, in
         POINTER(c_int),  # icount_interp, out
     )
@@ -280,7 +311,7 @@ def prototype(lib):
         POINTER(c_double),  # srvert, in
         POINTER(c_int),  # maxpts, in
         POINTER(c_int),  # minpts, in
-        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(filename_t),  # factorfile, in
         POINTER(c_int),  # factorfiletype, in
         POINTER(c_int),  # icount_interp, out
     )
@@ -290,7 +321,7 @@ def prototype(lib):
     #   factorfile,factorfiletype,npts,mpts,krigtype,transtype,
     #   sourceval,targval,icount_interp,meanval)
     lib.krige_using_file.argtypes = (
-        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(filename_t),  # factorfile, in
         POINTER(c_int),  # factorfiletype, in
         POINTER(c_int),  # npts, in
         POINTER(c_int),  # mpts, in
@@ -360,7 +391,7 @@ def prototype(lib):
         ndpointer(c_double, ndim=1, flags="F"),  # ect(mpts), in
         ndpointer(c_double, ndim=1, flags="F"),  # nct(mpts), in
         ndpointer(c_int, ndim=1, flags="F"),  # active(mpts), in
-        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(filename_t),  # factorfile, in
         POINTER(c_int),  # factorfiletype, in
         POINTER(c_int),  # icount_interp, out
     )
@@ -370,7 +401,7 @@ def prototype(lib):
     #   factorfile,factorfiletype,npts,mpts,transtype,
     #   lt_target,gt_target,sourceval,targval,icount_interp)
     lib.interpolate_blend_using_file.argtypes = (
-        POINTER(lenfilename_t),  # factorfile, in
+        POINTER(filename_t),  # factorfile, in
         POINTER(c_int),  # factorfiletype, in
         POINTER(c_int),  # npts, in
         POINTER(c_int),  # mpts, in
