@@ -275,9 +275,7 @@ class PestUtilsLib:
             raise FileNotFoundError(f"could not find depvarfile {depvarfile}")
         if isinstance(iprec, str):
             iprec = enum.Prec.get_value(iprec)
-        pts = ManyArrays(
-            {"ecoord": ecoord, "ncoord": ncoord}, int_any={"layer": layer}
-        )
+        pts = ManyArrays({"ecoord": ecoord, "ncoord": ncoord}, int_any={"layer": layer})
         npts = len(pts)
         simtime = np.zeros(ntime, np.float64, order="F")
         simstate = np.zeros((ntime, npts), np.float64, order="F")
@@ -492,9 +490,7 @@ class PestUtilsLib:
         npt.NDArray[np.int32]
             Array interp_success(npts), where 1 is success and 0 is failure.
         """
-        pts = ManyArrays(
-            {"ecoord": ecoord, "ncoord": ncoord}, int_any={"layer": layer}
-        )
+        pts = ManyArrays({"ecoord": ecoord, "ncoord": ncoord}, int_any={"layer": layer})
         npts = len(pts)
         factorfile = Path(factorfile)
         if isinstance(factorfiletype, str):
