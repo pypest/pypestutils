@@ -16,10 +16,10 @@ meson install -C builddir
 
 # copy lib files to Python module
 mkdir pypestutils/lib
-if [ "$(uname)" = "Darwin" ]; then
+if [ "$MSYSTEM" = "MSYS" ]; then
+  cp inst/bin/pestutils.dll pypestutils/lib/
+elif [ "$(uname)" = "Darwin" ]; then
   cp inst/lib/libpestutils.dylib pypestutils/lib/
 elif [ "$(uname)" = "Linux" ]; then
   cp inst/lib/libpestutils.so pypestutils/lib/
-else  # Windows / msys
-  cp inst/bin/pestutils.dll pypestutils/lib/
 fi
