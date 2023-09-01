@@ -78,7 +78,7 @@ archs = ["x86_64", "arm64"]
 environment = { MACOSX_DEPLOYMENT_TARGET="10.9", FC="gfortran-13" }
 before-build = [
     "pip install meson ninja",
-    "bash {project}/scripts/build_lib.sh",
+    'FFLAGS="$ARCHFLAGS" bash {project}/scripts/build_lib.sh',
 ]
 test-skip = "*-macosx_arm64"
 
