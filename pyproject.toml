@@ -74,7 +74,7 @@ before-build = [
 test-skip = "*aarch64"  # slow!
 
 [tool.cibuildwheel.macos]
-archs = ["x86_64", "arm64"]
+archs = ["x86_64"]  # , "arm64"] - need either native host or fortran cross-compiler
 environment = { MACOSX_DEPLOYMENT_TARGET="10.9", FC="gfortran-13" }
 before-build = [
     "pip install meson ninja",
