@@ -26,7 +26,6 @@ fc = meson.get_compiler('fortran')
 fc_id = fc.get_id()
 compile_args = []
 link_args = []
-extra_link_args = []
 
 # Command line options for gfortran
 if fc_id == 'gcc'
@@ -55,15 +54,8 @@ if fc_id == 'gcc'
     compile_args += '-D__APPLE__'
   elif system == 'windows'
     compile_args += '-D_WIN32'
-    link_args += [
-      '-static-libgcc',
-      '-static-libgfortran',
-      '-static-libquadmath',
-    ]
-    # Needed for msys2 / mingw
-    extra_link_args += [
-        '-Wl,-Bstatic,--whole-archive', '-lwinpthread', '-Wl,--no-whole-archive',
-    ]
+    # For "more static" use the following envvar:
+    # LDFLAGS=-static-libgcc -static-libgfortran -static-libquadmath -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive
   endif
 endif
 
@@ -98,7 +90,7 @@ elif fc_id == 'intel'
 endif
 
 add_project_arguments(fc.get_supported_arguments(compile_args), language: 'fortran')
-add_project_link_arguments(fc.get_supported_arguments(link_args) + extra_link_args, language: 'fortran')
+add_project_link_arguments(fc.get_supported_arguments(link_args), language: 'fortran')
 
 subdir('pestutils')
 

@@ -2,9 +2,9 @@
 cd %~dp0\..
 
 :: clean previous attempts
-RD /S /Q builddir
-RD /S /Q inst
-RD /S /Q pypestutils\lib
+RD /S /Q builddir 2> NUL
+RD /S /Q inst 2> NUL
+RD /S /Q pypestutils\lib 2> NUL
 
 :: setup, compile and install
 meson setup builddir --prefix=%cd%\inst
