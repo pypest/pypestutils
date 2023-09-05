@@ -11,21 +11,23 @@ authors = [
 ]
 description = "PEST utilities for MODFLOW"
 keywords = ["PEST", "MODFLOW", "groundwater", "model"]
-license = {text = "CC0"}
+license = {text = "Unlicense"}
 classifiers = [
     "Intended Audience :: Science/Research",
     "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
     "Operating System :: Unix",
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Fortran",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering :: Hydrology",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 dependencies = [
     "numpy >=1.20",
     "pandas",
@@ -60,7 +62,7 @@ version = {attr = "pypestutils.version.__version__"}
 include = ["pypestutils", "pypestutils.*"]
 
 [tool.cibuildwheel]
-build = "cp39-*"  # same as requires-python
+build = "cp38-*"  # pick one; see also [project.requires-python]
 skip = "*-musllinux*"
 build-verbosity = "3"
 repair-wheel-command = "python scripts/repair_wheel.py -w {dest_dir} {wheel}"
