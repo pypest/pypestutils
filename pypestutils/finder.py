@@ -2,8 +2,8 @@
 import ctypes
 import os
 import platform
-from pathlib import Path
 from ctypes.util import find_library
+from pathlib import Path
 
 # the current working directory of this file
 pkg_dir = Path(__file__).parent
