@@ -29,10 +29,12 @@ requires-python = ">=3.9"
 dependencies = [
     "numpy >=1.20",
     "pandas",
-    "pyemu",
 ]
 
 [project.optional-dependencies]
+optional = [
+    "pyemu",
+]
 test = [
     "pytest",
 ]
