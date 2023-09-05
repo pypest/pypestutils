@@ -2,8 +2,8 @@ project(
   'PESTUTILS',
   'fortran',
   version: '2023.8.7',
-  meson_version: '>= 0.59.0',
-  default_options : [
+  meson_version: '>= 1.1.0',
+  default_options: [
     'b_vscrt=static_from_buildtype', # Link runtime libraries statically on Windows
     'optimization=2',
 ])
@@ -93,8 +93,3 @@ add_project_arguments(fc.get_supported_arguments(compile_args), language: 'fortr
 add_project_link_arguments(fc.get_supported_arguments(link_args), language: 'fortran')
 
 subdir('pestutils')
-
-# meson tests to evaluate installation success
-#test('Test installation version', driver1exe, args : ['-v',])
-#test('Test installation compiler', driver1exe, args : ['-c',])
-#test('Test installation help', driver1exe, args : ['-h',])
