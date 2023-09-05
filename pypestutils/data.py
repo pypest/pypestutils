@@ -1,10 +1,14 @@
 """Data module."""
 from __future__ import annotations
 
+from enum import Enum
+from inspect import isclass
 from typing import Any
 
 import numpy as np
 import numpy.typing as npt
+
+from pypestutils.enum import ParamEnum
 
 __all__ = ["ManyArrays", "validate_scalar"]
 
@@ -26,13 +30,16 @@ def validate_scalar(name: str, value: Any, **kwargs) -> None:
     ------
     ValueError
         When value fails validation criteria.
+    TypeError
+        When parameter use is not expected.
     NotImplementedError
         When keyword is not recognized.
     """
     if not np.isscalar(value):
-        raise ValueError(f"'{name}' is not a scalar value")
+        raise TypeError(f"'{name}' is not a scalar value")
     if "isfinite" in kwargs:
-        assert kwargs.pop("isfinite") is True
+        if kwargs.pop("isfinite") is not True:
+            raise TypeError("isfinite must be True")
         if not np.isfinite(value):
             raise ValueError(f"'{name}' must be finite (was {value!r})")
     if "gt" in kwargs:
@@ -60,12 +67,18 @@ def validate_scalar(name: str, value: Any, **kwargs) -> None:
         if not np.isin(value, isin):
             raise ValueError(f"'{name}' must be in {isin} (was {value!r})")
     if "enum" in kwargs:
-        enum_v = kwargs.pop("enum")
-        valid_options = enum_v.get_valid_options()
+        enum_t = kwargs.pop("enum")
+        if not (isclass(enum_t) and issubclass(enum_t, ParamEnum)):
+            raise TypeError("enum must be a subclass of ParamEnum")
+        elif isinstance(value, Enum) and not isinstance(value, enum_t):
+            raise TypeError(f"'{value!s}' is not an enum {enum_t.__name__}")
+        elif not isinstance(value, int):
+            raise TypeError(f"enum value must be either {enum_t.__name__} or int")
+        valid_options = enum_t.get_valid_options()
         if not np.isin(value, list(valid_options.keys())):
             enum_str = ", ".join([f"{v} ({n})" for (v, n) in valid_options.items()])
             raise ValueError(
-                f"'{name}' must be in enum {enum_v.__name__} {enum_str} (was {value!r})"
+                f"'{name}' must be in enum {enum_t.__name__} {enum_str} (was {value!r})"
             )
     if kwargs:
         raise NotImplementedError(f"unhandled kwargs {kwargs}")
@@ -185,15 +198,19 @@ class ManyArrays:
         ------
         ValueError
             When 1 or more array elements fail validation criteria.
+        TypeError
+            When parameter use is not expected.
         NotImplementedError
             When keyword is not recognized.
         """
         if name not in self._names:
             raise KeyError(f"'{name}' not found")
         ar = getattr(self, name)
-        typ = ar.dtype.type
+        dtp = ar.dtype
+        typ = dtp.type
         if "isfinite" in kwargs:
-            assert kwargs.pop("isfinite") is True
+            if kwargs.pop("isfinite") is not True:
+                raise TypeError("isfinite must be True")
             if not np.isfinite(ar).all():
                 raise ValueError(f"'{name}' must be finite")
         if "gt" in kwargs:
@@ -217,10 +234,16 @@ class ManyArrays:
             if not np.isin(ar, isin).all():
                 raise ValueError(f"'{name}' must be in {isin}")
         if "enum" in kwargs:
-            enum_v = kwargs.pop("enum")
-            valid_options = enum_v.get_valid_options()
+            enum_t = kwargs.pop("enum")
+            if not (isclass(enum_t) and issubclass(enum_t, ParamEnum)):
+                raise TypeError("enum must be a subclass of ParamEnum")
+            elif not np.issubdtype(dtp, np.integer):
+                raise TypeError(f"'{name}' values must be integer type")
+            valid_options = enum_t.get_valid_options()
             if not np.isin(ar, list(valid_options.keys())).all():
                 enum_str = ", ".join([f"{v} ({n})" for (v, n) in valid_options.items()])
-                raise ValueError(f"'{name}' must be in {enum_v}: {enum_str}")
+                raise ValueError(
+                    f"'{name}' must be in enum {enum_t.__name__} {enum_str}"
+                )
         if kwargs:
             raise NotImplementedError(f"unhandled kwargs {kwargs}")
