@@ -1,0 +1,7 @@
+     KSTP      KPER              TEXT        NCOL      NROW      NLAY     IMETH      DELT             PERTIM            TOTIM                   TXT1ID1             TXT2ID1             TXT1ID2             TXT2ID2
+        1         1      FLOW-JA-FACE       12300         1        -1         1    2.00000000        2.00000000        2.00000000    
+        1         1   STORAGE-AQUEOUS          50        50        -1         1    2.00000000        2.00000000        2.00000000    
+        1         1   SOURCE-SINK MIX          50        50        -1         6    2.00000000        2.00000000        2.00000000              SVA_TM_T            SVA_TM_T            SVA_TM_T                 SSM
+        2         1      FLOW-JA-FACE       12300         1        -1         1    2.00000000        4.00000000        4.00000000    
+        2         1   STORAGE-AQUEOUS          50        50        -1         1    2.00000000        4.00000000        4.00000000    
+        2         1   SOURCE-SINK MIX          50        50        -1         6    2.00000000        4.00000000        4.00000000              SVA_TM_T            SVA_TM_T            SVA_TM_T                 SSM

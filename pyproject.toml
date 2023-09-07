@@ -9,12 +9,13 @@ authors = [
     {name = "Jeremy White", email = "jtwhite1000@gmail.com"},
     {name = "Mike Taves", email = "mwtoews@gmail.com"},
 ]
+readme = "README.md"
 description = "PEST utilities for MODFLOW"
 keywords = ["PEST", "MODFLOW", "groundwater", "model"]
 license = {text = "Unlicense"}
 classifiers = [
     "Intended Audience :: Science/Research",
-    "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
+    "License :: OSI Approved :: The Unlicense (Unlicense)",
     "Operating System :: Unix",
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
@@ -29,7 +30,7 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "numpy >=1.20",
+    "numpy",
     "pandas",
 ]
 
@@ -40,14 +41,6 @@ optional = [
 test = [
     "pytest",
 ]
-
-[project.readme]
-text = """\
-PEST utilities for MODFLOW.
-
-TODO.
-"""
-content-type = "text/x-rst"
 
 [project.urls]
 Repository = "https://github.com/pypest/pypestutils"

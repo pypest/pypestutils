@@ -1,4 +1,5 @@
 """Common functions for tests. For pytest fixtures, see conftest.py."""
+from pathlib import Path
 
 # key is name, value is number of arguments
 pestutils_function_names = {
@@ -28,3 +29,5 @@ pestutils_function_names = {
     "fieldgen2d_sva": 16,
     "fieldgen3d_sva": 21,
 }
+
+data_dir = Path(__file__).parent / "data"
