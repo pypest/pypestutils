@@ -78,7 +78,7 @@ jobs:
 
       - name: Install package
         run: |
-          pip install .[test]
+          pip install .[test,optional]
 
       - name: Run tests
         run: |
