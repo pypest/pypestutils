@@ -304,8 +304,8 @@ class PestUtilsLib:
         )
         return {
             "nproctime": nproctime.value,
-            "simtime": simtime,
-            "simstate": simstate,
+            "simtime": simtime.copy("A"),
+            "simstate": simstate.copy("A"),
         }
 
     def interp_to_obstime(
@@ -389,7 +389,7 @@ class PestUtilsLib:
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("interpolated %d time points to %d observations", npts, nobs)
-        return obssimval
+        return obssimval.copy("A")
 
     def install_mf6_grid_from_file(
         self, gridname: str, grbfile: str | PathLike
@@ -511,7 +511,7 @@ class PestUtilsLib:
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("calculated mf6 interp factors for %r", gridname)
-        return interp_success
+        return interp_success.copy("A")
 
     def interp_from_mf6_depvar_file(
         self,
@@ -589,8 +589,8 @@ class PestUtilsLib:
         )
         return {
             "nproctime": nproctime.value,
-            "simtime": simtime,
-            "simstate": simstate,
+            "simtime": simtime.copy("A"),
+            "simstate": simstate.copy("A"),
         }
 
     def extract_flows_from_cbc_file(
@@ -678,12 +678,12 @@ class PestUtilsLib:
         self.logger.info("extracted flows from %r", cbcfile.name)
         return {
             "numzone": numzone.value,
-            "zonenumber": zonenumber,
+            "zonenumber": zonenumber.copy("A"),
             "nproctime": nproctime.value,
-            "timestep": timestep,
-            "stressperiod": stressperiod,
-            "simtime": simtime,
-            "simflow": simflow,
+            "timestep": timestep.copy("A"),
+            "stressperiod": stressperiod.copy("A"),
+            "simtime": simtime.copy("A"),
+            "simflow": simflow.copy("A"),
         }
 
     def calc_kriging_factors_2d(
@@ -1073,7 +1073,7 @@ class PestUtilsLib:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("kriged using factor file %r", factorfile.name)
         return {
-            "targval": targval,
+            "targval": targval.copy("A"),
             "icount_interp": icount_interp.value,
         }
 
@@ -1144,7 +1144,7 @@ class PestUtilsLib:
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("calculated covariance matrix for %d 2D pilot points", npts)
-        return covmat
+        return covmat.copy("A")
 
     def build_covar_matrix_3d(
         self,
@@ -1228,7 +1228,7 @@ class PestUtilsLib:
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("calculated covariance matrix for %d 3D pilot points", npts)
-        return covmat
+        return covmat.copy("A")
 
     def calc_structural_overlay_factors(
         self,
@@ -1377,7 +1377,7 @@ class PestUtilsLib:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("applied interpolation factors from %r", factorfile.name)
         return {
-            "targval": mpts.targval,
+            "targval": mpts.targval.copy("A"),
             "icount_interp": icount_interp.value,
         }
 
@@ -1455,7 +1455,7 @@ class PestUtilsLib:
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("undertook 2D inverse-power-of-distance spatial interpolation")
-        return targval
+        return targval.copy("A")
 
     def ipd_interpolate_3d(
         self,
@@ -1552,7 +1552,7 @@ class PestUtilsLib:
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("undertook 3D inverse-power-of-distance spatial interpolation")
-        return targval
+        return targval.copy("A")
 
     def initialize_randgen(self, iseed: int) -> None:
         """
@@ -1660,7 +1660,7 @@ class PestUtilsLib:
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("generated 2D stochastic fields for %d realisations", nreal)
-        return randfield
+        return randfield.copy("A")
 
     def fieldgen3d_sva(
         self,
@@ -1770,4 +1770,4 @@ class PestUtilsLib:
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("generated 3D stochastic fields for %d realisations", nreal)
-        return randfield
+        return randfield.copy("A")
