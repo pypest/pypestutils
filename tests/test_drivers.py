@@ -10,15 +10,26 @@ from .common import data_dir
 
 
 @pytest.mark.parametrize(
-    "filein,fileout,isim,itype,exp_d",
+    "filein, fileout, isim, itype, exp_d",
     [
         pytest.param(
             "sva_tm.hds",
             "driver1a.out",
             31,
             1,
-            {"iprec": 2, "narray": 4, "ntime": 4},
+            {"iprec": 2, "narray": 367, "ntime": 367},
             id="a",
+            marks=pytest.mark.skipif(
+                not (data_dir / "sva_tm.hds").exists(), reason="full"
+            ),
+        ),
+        pytest.param(
+            "sva_tm_r.hds",
+            "driver1a_r.out",
+            31,
+            1,
+            {"iprec": 2, "narray": 4, "ntime": 4},
+            id="a_r",
         ),
         pytest.param(
             "PT01.hds",
@@ -33,16 +44,38 @@ from .common import data_dir
             "driver1c.out",
             22,
             2,
-            {"iprec": 1, "narray": 16, "ntime": 3},
+            {"iprec": 1, "narray": 94, "ntime": 16},
+            marks=pytest.mark.skipif(
+                not (data_dir / "PT01.cbb").exists(), reason="full"
+            ),
             id="c",
+        ),
+        pytest.param(
+            "PT01_r.cbb",
+            "driver1c_r.out",
+            22,
+            2,
+            {"iprec": 1, "narray": 16, "ntime": 3},
+            id="c_r",
         ),
         pytest.param(
             "sva_tm_t.cbc",
             "driver1d.out",
             31,
             2,
-            {"iprec": 2, "narray": 6, "ntime": 2},
+            {"iprec": 2, "narray": 900, "ntime": 300},
+            marks=pytest.mark.skipif(
+                not (data_dir / "sva_tm_t.cbc").exists(), reason="full"
+            ),
             id="d",
+        ),
+        pytest.param(
+            "sva_tm_t_r.cbc",
+            "driver1d_r.out",
+            31,
+            2,
+            {"iprec": 2, "narray": 6, "ntime": 2},
+            id="d_r",
         ),
         pytest.param(
             "ex-gwf-u1disv.hds",
@@ -117,20 +150,46 @@ def test_driver1(tmp_path, filein, fileout, isim, itype, exp_d):
             15,
             "coastwells.crd",
             "coast.hds",
-            2,
+            36,
             "coast_heads_wells.dat",
-            {"nproctime": 2},
+            {"nproctime": 36},
+            marks=pytest.mark.skipif(
+                not (data_dir / "coast.hds").exists(), reason="full"
+            ),
             id="b",
+        ),
+        pytest.param(
+            "coast.spc",
+            15,
+            "coastwells.crd",
+            "coast_r.hds",
+            2,
+            "coast_heads_wells_r.dat",
+            {"nproctime": 2},
+            id="b_r",
         ),
         pytest.param(
             "lockyer.spc",
             1,
             "lock_bore.csv",
             "lock.hds",
-            4,
+            114,
             "lock_heads_wells.dat",
-            {"nproctime": 4},
+            {"nproctime": 114},
+            marks=pytest.mark.skipif(
+                not (data_dir / "lock.hds").exists(), reason="full"
+            ),
             id="c",
+        ),
+        pytest.param(
+            "lockyer.spc",
+            1,
+            "lock_bore.csv",
+            "lock_r.hds",
+            4,
+            "lock_heads_wells_r.dat",
+            {"nproctime": 4},
+            id="c_r",
         ),
     ],
 )
