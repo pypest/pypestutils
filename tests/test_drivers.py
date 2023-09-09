@@ -1,14 +1,16 @@
 """John Doherty's driver test programs."""
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
 
 from pypestutils import enum
-from pypestutils.pestutilslib import PestUtilsLib, PestUtilsLibError
+from pypestutils.pestutilslib import PestUtilsLib
 
 from .common import data_dir
 
 
+# driver1 inputs
 @pytest.mark.parametrize(
     "filein, fileout, isim, itype, exp_d",
     [
@@ -132,73 +134,22 @@ def test_driver1(tmp_path, filein, fileout, isim, itype, exp_d):
     assert res_d["narray"] == len(res_df)
 
 
-@pytest.mark.parametrize(
-    "spc, nlay, crd, depvar, ntime, fileout, exp_d",
-    [
-        pytest.param(
-            "rect.spc",
-            1,
-            "wells.crd",
-            "rect_sgl.hds",
-            1,
-            "heads_interp1_sgl.dat",
-            {"nproctime": 1},
-            id="a",
-        ),
-        pytest.param(
-            "coast.spc",
-            15,
-            "coastwells.crd",
-            "coast.hds",
-            36,
-            "coast_heads_wells.dat",
-            {"nproctime": 36},
-            marks=pytest.mark.skipif(
-                not (data_dir / "coast.hds").exists(), reason="full"
-            ),
-            id="b",
-        ),
-        pytest.param(
-            "coast.spc",
-            15,
-            "coastwells.crd",
-            "coast_r.hds",
-            2,
-            "coast_heads_wells_r.dat",
-            {"nproctime": 2},
-            id="b_r",
-        ),
-        pytest.param(
-            "lockyer.spc",
-            1,
-            "lock_bore.csv",
-            "lock.hds",
-            114,
-            "lock_heads_wells.dat",
-            {"nproctime": 114},
-            marks=pytest.mark.skipif(
-                not (data_dir / "lock.hds").exists(), reason="full"
-            ),
-            id="c",
-        ),
-        pytest.param(
-            "lockyer.spc",
-            1,
-            "lock_bore.csv",
-            "lock_r.hds",
-            4,
-            "lock_heads_wells_r.dat",
-            {"nproctime": 4},
-            id="c_r",
-        ),
-    ],
-)
-def test_driver2(spc, nlay, crd, depvar, ntime, fileout, exp_d):
-    flopy = pytest.importorskip("flopy")
-    lib = PestUtilsLib()
-    spc = flopy.discretization.StructuredGrid.from_gridspec(data_dir / spc)
-    gridname = "grid1"
-    icorner = 2  # driver1.f90 uses '1' but flopy's module uses lower left
+def read_crd(pth: Path) -> pd.DataFrame:
+    """Read coordinate file, return DataFrame."""
+    if pth.suffix == ".csv":
+        df = pd.read_csv(pth, header=None)
+    else:
+        df = pd.read_fwf(pth, header=None)
+    df.columns = ["point", "ee", "nn", "layer"]
+    return df.set_index("point")
+
+
+def install_structured_grid(lib, spc_pth: Path, gridname: str, nlay: int) -> None:
+    """Install structured grid from a spec file."""
+    import flopy
+
+    spc = flopy.discretization.StructuredGrid.from_gridspec(spc_pth)
+    icorner = 2  # driver programs use '1' but flopy's module uses lower left
     lib.install_structured_grid(
         gridname,
         spc.ncol,
@@ -211,21 +162,17 @@ def test_driver2(spc, nlay, crd, depvar, ntime, fileout, exp_d):
         spc.delr,
         spc.delc,
     )
-    crd_pth = data_dir / crd
-    if crd_pth.suffix == ".csv":
-        crd_df = pd.read_csv(crd_pth, header=None)
-    else:
-        crd_df = pd.read_fwf(crd_pth, header=None)
-    crd_df.columns = ["apoint", "ee", "nn", "layer"]
-    crd_df.set_index("apoint", inplace=True)
-    # print(crd_df)
-    depvar_pth = data_dir / depvar
+
+
+def interp_from_structured_grid(
+    lib, crd_df: pd.DataFrame, depvar_pth: Path, gridname: str, ntime: int
+) -> dict:
     isim = 1
     iprec = enum.Prec.single
     texttype = "head"
     interpthresh = 1e20
     nointerpval = 1.1e30
-    res_d = lib.interp_from_structured_grid(
+    return lib.interp_from_structured_grid(
         gridname,
         depvar_pth,
         isim,
@@ -238,26 +185,194 @@ def test_driver2(spc, nlay, crd, depvar, ntime, fileout, exp_d):
         crd_df.nn,
         crd_df.layer,
     )
+
+
+# driver2 inputs
+@pytest.mark.parametrize(
+    "spc, nlay, crd, depvar, ntime, fileout",
+    [
+        pytest.param(
+            "rect.spc",
+            1,
+            "wells.crd",
+            "rect_sgl.hds",
+            1,
+            "heads_interp1_sgl.dat",
+            id="a",
+        ),
+        pytest.param(
+            "coast.spc",
+            15,
+            "coastwells.crd",
+            "coast.hds",
+            36,
+            "coast_heads_wells.dat",
+            marks=pytest.mark.skipif(
+                not (data_dir / "coast.hds").exists(), reason="full"
+            ),
+            id="b",
+        ),
+        pytest.param(
+            "coast.spc",
+            15,
+            "coastwells.crd",
+            "coast_r.hds",
+            4,
+            "coast_heads_wells_r.dat",
+            id="b_r",
+        ),
+        pytest.param(
+            "lockyer.spc",
+            1,
+            "lock_bore.csv",
+            "lock.hds",
+            114,
+            "lock_heads_wells.dat",
+            marks=pytest.mark.skipif(
+                not (data_dir / "lock.hds").exists(), reason="full"
+            ),
+            id="c",
+        ),
+        pytest.param(
+            "lockyer.spc",
+            1,
+            "lock_bore.csv",
+            "lock_r.hds",
+            4,
+            "lock_heads_wells_r.dat",
+            id="c_r",
+        ),
+    ],
+)
+def test_driver2(spc, nlay, crd, depvar, ntime, fileout):
+    pytest.importorskip("flopy")
+    lib = PestUtilsLib()
+    gridname = "grid1"
+    install_structured_grid(lib, data_dir / spc, gridname, nlay)
+    crd_df = read_crd(data_dir / crd)
+    res_d = interp_from_structured_grid(lib, crd_df, data_dir / depvar, gridname, ntime)
     simtime = res_d.pop("simtime")
     assert simtime.shape == (ntime,)
     simstate = res_d.pop("simstate")
     assert simstate.shape == (ntime, len(crd_df))
-    assert exp_d == res_d
+    assert res_d["nproctime"] == ntime
     lib.uninstall_structured_grid(gridname)
     lib.free_all_memory()
-    exp_df = pd.read_fwf(
+    pts_df = pd.read_fwf(
         data_dir / (fileout + ".std"),
         header=None,
         widths=[25, 16, 20],
     )
-    exp_df.columns = ["apoint", "simtime", "simstate"]
+    pts_df.columns = ["point", "simtime", "simstate"]
     res_df = pd.DataFrame(
         {
-            "apoint": crd_df.index.repeat(ntime),
+            "point": crd_df.index.repeat(ntime),
             "simtime": np.tile(simtime, len(crd_df)),
             "simstate": simstate.ravel("F"),
         }
     )
-    exp_df["apoint"] = exp_df["apoint"].str.lower()
-    res_df["apoint"] = res_df["apoint"].str.lower()
-    pd.testing.assert_frame_equal(exp_df, res_df)
+    pts_df["point"] = pts_df["point"].str.lower()
+    res_df["point"] = res_df["point"].str.lower()
+    pd.testing.assert_frame_equal(pts_df, res_df)
+
+
+# driver3 inputs
+@pytest.mark.parametrize(
+    "spc, nlay, crd, depvar, ntime, obsdat, time_extrap, fileout",
+    [
+        pytest.param(
+            "coast.spc",
+            15,
+            "coastwells.crd",
+            "coast.hds",
+            36,
+            "coastwells_meastime.dat",
+            50,
+            "coast_heads_wells_time_interp.dat",
+            marks=pytest.mark.skipif(
+                not (data_dir / "coast.hds").exists(), reason="full"
+            ),
+            id="a",
+        ),
+        pytest.param(
+            "coast.spc",
+            15,
+            "coastwells.crd",
+            "coast_r.hds",
+            4,
+            "coastwells_meastime_r.dat",
+            50,
+            "coast_heads_wells_time_interp_r.dat",
+            id="a_r",
+        ),
+        pytest.param(
+            "lockyer.spc",
+            1,
+            "lock_bore.csv",
+            "lock.hds",
+            114,
+            "lockwells_meastime.dat",
+            2.0,
+            "lock_heads_wells_time_interp.dat",
+            marks=pytest.mark.skipif(
+                not (data_dir / "lock.hds").exists(), reason="full"
+            ),
+            id="b",
+        ),
+        pytest.param(
+            "lockyer.spc",
+            1,
+            "lock_bore.csv",
+            "lock_r.hds",
+            4,
+            "lockwells_meastime.dat",
+            2.0,
+            "lock_heads_wells_time_interp_r.dat",
+            id="b_r",
+        ),
+    ],
+)
+def test_driver3(spc, nlay, crd, depvar, ntime, obsdat, time_extrap, fileout):
+    pytest.importorskip("flopy")
+    lib = PestUtilsLib()
+    gridname = "grid1"
+    install_structured_grid(lib, data_dir / spc, gridname, nlay)
+    crd_df = read_crd(data_dir / crd)
+    res_d = interp_from_structured_grid(lib, crd_df, data_dir / depvar, gridname, ntime)
+    lib.uninstall_structured_grid(gridname)
+    nproctime = res_d["nproctime"]
+    simtime = res_d["simtime"]
+    simstate = res_d["simstate"]
+    obsdat_df = pd.read_fwf(data_dir / obsdat, header=None, widths=[15, 20])
+    obsdat_df.columns = ["point", "time"]
+    # mapping between 0-based index and point name
+    point_idx = {v: k for k, v in crd_df.reset_index().point.to_dict().items()}
+    obsdat_df["num"] = -1
+    sel = obsdat_df.point.isin(point_idx.keys())
+    obsdat_df.loc[sel, "num"] = obsdat_df.loc[sel, "point"].map(point_idx)
+    interpthresh = 1e20
+    nointerpval = 1.1e30
+    how_extrap = "L"  # linear
+    obsdat_df["value"] = lib.interp_to_obstime(
+        nproctime,
+        simtime,
+        simstate,
+        interpthresh,
+        how_extrap,
+        time_extrap,
+        nointerpval,
+        obsdat_df["num"],
+        obsdat_df["time"],
+    )
+    lib.free_all_memory()
+    exp_df = pd.read_fwf(
+        data_dir / (fileout + ".std"),
+        header=None,
+        widths=[25, 16, 30],
+    )
+    exp_df.columns = ["point", "time", "value"]
+    exp_df["point"] = exp_df["point"].str.lower()
+    obsdat_df["point"] = obsdat_df["point"].str.lower()
+    # print(exp_df.head())
+    # print(obsdat_df.head())
+    pd.testing.assert_frame_equal(exp_df, obsdat_df[exp_df.columns])
