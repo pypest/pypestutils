@@ -141,6 +141,7 @@ def read_crd(pth: Path) -> pd.DataFrame:
     else:
         df = pd.read_fwf(pth, header=None)
     df.columns = ["point", "ee", "nn", "layer"]
+    df["point"] = df["point"].str.lower()
     return df.set_index("point")
 
 
@@ -262,8 +263,8 @@ def test_driver2(spc, nlay, crd, depvar, ntime, fileout):
         data_dir / (fileout + ".std"),
         header=None,
         widths=[25, 16, 20],
+        names=["point", "simtime", "simstate"],
     )
-    pts_df.columns = ["point", "simtime", "simstate"]
     res_df = pd.DataFrame(
         {
             "point": crd_df.index.repeat(ntime),
@@ -345,6 +346,7 @@ def test_driver3(spc, nlay, crd, depvar, ntime, obsdat, time_extrap, fileout):
     simstate = res_d["simstate"]
     obsdat_df = pd.read_fwf(data_dir / obsdat, header=None, widths=[15, 20])
     obsdat_df.columns = ["point", "time"]
+    obsdat_df["point"] = obsdat_df["point"].str.lower()
     # mapping between 0-based index and point name
     point_idx = {v: k for k, v in crd_df.reset_index().point.to_dict().items()}
     obsdat_df["num"] = -1
@@ -369,10 +371,133 @@ def test_driver3(spc, nlay, crd, depvar, ntime, obsdat, time_extrap, fileout):
         data_dir / (fileout + ".std"),
         header=None,
         widths=[25, 16, 30],
+        names=["point", "time", "value"],
     )
-    exp_df.columns = ["point", "time", "value"]
-    exp_df["point"] = exp_df["point"].str.lower()
-    obsdat_df["point"] = obsdat_df["point"].str.lower()
     # print(exp_df.head())
     # print(obsdat_df.head())
     pd.testing.assert_frame_equal(exp_df, obsdat_df[exp_df.columns])
+
+
+# driver4 inputs
+@pytest.mark.parametrize(
+    "grbfile, inst_exp, crd, factorfile, blnfile, nointerp_idx, depvar, ntime, interpthresh, interp_exp",
+    [
+        pytest.param(
+            "hd1h.dis.grb",
+            {"idis": 2, "ncells": 11976, "ndim1": 11976, "ndim2": 1, "ndim3": 1},
+            "hd1h_wellcoords.csv",
+            "hd1h.fac",
+            "hd1h.bln",
+            [218],
+            "hd1h.hds",
+            644,
+            1e30,
+            "hd1h_wells_sim.dat",
+            marks=pytest.mark.skipif(
+                not (data_dir / "hd1h.hds").exists(), reason="full"
+            ),
+            id="a",
+        ),
+        pytest.param(
+            "hd1h.dis.grb",
+            {"idis": 2, "ncells": 11976, "ndim1": 11976, "ndim2": 1, "ndim3": 1},
+            "hd1h_wellcoords.csv",
+            "hd1h.fac",
+            "hd1h.bln",
+            [218],
+            "hd1h_r.hds",
+            3,
+            1e30,
+            "hd1h_wells_sim_r.dat",
+            id="a_r",
+        ),
+        pytest.param(
+            "vdl.disv.grb",
+            {"idis": 2, "ncells": 2751, "ndim1": 2751, "ndim2": 1, "ndim3": 1},
+            "vdl_wells.csv",
+            "vdl.fac",
+            "vdl_interp.bln",
+            [],
+            "vdl.hds",
+            4,
+            1e20,
+            "vdl_well_heads.dat",
+            id="b",
+        ),
+    ],
+)
+def test_driver4(
+    tmp_path,
+    grbfile,
+    inst_exp,
+    crd,
+    factorfile,
+    blnfile,
+    nointerp_idx,
+    depvar,
+    ntime,
+    interpthresh,
+    interp_exp,
+):
+    lib = PestUtilsLib()
+    # option 1
+    gridname = "grid1"
+    grb_pth = data_dir / grbfile
+    inst_res = lib.install_mf6_grid_from_file(gridname, grb_pth)
+    assert inst_res == inst_exp
+    # option 3
+    crd_df = read_crd(data_dir / crd)
+    # option 4
+    factorfile_pth = tmp_path / factorfile
+    blnfile_pth = tmp_path / blnfile
+    interp_success = lib.calc_mf6_interp_factors(
+        gridname,
+        crd_df.ee,
+        crd_df.nn,
+        crd_df.layer,
+        factorfile_pth,
+        enum.FactorFileType.text,
+        blnfile_pth,
+    )
+    assert len(interp_success) == len(crd_df)
+    # check position of failures
+    np.testing.assert_array_equal(np.where(interp_success == 0)[0], nointerp_idx)
+    fac_text = factorfile_pth.read_text()
+    # replace signed zeros with unsigned zeros
+    fac_text = fac_text.replace(" -0.000000000000000 ", "  0.000000000000000 ")
+    fac_std_lines = (data_dir / (factorfile + ".std")).read_text().splitlines()
+    assert fac_text.splitlines() == fac_std_lines
+    bln_std_lines = (data_dir / (blnfile + ".std")).read_text().splitlines()
+    assert blnfile_pth.read_text().splitlines() == bln_std_lines
+    # option 5
+    vartype = "head"
+    reapportion = 1  # yes / True
+    nointerpval = 1e30
+    npts = len(crd_df)
+    interp_res = lib.interp_from_mf6_depvar_file(
+        data_dir / depvar,
+        factorfile_pth,
+        enum.FactorFileType.text,
+        ntime,
+        vartype,
+        interpthresh,
+        reapportion,
+        nointerpval,
+        npts,
+    )
+    simtime = interp_res.pop("simtime")
+    assert simtime.shape == (ntime,)
+    simstate = interp_res.pop("simstate")
+    assert simstate.shape == (ntime, len(crd_df))
+    assert interp_res["nproctime"] == ntime
+    # pd.read_fwf is slow!
+    pts_ar = np.loadtxt(
+        data_dir / (interp_exp + ".std"),
+        dtype=[("point", "U20"), ("simtime", float), ("simstate", float)],
+    )
+    np.testing.assert_array_equal(pts_ar["point"], crd_df.index.repeat(ntime))
+    np.testing.assert_allclose(pts_ar["simtime"], np.tile(simtime, len(crd_df)))
+    np.testing.assert_allclose(pts_ar["simstate"], simstate.ravel("F"))
+    # option 6 - not tested by driver
+    # option 2
+    lib.uninstall_mf6_grid(gridname)

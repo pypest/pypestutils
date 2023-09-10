@@ -479,7 +479,7 @@ class PestUtilsLib:
         layer : int or array_like
             Layers of points with shape (npts,).
         factorfile : str or PathLike
-            File for kriging factors.
+            File for kriging factors to write.
         factorfiletype : int, str or enum.FactorFileType
             Factor file type, where 0:binary, 1:text.
         blnfile : str or PathLike
@@ -495,7 +495,7 @@ class PestUtilsLib:
         factorfile = Path(factorfile)
         if isinstance(factorfiletype, str):
             factorfiletype = enum.FactorFileType.get_value(factorfiletype)
-        blnfile = Path(blnfile)  # TODO
+        blnfile = Path(blnfile)
         interp_success = np.zeros(npts, np.int32, order="F")
         res = self.pestutils.calc_mf6_interp_factors(
             byref(self.create_char_array(gridname, "LENGRIDNAME")),
@@ -562,7 +562,9 @@ class PestUtilsLib:
         depvarfile = Path(depvarfile)
         if not depvarfile.is_file():
             raise FileNotFoundError(f"could not find depvarfile {depvarfile}")
-        factorfile = Path(factorfile)  # TODO
+        factorfile = Path(factorfile)
+        if not factorfile.is_file():
+            raise FileNotFoundError(f"could not find factorfile {factorfile}")
         if isinstance(factorfiletype, str):
             factorfiletype = enum.FactorFileType.get_value(factorfiletype)
         simtime = np.zeros(ntime, np.float64, order="F")
@@ -585,7 +587,7 @@ class PestUtilsLib:
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info(
-            "interpolated points from mf6 depvar file %r", npts, depvarfile.name
+            "interpolated %d points from mf6 depvar file %r", npts, depvarfile.name
         )
         return {
             "nproctime": nproctime.value,

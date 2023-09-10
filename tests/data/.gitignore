@@ -5,6 +5,8 @@ coastwells_meastime.dat
 driver1a.out.std
 driver1c.out.std
 driver1d.out.std
+hd1h.hds
+hd1h_wells_sim.dat.std
 lock.hds
 lock_heads_wells.dat.std
 lock_heads_wells_time_interp.dat.std
