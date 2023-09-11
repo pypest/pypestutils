@@ -51,6 +51,25 @@ def test_validate_scalar():
     with pytest.raises(ValueError, match="must be in enum KrigType 0 "):
         validate_scalar("foo", 2, enum=KrigType)
 
+    validate_scalar("foo", "bar", minlen=1)
+    validate_scalar("foo", "bar", minlen=3)
+    with pytest.raises(TypeError, match="minlen must be 1 or more"):
+        validate_scalar("foo", "bar", minlen=0)
+    with pytest.raises(ValueError, match="'foo' cannot have zero len"):
+        validate_scalar("foo", "", minlen=1)
+    with pytest.raises(ValueError, match="'foo' has a min len 2 "):
+        validate_scalar("foo", "b", minlen=2)
+
+    validate_scalar("foo", "bar", maxlen=3)
+    with pytest.raises(ValueError, match="'foo' has a max len 2 "):
+        validate_scalar("foo", "bar", maxlen=2)
+
+    validate_scalar("foo", "bar", leneq=3)
+    with pytest.raises(ValueError, match="'foo' must have len 3 "):
+        validate_scalar("foo", "ba", leneq=3)
+    with pytest.raises(ValueError, match="'foo' must have len 3 "):
+        validate_scalar("foo", "barr", leneq=3)
+
     with pytest.raises(NotImplementedError, match="unhandled kwarg"):
         validate_scalar("foo", 2, notimpl=True)
 

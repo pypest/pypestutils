@@ -23,8 +23,8 @@ def validate_scalar(name: str, value: Any, **kwargs) -> None:
     value : any
         Value of parameter.
     kwargs : dict
-        Supported validation keywords are: isfinite, gt, ge, lt, le, isin and
-        enum.
+        Supported validation keywords are: isfinite, gt, ge, lt, le, isin,
+        enum, minlen, maxlen and leneq.
 
     Raises
     ------
@@ -80,6 +80,25 @@ def validate_scalar(name: str, value: Any, **kwargs) -> None:
             raise ValueError(
                 f"'{name}' must be in enum {enum_t.__name__} {enum_str} (was {value!r})"
             )
+    if "minlen" in kwargs:
+        valuelen = len(value)
+        minlen = kwargs.pop("minlen")
+        if minlen < 1:
+            raise TypeError("minlen must be 1 or more")
+        elif minlen == 1 and valuelen < 1:  # special case `minlen=1`
+            raise ValueError(f"'{name}' cannot have zero len")
+        elif valuelen < minlen:
+            raise ValueError(f"'{name}' has a min len {minlen} (was {len(value)})")
+    if "maxlen" in kwargs:
+        valuelen = len(value)
+        maxlen = kwargs.pop("maxlen")
+        if valuelen > maxlen:
+            raise ValueError(f"'{name}' has a max len {maxlen} (was {valuelen})")
+    if "leneq" in kwargs:
+        valuelen = len(value)
+        leneq = kwargs.pop("leneq")
+        if valuelen != leneq:
+            raise ValueError(f"'{name}' must have len {leneq} (was {valuelen})")
     if kwargs:
         raise NotImplementedError(f"unhandled kwargs {kwargs}")
 
