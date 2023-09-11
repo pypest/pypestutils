@@ -1,5 +1,6 @@
 """John Doherty's driver test programs."""
 from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -10,9 +11,31 @@ from pypestutils.pestutilslib import PestUtilsLib
 from .common import data_dir
 
 
+def read_inquire_modflow_binary_file_specs_file(
+    pth: Path, itype: int, isim: int
+) -> pd.DataFrame:
+    if pth.suffix == ".csv":
+        return pd.read_csv(pth)
+    if itype == 1:
+        widths = [9, 10, 14, 18, 24, 10, 10, 10]
+    elif itype == 2:
+        widths = [9, 10, 18, 12, 10, 10, 10, 14, 19, 17]
+        if isim in [31, 32]:
+            widths += [22, 20, 20, 20]
+    else:
+        raise ValueError(itype)
+    with pth.open() as fp:
+        header_line = fp.readline()
+    header_names = header_line.split()
+    # print(header_line)
+    # print(''.join([a.rjust(b) for a, b in zip(header_names, widths)]))
+    assert len(widths) == len(header_names)
+    return pd.read_fwf(pth, widths=widths)
+
+
 # driver1 inputs
 @pytest.mark.parametrize(
-    "filein, fileout, isim, itype, exp_d",
+    "filein, fileout, isim, itype, inq_exp",
     [
         pytest.param(
             "sva_tm.hds",
@@ -105,33 +128,20 @@ from .common import data_dir
         ),
     ],
 )
-def test_driver1(tmp_path, filein, fileout, isim, itype, exp_d):
+def test_driver1(tmp_path, filein, fileout, isim, itype, inq_exp):
     lib = PestUtilsLib()
     filein_pth = data_dir / filein
     fileout_pth = tmp_path / fileout
-    res_d = lib.inquire_modflow_binary_file_specs(filein_pth, fileout_pth, isim, itype)
+    inq_res = lib.inquire_modflow_binary_file_specs(
+        filein_pth, fileout_pth, isim, itype
+    )
     res_df = pd.read_csv(fileout_pth)
-    if itype == 1:
-        widths = [9, 10, 14, 18, 24, 10, 10, 10]
-    elif itype == 2:
-        widths = [9, 10, 18, 12, 10, 10, 10, 14, 19, 17]
-        if isim in [31, 32]:
-            widths += [22, 20, 20, 20]
-    else:
-        raise ValueError(itype)
-    exp_fileout_pth = data_dir / (fileout + ".std")
-    with exp_fileout_pth.open() as fp:
-        header_line = fp.readline()
-    header_names = header_line.split()
-    # print(header_line)
-    # print(''.join([a.rjust(b) for a, b in zip(header_names, widths)]))
-    assert len(widths) == len(header_names)
-    exp_df = pd.read_fwf(exp_fileout_pth, widths=widths)
-    # print(fileout_pth)
-    # print(exp_df)
-    assert res_d == exp_d
+    exp_df = read_inquire_modflow_binary_file_specs_file(
+        data_dir / (fileout + ".std"), itype, isim
+    )
+    assert inq_res == inq_exp
     pd.testing.assert_frame_equal(res_df, exp_df)
-    assert res_d["narray"] == len(res_df)
+    assert inq_res["narray"] == len(res_df)
 
 
 def read_crd(pth: Path) -> pd.DataFrame:
@@ -501,3 +511,158 @@ def test_driver4(
     # option 6 - not tested by driver
     # option 2
     lib.uninstall_mf6_grid(gridname)
+
+
+# driver5 inputs
+@pytest.mark.parametrize(
+    "ncell, isim, zonefile, nzone, cbcfile, inq_exp, flowtype, ext_exp, obs_exp",
+    [
+        pytest.param(
+            120_000,
+            31,
+            "sop_zones.dat",
+            10,
+            "sop.cbc",
+            {"iprec": 2, "narray": 2, "ntime": 1, "fileout": "sop_flow_contents.dat"},
+            "chd",
+            {"numzone": 4, "nproctime": 1, "fileout": "sop_chd_flows.dat"},
+            None,
+            id="a",
+        ),
+        pytest.param(
+            300,
+            31,
+            "inflow_zones.dat",
+            4,
+            "ex-gwf-sfr-p01b.sfr.bud",
+            {"iprec": 2, "narray": 240, "ntime": 24},
+            "inflow",
+            {"numzone": 2, "nproctime": 24, "fileout": "inflows.dat"},
+            None,
+            id="b",
+        ),
+        pytest.param(
+            29_113_440,
+            32,
+            "rchzones.dat",
+            20,
+            "ex-gwf-disvmesh.cbc",
+            {"iprec": 2, "narray": 4, "ntime": 1},
+            "rch",
+            {"numzone": 7, "nproctime": 1, "fileout": "rchflow.dat"},
+            None,
+            id="c",
+        ),
+        pytest.param(
+            1200,
+            22,
+            "wellzone.dat",
+            20,
+            "umodel_usg_wel.cbc",
+            {"iprec": 1, "narray": 151, "ntime": 151},
+            "wel",
+            {"numzone": 12, "nproctime": 151, "fileout": "umodel_wellflow.dat"},
+            {"obsfile": "umodel_obstimes.dat", "fileout": "umodel_wellflow_interp.dat"},
+            id="d",
+        ),
+        pytest.param(
+            3_705_856,
+            1,
+            "nfsegzone.dat",
+            3,
+            "nfseg.cbb",
+            {"iprec": 1, "narray": 4, "ntime": 2, "fileout": "nfseg.cbb.contents"},
+            "rech",
+            {"numzone": 3, "nproctime": 2, "fileout": "nfseg_rech.dat"},
+            None,
+            id="e",
+        ),
+    ],
+)
+def test_driver5(
+    tmp_path, ncell, isim, zonefile, nzone, cbcfile, inq_exp, flowtype, ext_exp, obs_exp
+):
+    lib = PestUtilsLib()
+    itype = 2  # cell-by-cell flows
+    if "fileout" in inq_exp:
+        inqfile = inq_exp.pop("fileout")
+        res_inqfile = tmp_path / inqfile
+    else:
+        res_inqfile = inqfile = ""
+    cbc_pth = data_dir / cbcfile
+    inq_res = lib.inquire_modflow_binary_file_specs(cbc_pth, res_inqfile, isim, itype)
+    assert inq_res == inq_exp
+    if inqfile:
+        res_df = pd.read_csv(res_inqfile)
+        exp_df = read_inquire_modflow_binary_file_specs_file(
+            data_dir / (inqfile + ".std"), itype, isim
+        )
+        pd.testing.assert_frame_equal(res_df, exp_df)
+    iprec = inq_res["iprec"]
+    ntime = inq_res["ntime"]
+    zonedat = np.loadtxt(data_dir / zonefile, dtype="i").T
+    zone = np.unique(zonedat[1])
+    nzone = len(zone)
+    izone = np.zeros(ncell, np.int32)
+    izone[zonedat[0] - 1] = zonedat[1]
+    ext_res = lib.extract_flows_from_cbc_file(
+        cbc_pth,
+        flowtype,
+        isim,
+        iprec,
+        izone,
+        nzone,
+        ntime,
+    )
+    header = ["ZONENUMBER", "KSTP", "KPER", "SIMTIME", "SIMFLOW"]
+    dtypes = np.dtype(list(zip(header, [int] * 3 + [float] * 2)))
+    with (data_dir / (ext_exp.pop("fileout") + ".std")).open("r") as fp:
+        assert fp.readline().split() == header
+        exp_ar = np.loadtxt(fp, dtypes)
+    # print(pd.DataFrame(exp_ar))
+    zonenumber = ext_res.pop("zonenumber")
+    timestep = ext_res.pop("timestep")
+    stressperiod = ext_res.pop("stressperiod")
+    simtime = ext_res.pop("simtime")
+    simflow = ext_res.pop("simflow")
+    assert ext_res == ext_exp
+    np.testing.assert_array_equal(exp_ar["ZONENUMBER"], np.repeat(zonenumber, ntime))
+    np.testing.assert_array_equal(exp_ar["KSTP"], np.tile(timestep, nzone))
+    np.testing.assert_array_equal(exp_ar["KPER"], np.tile(stressperiod, nzone))
+    np.testing.assert_allclose(exp_ar["SIMTIME"], np.tile(simtime, nzone))
+    np.testing.assert_allclose(exp_ar["SIMFLOW"], simflow.ravel("F"))
+    if obs_exp is None:
+        return
+    nproctime = ext_res["nproctime"]
+    obsdat_pth = data_dir / obs_exp["obsfile"]
+    obsdat = np.loadtxt(obsdat_pth, dtype=[("zone", "U15"), ("time", float)])
+    assert np.char.startswith(obsdat["zone"], "zone").all()
+    obszone = np.char.replace(obsdat["zone"], "zone", "").astype(int)
+    zonenumber_l = zonenumber.tolist()
+    obszonenum = -np.ones(len(obsdat), np.int32)
+    sel = np.isin(obszone, zonenumber)
+    obszonenum[sel] = np.vectorize(lambda x: zonenumber_l.index(x))(obszone[sel])
+    interpthresh = 1.0e300
+    how_extrap = "c"
+    time_extrap = 0.0
+    nointerpval = 1e30
+    obsdat_df = pd.DataFrame(obsdat)
+    obsdat_df["value"] = lib.interp_to_obstime(
+        nproctime,
+        simtime,
+        simflow,
+        interpthresh,
+        how_extrap,
+        time_extrap,
+        nointerpval,
+        obszonenum,
+        obsdat["time"],
+    )
+    lib.free_all_memory()
+    exp_df = pd.read_fwf(
+        data_dir / (obs_exp["fileout"] + ".std"),
+        header=None,
+        widths=[25, 16, 30],
+        names=["zone", "time", "value"],
+    )
+    pd.testing.assert_frame_equal(exp_df, obsdat_df)

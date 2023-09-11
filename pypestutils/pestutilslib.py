@@ -65,6 +65,8 @@ class PestUtilsLib:
         else:
             raise TypeError(f"expecting either str or bytes; found {type(init)}")
         size = get_dimvar_int(self.pestutils, name)
+        if len(init) > size:
+            raise ValueError(f"init size is {len(init)} but {name} is {size}")
         return create_string_buffer(init, size)
 
     def inquire_modflow_binary_file_specs(
@@ -111,6 +113,8 @@ class PestUtilsLib:
             raise FileNotFoundError(f"could not find filein {filein}")
         if fileout:
             fileout = Path(fileout)
+        else:
+            fileout = b""
         validate_scalar("isim", isim, isin=[1, 21, 22, 31, 32, 33])
         validate_scalar("itype", itype, isin=[1, 2])
         iprec = c_int()
@@ -118,7 +122,7 @@ class PestUtilsLib:
         ntime = c_int()
         res = self.pestutils.inquire_modflow_binary_file_specs(
             byref(self.create_char_array(bytes(filein), "LENFILENAME")),
-            byref(self.create_char_array(bytes(fileout) or b"", "LENFILENAME")),
+            byref(self.create_char_array(bytes(fileout), "LENFILENAME")),
             byref(c_int(isim)),
             byref(c_int(itype)),
             byref(iprec),
@@ -647,6 +651,8 @@ class PestUtilsLib:
         cbcfile = Path(cbcfile)
         if not cbcfile.is_file():
             raise FileNotFoundError(f"could not find cbcfile {cbcfile}")
+        validate_scalar("flowtype", flowtype, minlen=1)
+        validate_scalar("iprec", iprec, enum=enum.Prec)
         if isinstance(iprec, str):
             iprec = enum.Prec.get_value(iprec)
         cell = ManyArrays(int_any={"izone": izone})
