@@ -279,8 +279,8 @@ class PestUtilsLib:
             raise FileNotFoundError(f"could not find depvarfile {depvarfile}")
         if isinstance(iprec, str):
             iprec = enum.Prec.get_value(iprec)
-        pts = ManyArrays({"ecoord": ecoord, "ncoord": ncoord}, int_any={"layer": layer})
-        npts = len(pts)
+        pta = ManyArrays({"ecoord": ecoord, "ncoord": ncoord}, int_any={"layer": layer})
+        npts = len(pta)
         simtime = np.zeros(ntime, np.float64, order="F")
         simstate = np.zeros((ntime, npts), np.float64, order="F")
         nproctime = c_int()
@@ -294,9 +294,9 @@ class PestUtilsLib:
             byref(c_double(interpthresh)),
             byref(c_double(nointerpval)),
             byref(c_int(npts)),
-            pts.ecoord,
-            pts.ncoord,
-            pts.layer,
+            pta.ecoord,
+            pta.ncoord,
+            pta.layer,
             byref(nproctime),
             simtime,
             simstate,
@@ -494,8 +494,8 @@ class PestUtilsLib:
         npt.NDArray[np.int32]
             Array interp_success(npts), where 1 is success and 0 is failure.
         """
-        pts = ManyArrays({"ecoord": ecoord, "ncoord": ncoord}, int_any={"layer": layer})
-        npts = len(pts)
+        pta = ManyArrays({"ecoord": ecoord, "ncoord": ncoord}, int_any={"layer": layer})
+        npts = len(pta)
         factorfile = Path(factorfile)
         if isinstance(factorfiletype, str):
             factorfiletype = enum.FactorFileType.get_value(factorfiletype)
@@ -504,9 +504,9 @@ class PestUtilsLib:
         res = self.pestutils.calc_mf6_interp_factors(
             byref(self.create_char_array(gridname, "LENGRIDNAME")),
             byref(c_int(npts)),
-            pts.ecoord,
-            pts.ncoord,
-            pts.layer,
+            pta.ecoord,
+            pta.ncoord,
+            pta.layer,
             byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
             byref(c_int(factorfiletype)),
             byref(self.create_char_array(bytes(blnfile), "LENFILENAME")),
@@ -752,12 +752,14 @@ class PestUtilsLib:
         int
             Number of interp points.
         """
-        npts = ManyArrays({"ecs": ecs, "ncs": ncs}, int_any={"zns": zns})
-        mpts = ManyArrays(
+        npta = ManyArrays({"ecs": ecs, "ncs": ncs}, int_any={"zns": zns})
+        npts = len(npta)
+        mpta = ManyArrays(
             {"ect": ect, "nct": nct},
             {"aa": aa, "anis": anis, "bearing": bearing},
             {"znt": znt},
         )
+        mpts = len(mpta)
         if isinstance(vartype, str):
             vartype = enum.VarioType.get_value(vartype)
         if isinstance(krigtype, str):
@@ -767,19 +769,19 @@ class PestUtilsLib:
             factorfiletype = enum.FactorFileType.get_value(factorfiletype)
         icount_interp = c_int()
         res = self.pestutils.calc_kriging_factors_2d(
-            byref(c_int(len(npts))),
-            npts.ecs,
-            npts.ncs,
-            npts.zns,
-            byref(c_int(len(mpts))),
-            mpts.ect,
-            mpts.nct,
-            mpts.znt,
+            byref(c_int(npts)),
+            npta.ecs,
+            npta.ncs,
+            npta.zns,
+            byref(c_int(mpts)),
+            mpta.ect,
+            mpta.nct,
+            mpta.znt,
             byref(c_int(vartype)),
             byref(c_int(krigtype)),
-            mpts.aa,
-            mpts.anis,
-            mpts.bearing,
+            mpta.aa,
+            mpta.anis,
+            mpta.bearing,
             byref(c_double(searchrad)),
             byref(c_int(maxpts)),
             byref(c_int(minpts)),
@@ -837,10 +839,12 @@ class PestUtilsLib:
         int
             Number of interp points.
         """
-        npts = ManyArrays({"ecs": ecs, "ncs": ncs}, int_d={"zns": zns})
-        mpts = ManyArrays(
+        npta = ManyArrays({"ecs": ecs, "ncs": ncs}, int_d={"zns": zns})
+        npts = len(npta)
+        mpta = ManyArrays(
             {"ect": ect, "nct": nct}, {"anis": anis, "bearing": bearing}, {"znt": znt}
         )
+        mpts = len(mpta)
         if isinstance(krigtype, str):
             krigtype = enum.KrigType.get_value(krigtype)
         factorfile = Path(factorfile)
@@ -848,17 +852,17 @@ class PestUtilsLib:
             factorfiletype = enum.FactorFileType.get_value(factorfiletype)
         icount_interp = c_int()
         res = self.pestutils.calc_kriging_factors_auto_2d(
-            byref(c_int(len(npts))),
-            npts.ecs,
-            npts.ncs,
-            npts.zns,
-            byref(c_int(len(mpts))),
-            mpts.ect,
-            mpts.nct,
-            mpts.znt,
+            byref(c_int(npts)),
+            npta.ecs,
+            npta.ncs,
+            npta.zns,
+            byref(c_int(mpts)),
+            mpta.ect,
+            mpta.nct,
+            mpta.znt,
             byref(c_int(krigtype)),
-            mpts.anis,
-            mpts.bearing,
+            mpta.anis,
+            mpta.bearing,
             byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
             byref(c_int(factorfiletype)),
             byref(icount_interp),
@@ -941,8 +945,10 @@ class PestUtilsLib:
         int
             Number of interp points.
         """
-        npts = ManyArrays({"ecs": ecs, "ncs": ncs, "zcs": zcs}, int_any={"zns": zns})
-        mpts = ManyArrays({"ect": ect, "nct": nct, "zct": zct}, int_any={"znt": znt})
+        npta = ManyArrays({"ecs": ecs, "ncs": ncs, "zcs": zcs}, int_any={"zns": zns})
+        npts = len(npta)
+        mpta = ManyArrays({"ect": ect, "nct": nct, "zct": zct}, int_any={"znt": znt})
+        mpts = len(mpta)
         if isinstance(krigtype, str):
             krigtype = enum.KrigType.get_value(krigtype)
         vartype = np.array(vartype)
@@ -966,16 +972,16 @@ class PestUtilsLib:
             factorfiletype = enum.FactorFileType.get_value(factorfiletype)
         icount_interp = c_int()
         res = self.pestutils.calc_kriging_factors_3d(
-            byref(c_int(len(npts))),
-            npts.ecs,
-            npts.ncs,
-            npts.zcs,
-            npts.zns,
-            byref(c_int(len(mpts))),
-            mpts.ect,
-            mpts.nct,
-            mpts.zct,
-            mpts.znt,
+            byref(c_int(npts)),
+            npta.ecs,
+            npta.ncs,
+            npta.zcs,
+            npta.zns,
+            byref(c_int(mpts)),
+            mpta.ect,
+            mpta.nct,
+            mpta.zct,
+            mpta.znt,
             byref(c_int(krigtype)),
             byref(c_int(len(nzone))),
             nzone.zonenum,
@@ -1052,6 +1058,7 @@ class PestUtilsLib:
         if isinstance(transtype, str):
             transtype = enum.TransType.get_value(transtype)
         npta = ManyArrays({"sourceval": sourceval})
+        npts = len(npta)
         if meanval is None:
             if krigtype == enum.KrigType.simple:
                 self.logger.error(
@@ -1064,8 +1071,8 @@ class PestUtilsLib:
         res = self.pestutils.krige_using_file(
             byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
             byref(c_int(factorfiletype)),
-            byref(c_int(len(npta))),
-            byref(c_int(len(mpta))),
+            byref(c_int(npts)),
+            byref(c_int(mpts)),
             byref(c_int(krigtype)),
             byref(c_int(transtype)),
             npta.sourceval,
@@ -1116,7 +1123,7 @@ class PestUtilsLib:
         npt.NDArray[np.float64]
             2D matrix covmat(ldcovmat, npts).
         """
-        pts = ManyArrays(
+        pta = ManyArrays(
             {"ec": ec, "nc": nc},
             {
                 "nugget": nugget,
@@ -1127,21 +1134,21 @@ class PestUtilsLib:
             },
             {"zn": zn},
         )
-        npts = len(pts)
+        npts = len(pta)
         if isinstance(vartype, str):
             vartype = enum.VarioType.get_value(vartype)
         covmat = np.zeros((ldcovmat, npts), np.float64, order="F")
         res = self.pestutils.build_covar_matrix_2d(
             byref(c_int(npts)),
-            pts.ec,
-            pts.nc,
-            pts.zn,
+            pta.ec,
+            pta.nc,
+            pta.zn,
             byref(c_int(vartype)),
-            pts.nugget,
-            pts.aa,
-            pts.sill,
-            pts.anis,
-            pts.bearing,
+            pta.nugget,
+            pta.aa,
+            pta.sill,
+            pta.anis,
+            pta.bearing,
             byref(c_int(ldcovmat)),
             covmat,
         )
@@ -1193,7 +1200,7 @@ class PestUtilsLib:
         npt.NDArray[np.float64]
             2D matrix covmat(ldcovmat, npts).
         """
-        pts = ManyArrays(
+        pta = ManyArrays(
             {"ec": ec, "nc": nc, "zc": zc},
             {
                 "nugget": nugget,
@@ -1207,25 +1214,25 @@ class PestUtilsLib:
             },
             {"zn": zn},
         )
-        npts = len(pts)
+        npts = len(pta)
         if isinstance(vartype, str):
             vartype = enum.VarioType.get_value(vartype)
         covmat = np.zeros((ldcovmat, npts), np.float64, order="F")
         res = self.pestutils.build_covar_matrix_3d(
             byref(c_int(npts)),
-            pts.ec,
-            pts.nc,
-            pts.zc,
-            pts.zn,
+            pta.ec,
+            pta.nc,
+            pta.zc,
+            pta.zn,
             byref(c_int(vartype)),
-            pts.nugget,
-            pts.sill,
-            pts.ahmax,
-            pts.ahmin,
-            pts.avert,
-            pts.bearing,
-            pts.dip,
-            pts.rake,
+            pta.nugget,
+            pta.sill,
+            pta.ahmax,
+            pta.ahmin,
+            pta.avert,
+            pta.bearing,
+            pta.dip,
+            pta.rake,
             byref(c_int(ldcovmat)),
             covmat,
         )
@@ -1280,10 +1287,12 @@ class PestUtilsLib:
         int
             Number of interp points.
         """
-        npts = ManyArrays(
+        npta = ManyArrays(
             {"ecs": ecs, "ncs": ncs}, {"conwidth": conwidth, "aa": aa}, {"ids": ids}
         )
-        mpts = ManyArrays({"ect": ect, "nct": nct}, int_any={"active": active})
+        npts = len(npta)
+        mpta = ManyArrays({"ect": ect, "nct": nct}, int_any={"active": active})
+        mpts = len(mpta)
         if isinstance(structype, str):
             structype = enum.StrucType.get_value(structype)
         factorfile = Path(factorfile)
@@ -1291,18 +1300,18 @@ class PestUtilsLib:
             factorfiletype = enum.FactorFileType.get_value(factorfiletype)
         icount_interp = c_int()
         res = self.pestutils.calc_structural_overlay_factors(
-            byref(c_int(len(npts))),
-            npts.ecs,
-            npts.ncs,
-            npts.ids,
-            npts.conwidth,
-            npts.aa,
+            byref(c_int(npts)),
+            npta.ecs,
+            npta.ncs,
+            npta.ids,
+            npta.conwidth,
+            npta.aa,
             byref(c_int(structype)),
             byref(c_double(inverse_power)),
-            byref(c_int(len(mpts))),
-            mpts.ect,
-            mpts.nct,
-            mpts.active,
+            byref(c_int(mpts)),
+            mpta.ect,
+            mpta.nct,
+            mpta.active,
             byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
             byref(c_int(factorfiletype)),
             byref(icount_interp),
@@ -1362,19 +1371,21 @@ class PestUtilsLib:
             lt_target = "y" if lt_target else "n"
         if isinstance(gt_target, bool):
             gt_target = "y" if gt_target else "n"
-        npts = ManyArrays({"sourceval": sourceval})
-        mpts = ManyArrays({"targval": targval})
+        npta = ManyArrays({"sourceval": sourceval})
+        npts = len(npta)
+        mpta = ManyArrays({"targval": targval})
+        mpts = len(mpta)
         icount_interp = c_int()
         res = self.pestutils.interpolate_blend_using_file(
             byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
             byref(c_int(factorfiletype)),
-            byref(c_int(len(npts))),
-            byref(c_int(len(mpts))),
+            byref(c_int(npts)),
+            byref(c_int(mpts)),
             byref(c_int(transtype)),
             byref(c_char(lt_target.encode())),
             byref(c_char(gt_target.encode())),
-            npts.sourceval,
-            mpts.targval,
+            npta.sourceval,
+            mpta.targval,
             byref(icount_interp),
         )
         if res != 0:
@@ -1429,32 +1440,34 @@ class PestUtilsLib:
         npt.NDArray[np.float64]
             Values calculated for targets.
         """
-        npts = ManyArrays(
+        npta = ManyArrays(
             {"ecs": ecs, "ncs": ncs, "sourceval": sourceval}, int_any={"zns": zns}
         )
-        mpts = ManyArrays(
+        npts = len(npta)
+        mpta = ManyArrays(
             {"ect": ect, "nct": nct},
             {"anis": anis, "bearing": bearing, "invpow": invpow},
             {"znt": znt},
         )
+        mpts = len(mpta)
         if isinstance(transtype, str):
             transtype = enum.TransType.get_value(transtype)
-        targval = np.zeros(len(mpts), np.float64, order="F")
+        targval = np.zeros(mpts, np.float64, order="F")
         res = self.pestutils.ipd_interpolate_2d(
-            byref(c_int(len(npts))),
-            npts.ecs,
-            npts.ncs,
-            npts.zns,
-            npts.sourceval,
-            byref(c_int(len(mpts))),
-            mpts.ect,
-            mpts.nct,
-            mpts.znt,
+            byref(c_int(npts)),
+            npta.ecs,
+            npta.ncs,
+            npta.zns,
+            npta.sourceval,
+            byref(c_int(mpts)),
+            mpta.ect,
+            mpta.nct,
+            mpta.znt,
             targval,
             byref(c_int(transtype)),
-            mpts.anis,
-            mpts.bearing,
-            mpts.invpow,
+            mpta.anis,
+            mpta.bearing,
+            mpta.invpow,
         )
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
@@ -1511,11 +1524,12 @@ class PestUtilsLib:
         npt.NDArray[np.float64]
             Values calculated for targets.
         """
-        npts = ManyArrays(
+        npta = ManyArrays(
             {"ecs": ecs, "ncs": ncs, "zcs": zcs, "sourceval": sourceval},
             int_any={"zns": zns},
         )
-        mpts = ManyArrays(
+        npts = len(npta)
+        mpta = ManyArrays(
             {"ect": ect, "nct": nct, "zct": zct},
             {
                 "ahmax": ahmax,
@@ -1528,30 +1542,31 @@ class PestUtilsLib:
             },
             {"znt": znt},
         )
+        mpts = len(mpta)
         if isinstance(transtype, str):
             transtype = enum.TransType.get_value(transtype)
-        targval = np.zeros(len(mpts), np.float64, order="F")
+        targval = np.zeros(mpts, np.float64, order="F")
         res = self.pestutils.ipd_interpolate_3d(
-            byref(c_int(len(npts))),
-            npts.ecs,
-            npts.ncs,
-            npts.zcs,
-            npts.zns,
-            npts.sourceval,
-            byref(c_int(len(mpts))),
-            mpts.ect,
-            mpts.nct,
-            mpts.zct,
-            mpts.znt,
+            byref(c_int(npts)),
+            npta.ecs,
+            npta.ncs,
+            npta.zcs,
+            npta.zns,
+            npta.sourceval,
+            byref(c_int(mpts)),
+            mpta.ect,
+            mpta.nct,
+            mpta.zct,
+            mpta.znt,
             targval,
             byref(c_int(transtype)),
-            mpts.ahmax,
-            mpts.ahmin,
-            mpts.avert,
-            mpts.bearing,
-            mpts.dip,
-            mpts.rake,
-            mpts.invpow,
+            mpta.ahmax,
+            mpta.ahmin,
+            mpta.avert,
+            mpta.bearing,
+            mpta.dip,
+            mpta.rake,
+            mpta.invpow,
         )
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
