@@ -1010,6 +1010,7 @@ class PestUtilsLib:
         transtype: int | str | enum.TransType,
         sourceval: npt.ArrayLike,
         meanval: float | npt.ArrayLike | None,
+        nointerpval: float,
     ) -> dict:
         """
         Apply interpolation factors calculated by other functions.
@@ -1031,6 +1032,8 @@ class PestUtilsLib:
         meanval : float, array_like, optional
             Mean values are required if simple kriging, described as a float
             or 1D array with shape (mpts,).
+        nointerpval : float
+            Value to use where interpolation is not possible.
 
         Returns
         -------
@@ -1048,34 +1051,27 @@ class PestUtilsLib:
             krigtype = enum.KrigType.get_value(krigtype)
         if isinstance(transtype, str):
             transtype = enum.TransType.get_value(transtype)
-        float_arrays = {"sourceval": sourceval}
-        meanval_is_None = meanval is None
-        if meanval_is_None:
+        npta = ManyArrays({"sourceval": sourceval})
+        if meanval is None:
             if krigtype == enum.KrigType.simple:
                 self.logger.error(
                     "simple kriging requires 'meanval'; assuming zero for now"
                 )
-                meanval = np.zeros(mpts, np.float64, order="F")
-            else:
-                meanval = np.zeros(0, np.float64, order="F")  # dummy pointer
-        else:
-            float_arrays["meanval"] = meanval
-        pts = ManyArrays(float_arrays)
-        if not meanval_is_None:
-            meanval = pts.meanval
-        targval = np.zeros(mpts, np.float64, order="F")
+            meanval = 0.0
+        mpta = ManyArrays(float_any={"meanval": meanval}, ar_len=mpts)
+        targval = np.full(mpts, nointerpval, dtype=np.float64, order="F")
         icount_interp = c_int()
         res = self.pestutils.krige_using_file(
             byref(self.create_char_array(bytes(factorfile), "LENFILENAME")),
             byref(c_int(factorfiletype)),
-            byref(c_int(len(pts))),
-            byref(c_int(mpts)),
+            byref(c_int(len(npta))),
+            byref(c_int(len(mpta))),
             byref(c_int(krigtype)),
             byref(c_int(transtype)),
-            pts.sourceval,
+            npta.sourceval,
             targval,
             byref(icount_interp),
-            meanval,
+            mpta.meanval,
         )
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())

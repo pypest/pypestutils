@@ -11,6 +11,28 @@ from pypestutils.pestutilslib import PestUtilsLib
 from .common import data_dir
 
 
+def compare_files(pth1: Path, pth2: Path) -> None:
+    text1 = pth1.read_text()
+    text2 = pth2.read_text()
+    lines1 = text1.splitlines(keepends=True)
+    lines2 = text2.splitlines(keepends=True)
+    assert len(lines1) == len(lines2)
+    assert lines1 == lines2
+
+
+def compare_factor_files(pth1: Path, pth2: Path, atol=1e-08) -> None:
+    items1 = pth1.read_text().split()
+    items2 = pth2.read_text().split()
+    # line 1: name
+    assert items1[0].lower() == items2[0].lower()
+    # line 2: int1 int2
+    assert items1[1:3] == items2[1:3]
+    # the remainder can be converted to float and checked
+    ar1 = np.array(items1[3:]).astype(float)
+    ar2 = np.array(items2[3:]).astype(float)
+    np.testing.assert_allclose(ar1, ar2, atol=atol)
+
+
 def read_inquire_modflow_binary_file_specs_file(
     pth: Path, itype: int, isim: int
 ) -> pd.DataFrame:
@@ -472,13 +494,8 @@ def test_driver4(
     assert len(interp_success) == len(crd_df)
     # check position of failures
     np.testing.assert_array_equal(np.where(interp_success == 0)[0], nointerp_idx)
-    fac_text = factorfile_pth.read_text()
-    # replace signed zeros with unsigned zeros
-    fac_text = fac_text.replace(" -0.000000000000000 ", "  0.000000000000000 ")
-    fac_std_lines = (data_dir / (factorfile + ".std")).read_text().splitlines()
-    assert fac_text.splitlines() == fac_std_lines
-    bln_std_lines = (data_dir / (blnfile + ".std")).read_text().splitlines()
-    assert blnfile_pth.read_text().splitlines() == bln_std_lines
+    compare_factor_files(data_dir / (factorfile + ".std"), factorfile_pth)
+    compare_files(data_dir / (blnfile + ".std"), blnfile_pth)
     # option 5
     vartype = "head"
     reapportion = 1  # yes / True
@@ -666,3 +683,72 @@ def test_driver5(
         names=["zone", "time", "value"],
     )
     pd.testing.assert_frame_equal(exp_df, obsdat_df)
+
+
+def test_driver6(tmp_path):
+    flopy = pytest.importorskip("flopy")
+    spc_pth = data_dir / "rectmodel.spc"
+    spc = flopy.discretization.StructuredGrid.from_gridspec(spc_pth)
+    lib = PestUtilsLib()
+    aa = np.loadtxt(data_dir / "aa.ref", dtype=float)
+    mean = np.loadtxt(data_dir / "mean.ref", dtype=float)
+    anis = np.loadtxt(data_dir / "anis.ref", dtype=float)
+    bearing = np.loadtxt(data_dir / "bearing.ref", dtype=float)
+    ect = spc.get_xcellcenters_for_layer(0).ravel("C")
+    nct = spc.get_ycellcenters_for_layer(0).ravel("C")
+    vartype = 1  # enum.VarioType.spher
+    searchrad = 1e20
+    minpts = 10
+    maxpts = 20
+    krigtype = 1  # enum.KrigType.ordinary
+    factorfile = "factors.dat"
+    factorfile_pth = tmp_path / factorfile
+    factorfiletype = 1  # enum.FactorFileType.text
+    znt = np.loadtxt(data_dir / "zones.inf", dtype=int)
+    npts = np.loadtxt(
+        data_dir / "pp.dat",
+        dtype=[
+            ("point", "U8"),
+            ("ecs", float),
+            ("ncs", float),
+            ("zns", int),
+            ("vals", float),
+        ],
+    )
+    icount_interp = lib.calc_kriging_factors_2d(
+        npts["ecs"],
+        npts["ncs"],
+        npts["zns"],
+        ect,
+        nct,
+        znt,
+        vartype,
+        krigtype,
+        aa,
+        anis,
+        bearing,
+        searchrad,
+        maxpts,
+        minpts,
+        factorfile_pth,
+        factorfiletype,
+    )
+    assert icount_interp == 19_895
+    compare_factor_files(data_dir / (factorfile + ".std"), factorfile_pth, 1e-6)
+    mpts = len(mean)
+    transtype = 1  # "l" or "log"
+    nointerpval = 1.1e30
+    krige_res = lib.krige_using_file(
+        factorfile_pth,
+        factorfiletype,
+        mpts,
+        krigtype,
+        transtype,
+        npts["vals"],
+        mean,
+        nointerpval,
+    )
+    valt = krige_res["targval"]
+    assert krige_res["icount_interp"] == 19_895
+    valt_std = np.loadtxt(data_dir / "interpolated.ref.std")
+    np.testing.assert_allclose(valt, valt_std, atol=8e-5)
