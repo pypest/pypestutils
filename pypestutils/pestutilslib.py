@@ -839,7 +839,7 @@ class PestUtilsLib:
         int
             Number of interp points.
         """
-        npta = ManyArrays({"ecs": ecs, "ncs": ncs}, int_d={"zns": zns})
+        npta = ManyArrays({"ecs": ecs, "ncs": ncs}, int_any={"zns": zns})
         npts = len(npta)
         mpta = ManyArrays(
             {"ect": ect, "nct": nct}, {"anis": anis, "bearing": bearing}, {"znt": znt}
