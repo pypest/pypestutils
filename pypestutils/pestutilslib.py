@@ -38,13 +38,13 @@ class PestUtilsLib:
         prototype(self.pestutils)
         self.logger.debug("added prototypes")
 
-    def __del__(self):
-        """Clean-up library instance."""
-        try:
-            self.free_all_memory()
-        except (AttributeError, PestUtilsLibError) as err:
-            if hasattr(self, "logger"):
-                self.logger.warning("cannot call __del__: %s", err)
+    # def __del__(self):
+    #    """Clean-up library instance."""
+    #    try:
+    #        self.free_all_memory()
+    #    except (AttributeError, PestUtilsLibError) as err:
+    #        if hasattr(self, "logger"):
+    #            self.logger.warning("cannot call __del__: %s", err)
 
     def create_char_array(self, init: str | bytes, name: str):
         """Create c_char Array with a fixed size from dimvar and intial value.
