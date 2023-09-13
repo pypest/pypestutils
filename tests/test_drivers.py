@@ -694,16 +694,6 @@ def test_driver6(tmp_path):
     mean = np.loadtxt(data_dir / "mean.ref", dtype=float)
     anis = np.loadtxt(data_dir / "anis.ref", dtype=float)
     bearing = np.loadtxt(data_dir / "bearing.ref", dtype=float)
-    ect = spc.get_xcellcenters_for_layer(0).ravel("C")
-    nct = spc.get_ycellcenters_for_layer(0).ravel("C")
-    vartype = 1  # enum.VarioType.spher
-    searchrad = 1e20
-    minpts = 10
-    maxpts = 20
-    krigtype = 1  # enum.KrigType.ordinary
-    factorfile = "factors.dat"
-    factorfile_pth = tmp_path / factorfile
-    factorfiletype = 1  # enum.FactorFileType.text
     znt = np.loadtxt(data_dir / "zones.inf", dtype=int)
     npts = np.loadtxt(
         data_dir / "pp.dat",
@@ -715,6 +705,16 @@ def test_driver6(tmp_path):
             ("vals", float),
         ],
     )
+    vartype = 1  # enum.VarioType.spher
+    searchrad = 1e20
+    minpts = 10
+    maxpts = 20
+    krigtype = 1  # enum.KrigType.ordinary
+    factorfile = "factors.dat"
+    factorfile_pth = tmp_path / factorfile
+    factorfiletype = 1  # enum.FactorFileType.text
+    ect = spc.get_xcellcenters_for_layer(0).ravel("C")
+    nct = spc.get_ycellcenters_for_layer(0).ravel("C")
     icount_interp = lib.calc_kriging_factors_2d(
         npts["ecs"],
         npts["ncs"],
@@ -752,3 +752,62 @@ def test_driver6(tmp_path):
     assert krige_res["icount_interp"] == 19_895
     valt_std = np.loadtxt(data_dir / "interpolated.ref.std")
     np.testing.assert_allclose(valt, valt_std, atol=8e-5)
+
+
+def test_driver7(tmp_path):
+    flopy = pytest.importorskip("flopy")
+    spc_pth = data_dir / "rectmodel.spc"
+    spc = flopy.discretization.StructuredGrid.from_gridspec(spc_pth)
+    lib = PestUtilsLib()
+    mean = np.loadtxt(data_dir / "mean.ref", dtype=float)
+    anis = np.loadtxt(data_dir / "anis.ref", dtype=float)
+    bearing = np.loadtxt(data_dir / "bearing.ref", dtype=float)
+    znt = np.loadtxt(data_dir / "zones.inf", dtype=int)
+    krigtype = 0  # enum.KrigType.simple
+    factorfile = "factors1.dat"
+    factorfile_pth = tmp_path / factorfile
+    factorfiletype = 1  # enum.FactorFileType.text
+    ect = spc.get_xcellcenters_for_layer(0).ravel("C")
+    nct = spc.get_ycellcenters_for_layer(0).ravel("C")
+    npts = np.loadtxt(
+        data_dir / "pp.dat",
+        dtype=[
+            ("point", "U8"),
+            ("ecs", float),
+            ("ncs", float),
+            ("zns", int),
+            ("vals", float),
+        ],
+    )
+    icount_interp = lib.calc_kriging_factors_auto_2d(
+        npts["ecs"],
+        npts["ncs"],
+        npts["zns"],
+        ect,
+        nct,
+        znt,
+        krigtype,
+        anis,
+        bearing,
+        factorfile_pth,
+        factorfiletype,
+    )
+    assert icount_interp == 19_895
+    compare_factor_files(data_dir / (factorfile + ".std"), factorfile_pth, 1e-5)
+    mpts = len(mean)
+    transtype = 0  # "n" or "natural"
+    nointerpval = 1.1e30
+    krige_res = lib.krige_using_file(
+        factorfile_pth,
+        factorfiletype,
+        mpts,
+        krigtype,
+        transtype,
+        npts["vals"],
+        mean,
+        nointerpval,
+    )
+    valt = krige_res["targval"]
+    assert krige_res["icount_interp"] == 19_895
+    valt_std = np.loadtxt(data_dir / "interpolated1.ref.std")
+    np.testing.assert_allclose(valt, valt_std, atol=5e-5)
