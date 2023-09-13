@@ -16,7 +16,7 @@ def test_init_logger(caplog):
     caplog.set_level(logging.DEBUG)
     lib = PestUtilsLib(logger_level=logging.INFO)
     assert len(caplog.records) == 0
-    del lib
+    lib.initialize_randgen(123)
     assert len(caplog.records) > 0
 
 

@@ -290,7 +290,6 @@ def test_driver2(spc, nlay, crd, depvar, ntime, fileout):
     assert simstate.shape == (ntime, len(crd_df))
     assert res_d["nproctime"] == ntime
     lib.uninstall_structured_grid(gridname)
-    lib.free_all_memory()
     pts_df = pd.read_fwf(
         data_dir / (fileout + ".std"),
         header=None,
@@ -398,7 +397,6 @@ def test_driver3(spc, nlay, crd, depvar, ntime, obsdat, time_extrap, fileout):
         obsdat_df["num"],
         obsdat_df["time"],
     )
-    lib.free_all_memory()
     exp_df = pd.read_fwf(
         data_dir / (fileout + ".std"),
         header=None,
@@ -675,7 +673,6 @@ def test_driver5(
         obszonenum,
         obsdat["time"],
     )
-    lib.free_all_memory()
     exp_df = pd.read_fwf(
         data_dir / (obs_exp["fileout"] + ".std"),
         header=None,
