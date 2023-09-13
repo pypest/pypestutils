@@ -21,12 +21,18 @@ def get_grid_info_from_mf6_grb(grb_fname):
 
 
 def get_2d_pp_info_structured_grid(
-    pp_space, gridspec_fname, zone_array=None, existing_array=None, name_prefix="pp",
-    bearing_array=None,aniso_array=None,corrlen_array=None
+    pp_space,
+    gridspec_fname,
+    zone_array=None,
+    existing_array=None,
+    name_prefix="pp",
+    bearing_array=None,
+    aniso_array=None,
+    corrlen_array=None,
 ):
     sr = SpatialReference.from_gridspec(gridspec_fname)
     pname, px, py, pzone, pval = [], [], [], [], []
-    pi,pj = [],[]
+    pi, pj = [], []
     count = 0
     for i in range(int(pp_space / 2), sr.nrow, pp_space):
         for j in range(int(pp_space / 2), sr.ncol, pp_space):
@@ -48,19 +54,30 @@ def get_2d_pp_info_structured_grid(
             pj.append(j)
             count += 1
     df = pd.DataFrame(
-        {"name": pname, "x": px, "y": py, "zone": pzone, "value": pval,"i":pi,"j":pj}, index=pname
+        {
+            "name": pname,
+            "x": px,
+            "y": py,
+            "zone": pzone,
+            "value": pval,
+            "i": pi,
+            "j": pj,
+        },
+        index=pname,
     )
-    df.loc[:,"bearing"] = 0.0
+    df.loc[:, "bearing"] = 0.0
     if bearing_array is not None:
-        df.loc[:,"bearing"] = bearing_array[df.i,df.j]
-    df.loc[:,"aniso"] = 1.0
+        df.loc[:, "bearing"] = bearing_array[df.i, df.j]
+    df.loc[:, "aniso"] = 1.0
     if aniso_array is not None:
-        df.loc[:,"aniso"] = aniso_array[df.i,df.j]
-    df.loc[:,"corrlen"] = max(sr.xcentergrid.max(),sr.ycentergrid.max()) * pp_space * 5 #?
+        df.loc[:, "aniso"] = aniso_array[df.i, df.j]
+    df.loc[:, "corrlen"] = (
+        max(sr.xcentergrid.max(), sr.ycentergrid.max()) * pp_space * 5
+    )  # ?
     if corrlen_array is not None:
-        df.loc[:,"corrlen"] = corrlen_array[df.i,df.j]
-    
-    
+        df.loc[:, "corrlen"] = corrlen_array[df.i, df.j]
+    df["zone"] = df.zone.astype(int)
+
     return df
 
 
@@ -68,15 +85,30 @@ def interpolate_with_sva_pilotpoints_2d(
     pp_info,
     gridinfo_fname,
     vartype="exp",
+    krigtype="ordinary",
     vartransform="none",
     max_pts=50,
     min_pts=1,
     search_dist=1e30,
-    zone_array=1
+    zone_array=1,
 ):
-    #todo somechecks on pp_info
+    # todo somechecks on pp_info
+    req_cols = ["name", "x", "y", "value"]
+    missing = []
+    for req_col in req_cols:
+        if req_col not in pp_info.columns:
+            missing.append(req_col)
+    if len(missing) > 0:
+        raise Exception(
+            "the following required columns are not in pp_info:{0}".format(
+                ",".join(missing)
+            )
+        )
 
-    nnodes, nrow, ncol = None, None,None
+    if "zone" not in pp_info:
+        pp_info.loc[:, "zone"] = 1
+
+    nnodes, nrow, ncol = None, None, None
     easting, northing, area = None, None, None
     try:
         sr = SpatialReference.from_gridspec(gridinfo_fname)
@@ -89,9 +121,10 @@ def interpolate_with_sva_pilotpoints_2d(
     except Exception as e:
         # some messaging here
         # then try for an mf6 unstructured grid
-       
-        raise Exception("failed to load grid spec file {0}: {1}".format(gridspec_fname, str(e)))
 
+        raise Exception(
+            "failed to load grid spec file {0}: {1}".format(gridspec_fname, str(e))
+        )
 
     if not isinstance(zone_array, np.ndarray):
         zone_array = np.ones((nnodes), dtype=int)
@@ -99,10 +132,8 @@ def interpolate_with_sva_pilotpoints_2d(
         # TODO warn here
         zone_array = zone_array.astype(int)
 
-    # first interpolate the spatially varying geostat components if present
-    
     lib = PestUtilsLib()
-    
+
     hyperfac_fname = "temp.fac"
     hyperfac_ftype = "text"
     hyperbearing = 0.0
@@ -110,67 +141,160 @@ def interpolate_with_sva_pilotpoints_2d(
     hypervartype = "exp"
     hyperkrigtype = "ordinary"
     hypertrans = "none"
-    hypernoint = 1.0e+30
 
-    #todo some logging below, reporting num interp points
+    fac_files = []
+
     bearing = np.zeros_like(easting)
     if "bearing" in pp_info.columns:
         hypernoint = pp_info.bearing.mean()
-        npts = lib.calc_kriging_factors_auto_2d(pp_info.x.values,pp_info.y.values,pp_info.zone.values,easting.flatten(),northing.flatten(),zone_array.flatten(),
-                                                hyperkrigtype,hyperaniso,hyperbearing,hyperfac_fname,hyperfac_ftype) 
-        result = lib.krige_using_file(hyperfac_fname,hyperfac_ftype,nnodes,hyperkrigtype,hypertrans,pp_info.bearing.values,hypernoint,hypernoint)
+        hyperfac_fname = "tempbearing.fac"
+        npts = lib.calc_kriging_factors_auto_2d(
+            pp_info.x.values,
+            pp_info.y.values,
+            pp_info.zone.values.astype(int),
+            easting.flatten(),
+            northing.flatten(),
+            zone_array.flatten().astype(int),
+            hyperkrigtype,
+            hyperaniso,
+            hyperbearing,
+            hyperfac_fname,
+            hyperfac_ftype,
+        )
+        result = lib.krige_using_file(
+            hyperfac_fname,
+            hyperfac_ftype,
+            nnodes,
+            hyperkrigtype,
+            hypertrans,
+            pp_info.bearing.values,
+            hypernoint,
+            hypernoint,
+        )
         bearing = result["targval"]
+        fac_files.append(hyperfac_fname)
 
     aniso = np.zeros_like(easting)
     if "aniso" in pp_info.columns:
         hypernoint = pp_info.aniso.mean()
-        npts = lib.calc_kriging_factors_auto_2d(pp_info.x.values,pp_info.y.values,pp_info.zone.values,easting.flatten(),northing.flatten(),zone_array.flatten(),
-                                                hyperkrigtype,hyperaniso,hyperbearing,hyperfac_fname,hyperfac_ftype) 
-        result = lib.krige_using_file(hyperfac_fname,hyperfac_ftype,nnodes,hyperkrigtype,hypertrans,pp_info.aniso.values,hypernoint,hypernoint)
+        hyperfac_fname = "tempaniso.fac"
+        npts = lib.calc_kriging_factors_auto_2d(
+            pp_info.x.values,
+            pp_info.y.values,
+            pp_info.zone.values,
+            easting.flatten(),
+            northing.flatten(),
+            zone_array.flatten().astype(int),
+            hyperkrigtype,
+            hyperaniso,
+            hyperbearing,
+            hyperfac_fname,
+            hyperfac_ftype,
+        )
+        result = lib.krige_using_file(
+            hyperfac_fname,
+            hyperfac_ftype,
+            nnodes,
+            hyperkrigtype,
+            hypertrans,
+            pp_info.aniso.values,
+            hypernoint,
+            hypernoint,
+        )
         aniso = result["targval"]
 
     use_auto = False
     corrlen = None
     if "corrlen" in pp_info.columns:
         hypernoint = pp_info.corrlen.mean()
-        npts = lib.calc_kriging_factors_auto_2d(pp_info.x.values,pp_info.y.values,pp_info.zone.values,easting.flatten(),northing.flatten(),zone_array.flatten(),
-                                                hyperkrigtype,hyperaniso,hyperbearing,hyperfac_fname,hyperfac_ftype) 
-        result = lib.krige_using_file(hyperfac_fname,hyperfac_ftype,nnodes,hyperkrigtype,hypertrans,pp_info.corrlen.values,hypernoint,hypernoint)
+        hyperfac_fname = "tempcorrlen.fac"
+        npts = lib.calc_kriging_factors_auto_2d(
+            pp_info.x.values,
+            pp_info.y.values,
+            pp_info.zone.values,
+            easting.flatten(),
+            northing.flatten(),
+            zone_array.flatten().astype(int),
+            hyperkrigtype,
+            hyperaniso,
+            hyperbearing,
+            hyperfac_fname,
+            hyperfac_ftype,
+        )
+        result = lib.krige_using_file(
+            hyperfac_fname,
+            hyperfac_ftype,
+            nnodes,
+            hyperkrigtype,
+            hypertrans,
+            pp_info.corrlen.values,
+            hypernoint,
+            hypernoint,
+        )
         corrlen = result["targval"]
+        fac_files.append(hyperfac_fname)
         use_auto = False
 
-    #todo: remove hyperfac_fname if used...
+    for fac_file in fac_files:
+        try:
+            os.remove(fac_file)
+        except Exception as e:
+            pass
 
     # todo: maybe make these args?
-    krigtype = "ordinary"
     fac_fname = "var.fac"
     fac_ftype = "binary"
-    noint = pp_info.loc[:,"value"].mean()
+    noint = pp_info.loc[:, "value"].mean()
     if use_auto:
-        #todo some logging
-        npts = lib.calc_kriging_factors_auto_2d(pp_info.x.values,pp_info.y.values,pp_info.zone.values,easting.flatten(),northing.flatten(),zone_array.flatten(),
-                                                krigtype,aniso.flatten(),bearing.flatten(),fac_fname,fac_ftype)       
+        npts = lib.calc_kriging_factors_auto_2d(
+            pp_info.x.values,
+            pp_info.y.values,
+            pp_info.zone.values,
+            easting.flatten(),
+            northing.flatten(),
+            zone_array.flatten().astype(int),
+            krigtype,
+            aniso.flatten(),
+            bearing.flatten(),
+            fac_fname,
+            fac_ftype,
+        )
     else:
-        #todo: some logging
-        npts = lib.calc_kriging_factors_2d(pp_info.x.values,pp_info.y.values,pp_info.zone.values,easting.flatten(),northing.flatten(),zone_array.flatten(),
-                                                vartype,krigtype,corrlen.flatten(),aniso.flatten(),bearing.flatten(),
-                                                search_dist,max_pts,min_pts,fac_fname,fac_ftype) 
+        npts = lib.calc_kriging_factors_2d(
+            pp_info.x.values,
+            pp_info.y.values,
+            pp_info.zone.values,
+            easting.flatten(),
+            northing.flatten(),
+            zone_array.flatten().astype(int),
+            vartype,
+            krigtype,
+            corrlen.flatten(),
+            aniso.flatten(),
+            bearing.flatten(),
+            search_dist,
+            max_pts,
+            min_pts,
+            fac_fname,
+            fac_ftype,
+        )
 
-    result = lib.krige_using_file(fac_fname,fac_ftype,nnodes,krigtype,vartransform,pp_info.loc[:,"value"].values,noint,noint)
-    #todo: some logging re num interp points
+    result = lib.krige_using_file(
+        fac_fname,
+        fac_ftype,
+        nnodes,
+        krigtype,
+        vartransform,
+        pp_info.loc[:, "value"].values,
+        noint,
+        noint,
+    )
+
     if nrow is not None:
-        arr = result["targval"].reshape(nrow,ncol)
+        arr = result["targval"].reshape(nrow, ncol)
     else:
         arr = results[targval]
     return arr
-
-
-
-
-
-
-
-    # now 
 
 
 def generate_2d_grid_realizations(
@@ -200,7 +324,9 @@ def generate_2d_grid_realizations(
     except Exception as e:
         # some messaging here
         # then try for an mf6 unstructured grid
-        raise Exception("failed to load grid spec file {0}: {1}".format(gridspec_fname, str(e)))
+        raise Exception(
+            "failed to load grid spec file {0}: {1}".format(gridspec_fname, str(e))
+        )
 
     if not isinstance(mean, np.ndarray):
         mean = np.zeros((nnodes)) + mean
@@ -389,7 +515,9 @@ class SpatialReference(object):
 
     def _set_xycentergrid(self):
         self._xcentergrid, self._ycentergrid = np.meshgrid(self.xcenter, self.ycenter)
-        self._xcentergrid, self._ycentergrid = self.transform(self._xcentergrid, self._ycentergrid)
+        self._xcentergrid, self._ycentergrid = self.transform(
+            self._xcentergrid, self._ycentergrid
+        )
 
     def _set_xygrid(self):
         self._xgrid, self._ygrid = np.meshgrid(self.xedge, self.yedge)
