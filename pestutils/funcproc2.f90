@@ -3901,6 +3901,8 @@ subroutine free_param_memory1()
        use used_by_kb2d_1
        implicit none
        integer  :: ierr
+       ! re-set maxsam to allow subsequent allocation
+       maxsam=0
        if(allocated(xa))deallocate(xa,stat=ierr)
        if(allocated(ya))deallocate(ya,stat=ierr)
        if(allocated(dist))deallocate(dist,stat=ierr)
