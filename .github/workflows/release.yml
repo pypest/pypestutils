@@ -1,17 +1,21 @@
 name: Build wheels
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - "*"
   pull_request:
     paths:  # only run this with PRs that touch these files
       - ".github/workflows/release.yml"
       - "scripts/build_lib.*"
       - "pyproject.toml"
       - "setup.py"
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+  release:
+    types:
+      - published
+  workflow_dispatch:
 
 jobs:
   build_wheels:
