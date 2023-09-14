@@ -14,6 +14,7 @@ description = "PEST utilities for MODFLOW"
 keywords = ["PEST", "MODFLOW", "groundwater", "model"]
 license = {text = "Unlicense"}
 classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: The Unlicense (Unlicense)",
     "Operating System :: Unix",
