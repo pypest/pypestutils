@@ -1,0 +1,98 @@
+name: Build wheels
+
+on:
+  pull_request:
+    paths:  # only run this with PRs that touch these files
+      - ".github/workflows/release.yml"
+      - "scripts/build_lib.*"
+      - "pyproject.toml"
+      - "setup.py"
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-2022, macos-11]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm64
+
+      - name: Install MinGW-w64 tools (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          path-type: inherit
+          install: >-
+            mingw-w64-x86_64-gcc-fortran
+            mingw-w64-x86_64-lapack
+            mingw-w64-x86_64-meson
+            mingw-w64-x86_64-ninja
+
+      - name: Build pestutils (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        env:
+          LDFLAGS: -static-libgcc -static-libgfortran -static-libquadmath -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive
+        run: |
+          bash scripts/build_lib.sh
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.15.0
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: pypestutils
+          path: ./wheelhouse/*.whl
+
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build sdist
+        run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: pypestutils
+          path: dist/*.tar.gz
+
+  upload_pypi:
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    if: github.event_name == 'release' && github.event.action == 'published'
+    # or, alternatively, upload to PyPI on every tag starting with 'v' (remove on: release above to use this)
+    # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          # unpacks default artifact into dist/
+          name: pypestutils
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # To test: repository_url: https://test.pypi.org/legacy/
+          repository_url: https://test.pypi.org/legacy/

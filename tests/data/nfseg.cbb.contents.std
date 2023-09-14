@@ -1,0 +1,5 @@
+     KSTP      KPER              TEXT        NCOL      NROW      NLAY     IMETH      DELT             PERTIM            TOTIM
+        1         1                ET         704       752         7
+        1         1          RECHARGE         704       752         7
+        1         2                ET         704       752         7
+        1         2          RECHARGE         704       752         7

@@ -1,0 +1,88 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pypestutils"
+dynamic = ["version"]
+authors = [
+    {name = "Jeremy White", email = "jtwhite1000@gmail.com"},
+    {name = "Mike Taves", email = "mwtoews@gmail.com"},
+]
+readme = "README.md"
+description = "PEST utilities for MODFLOW"
+keywords = ["PEST", "MODFLOW", "groundwater", "model"]
+license = {text = "Unlicense"}
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: The Unlicense (Unlicense)",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Fortran",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Hydrology",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "pandas",
+]
+
+[project.optional-dependencies]
+optional = [
+    "flopy",
+    "pyemu",
+]
+test = [
+    "pytest",
+]
+
+[project.urls]
+Repository = "https://github.com/pypest/pypestutils"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.dynamic]
+version = {attr = "pypestutils.version.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["pypestutils", "pypestutils.*"]
+
+[tool.cibuildwheel]
+build = "cp38-*"  # pick one; see also [project.requires-python]
+skip = "*-musllinux*"
+build-verbosity = "3"
+repair-wheel-command = "python scripts/repair_wheel.py -w {dest_dir} {wheel}"
+test-requires = "tox"
+test-command = "tox --conf {project} --installpkg {wheel}"
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64", "aarch64"]
+before-build = [
+    "pip install meson ninja",
+    "bash {project}/scripts/build_lib.sh",
+]
+test-skip = "*aarch64"  # slow!
+
+[tool.cibuildwheel.macos]
+archs = ["x86_64"]  # , "arm64"] - need either native host or fortran cross-compiler
+environment = { MACOSX_DEPLOYMENT_TARGET="10.9", FC="gfortran-13" }
+before-build = [
+    "pip install meson ninja",
+    "bash {project}/scripts/build_lib.sh",
+]
+test-skip = "*-macosx_arm64"
+
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]
+
+[tool.isort]
+profile = "black"

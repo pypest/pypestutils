@@ -1,0 +1,7 @@
+include meson.build meson.options
+graft etc
+graft pestutils
+graft pypestutils
+graft scripts
+graft tests
+global-exclude *.py[cod]
