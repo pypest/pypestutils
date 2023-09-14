@@ -2,7 +2,7 @@
 
 Suite of Python tools based on PEST utilities.
 
-This package is currently in pre-alpha development, and is not suitable for use.
+This package is currently in pre-alpha development, and is not suitable for use, but early adopters are welcome to have a go.
 
 ## Installation
 ### Easy way
