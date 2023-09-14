@@ -1,0 +1,5 @@
+     KSTP      KPER              TEXT        NCPL      INT1      INT2     IMETH      DELT             PERTIM            TOTIM                   TXT1ID1             TXT2ID1             TXT1ID2             TXT2ID2
+        1         1      FLOW-JA-FACE         601         1        -1         1    1.00000000        1.00000000        1.00000000    
+        1         1        DATA-SPDIS         121         1        -1         6    1.00000000        1.00000000        1.00000000         EX-GWF-U1DISV                 NPF       EX-GWF-U1DISV                 NPF
+        1         1               CHD         121         1        -1         6    1.00000000        1.00000000        1.00000000         EX-GWF-U1DISV       EX-GWF-U1DISV       EX-GWF-U1DISV            CHD-LEFT
+        1         1               CHD         121         1        -1         6    1.00000000        1.00000000        1.00000000         EX-GWF-U1DISV       EX-GWF-U1DISV       EX-GWF-U1DISV           CHD-RIGHT

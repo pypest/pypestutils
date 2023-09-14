@@ -1,0 +1,2 @@
+option('install_drivers', type : 'boolean', value : false,
+  description : 'Install driver programs used for testing')

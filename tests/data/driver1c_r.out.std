@@ -1,0 +1,17 @@
+     KSTP      KPER              TEXT        NVAL      INT1     ICODE     IMETH      DELT             PERTIM            TOTIM
+        1         1     CONSTANT HEAD       13680         1         1
+        1         1     FLOW JA FACE        81416         1         1
+        1         1            DRAINS       13680         1         1
+        1         1     RIVER LEAKAGE       13680         1         1
+        1         2           STORAGE       13680         1         1
+        1         2     CONSTANT HEAD       13680         1         1
+        1         2     FLOW JA FACE        81416         1         1
+        1         2             WELLS       13680         1         1
+        1         2            DRAINS       13680         1         1
+        1         2     RIVER LEAKAGE       13680         1         1
+        2         2           STORAGE       13680         1         1
+        2         2     CONSTANT HEAD       13680         1         1
+        2         2     FLOW JA FACE        81416         1         1
+        2         2             WELLS       13680         1         1
+        2         2            DRAINS       13680         1         1
+        2         2     RIVER LEAKAGE       13680         1         1

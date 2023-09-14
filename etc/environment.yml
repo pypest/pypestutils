@@ -1,0 +1,29 @@
+name: pypestutils
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - appdirs
+  - fprettify
+  - jupytext
+  - matplotlib
+  - meson!=0.63.0
+  - ninja
+  - numpy
+  - pandas
+  - pip
+  - pytest
+  - pytest-cases
+  - pytest-dotenv
+  - pytest-order
+  - pytest-xdist
+  - flaky
+  - cython
+  - pip
+  - pip:
+    - git+https://github.com/pypest/pyemu.git
+
+# Win64 may also want
+# - m2w64-gcc-fortran
