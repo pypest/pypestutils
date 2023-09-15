@@ -10,8 +10,9 @@ __pycache__/
 *.obj
 *.so
 
-# Local installation
+# Local installation and misc. dirs
 inst/
+org_from_john
 
 # Distribution / packaging
 .Python
