@@ -1,0 +1,29 @@
+EXPORTS
+   LENFILENAME DATA
+   LENMESSAGE DATA
+   LENGRIDNAME DATA
+   inquire_modflow_binary_file_specs
+   retrieve_error_message
+   install_structured_grid
+   uninstall_structured_grid
+   free_all_memory
+   interp_from_structured_grid
+   interp_to_obstime
+   install_mf6_grid_from_file
+   uninstall_mf6_grid
+   calc_mf6_interp_factors
+   interp_from_mf6_depvar_file
+   extract_flows_from_cbc_file
+   calc_kriging_factors_2d
+   calc_kriging_factors_auto_2d
+   krige_using_file
+   calc_kriging_factors_3d
+   build_covar_matrix_2d
+   build_covar_matrix_3d
+   calc_structural_overlay_factors
+   interpolate_blend_using_file
+   ipd_interpolate_2d
+   ipd_interpolate_3d
+   initialize_randgen
+   fieldgen2d_sva
+   fieldgen3d_sva
