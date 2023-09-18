@@ -44,9 +44,12 @@ There are two methods to compile Fortran code on Windows, using MSYS2 via bash o
 
 1. MSYS2 can use `./scripts/build_lib.sh` similar to Linux.
 
-2. To use a conda, install `m2w64-gcc-fortran` and `meson` in a conda environment. With the environment active, call `.\scripts\build_lib.bat`. This will compile the library, writting `pestutils.dll` in the `.\inst\bin\` folder. Copy `pestutils.dll` into the module path `pypestutils\lib\` to enable it to be found. 
+2. If using conda:
+   - install `m2w64-gcc-fortran` and `meson` in a conda environment.
+   - with the environment active, call `.\scripts\build_lib.bat`. This will compile the library, writting `pestutils.dll` in the `.\inst\bin\` folder.
+   - copy `pestutils.dll` into the module path `pypestutils\lib\` to enable it to be found. 
 
-Then, install the local version of this package with pip.
+Then, install the local version of this package with pip. 
 
 #### Install pypestutils
 
