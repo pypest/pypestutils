@@ -1,7 +1,6 @@
 integer (kind=c_int) function inquire_modflow_binary_file_specs(FileIn,FileOut,isim,                          &
                                                    itype,iprec,narray,ntime)                     &
                  bind(C,name="inquire_modflow_binary_file_specs")
-!DIR$ ATTRIBUTES DLLEXPORT :: inquire_modflow_binary_file_specs
 
 ! -- This function reports some of the details of a MODFLOW-written binary file. This file may be single or double
 !    precision. It may be a system state or budget file.
@@ -412,7 +411,6 @@ end function inquire_modflow_binary_file_specs
 
 integer (kind=c_int) function retrieve_error_message(errormessage) &
                 bind(c, name="retrieve_error_message")
-!DIR$ ATTRIBUTES DLLEXPORT :: retrieve_error_message
 
 
 ! -- This function retrieves a previously-recorded error message.
@@ -443,7 +441,6 @@ end function retrieve_error_message
 integer (kind=c_int) function install_structured_grid(gridname,ncol,nrow,nlay,icorner,    &
                                       e0,n0,rotation,delr,delc)                           &
                  bind(c,name="install_structured_grid")
-!DIR$ ATTRIBUTES DLLEXPORT :: install_structured_grid
 
 ! -- This function installs specifications for a structured grid.
 
@@ -605,7 +602,6 @@ end function install_structured_grid
 
 integer (kind=c_int) function uninstall_structured_grid(gridname)               &
                  bind(c,name="uninstall_structured_grid")
-!DIR$ ATTRIBUTES DLLEXPORT :: uninstall_structured_grid
 
 ! -- This function uninstalls a previously installed set of structured grid specifications.
 
@@ -666,7 +662,6 @@ end function uninstall_structured_grid
 
 integer (kind=c_int) function free_all_memory() &
                  bind(c,name="free_all_memory")
-!DIR$ ATTRIBUTES DLLEXPORT :: free_all_memory
 
 ! -- This function deallocates all memory that is being used.
 
@@ -734,7 +729,6 @@ integer (kind=c_int) function interp_from_structured_grid(                   &
                              npts,ecoord,ncoord,layer,                       &
                              nproctime,simtime,simstate)                     &
                  bind(c,name="interp_from_structured_grid")
-!DIR$ ATTRIBUTES DLLEXPORT :: interp_from_structured_grid
 
 ! -- This function performs spatial interpolation from a structured grid to a set of points.
 
@@ -1072,7 +1066,6 @@ integer (kind=c_int) function interp_to_obstime(                               &
                              interpthresh,how_extrap,time_extrap,nointerpval,  &
                              nobs,obspoint,obstime,obssimval)                  &
                  bind(c,name="interp_to_obstime")
-!DIR$ ATTRIBUTES DLLEXPORT :: interp_to_obstime
 
 ! -- This function performs temporal interpolation for simulation times to observation times.
 ! -- Note that observation times do not need to be supplied in increasing order for each
@@ -1239,7 +1232,6 @@ end function interp_to_obstime
 integer (kind=c_int) function install_mf6_grid_from_file(gridname,grbfile,        &
                               idis,ncells,ndim1,ndim2,ndim3)                      &
                  bind(c,name="install_mf6_grid_from_file")
-!DIR$ ATTRIBUTES DLLEXPORT :: install_mf6_grid_from_file
 
 ! -- This function installs specifications for a MF6 grid from the contents of a GRB file.
 
@@ -1615,7 +1607,6 @@ end function install_mf6_grid_from_file
 
 integer (kind=c_int) function uninstall_mf6_grid(gridname)            &
                  bind(c,name="uninstall_mf6_grid")
-!DIR$ ATTRIBUTES DLLEXPORT :: uninstall_mf6_grid
 
 ! -- This function uninstalls a previously installed mf6 grid specification.
 
@@ -1682,7 +1673,6 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
                               factorfile, factorfiletype,              &
                               blnfile,interp_success)                  &
                  bind(c,name="calc_mf6_interp_factors")
-!DIR$ ATTRIBUTES DLLEXPORT :: calc_mf6_interp_factors
 
 ! -- This function calculates interpolation factors from a MODFLOW 6 DIS or DISV
 !    grid to a set of user-supplied points.
@@ -2334,7 +2324,6 @@ integer (kind=c_int) function interp_from_mf6_depvar_file(             &
                  ntime,vartype,interpthresh,reapportion,nointerpval,   &
                  npts,nproctime,simtime,simstate)                      &
                  bind(c,name="interp_from_mf6_depvar_file")
-!DIR$ ATTRIBUTES DLLEXPORT :: interp_from_mf6_depvar_file
 
 ! -- This function interpolates to a set of points using previously-calculated
 !    interpolation factors.
@@ -2657,7 +2646,6 @@ integer (kind=c_int) function extract_flows_from_cbc_file(     &
                  ntime,nproctime,                              &
                  timestep,stressperiod,simtime,simflow)        &
                  bind(c,name="extract_flows_from_cbc_file")
-!DIR$ ATTRIBUTES DLLEXPORT :: extract_flows_from_cbc_file
 
 ! -- This function reads and accumulates flows (as read from a cell-by-cell flow term file)
 !    to a user-specified boundary condition.

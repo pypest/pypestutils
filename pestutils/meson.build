@@ -14,6 +14,7 @@ lib_sources = files(
 
 lib = shared_library('pestutils', lib_sources,
   name_prefix: host_machine.system() == 'windows' ? '': 'lib',
+  vs_module_defs: 'pestutils.def',
   install: true)
 
 # Set RUNPATH/RPATH for install_rpath for only Linux and macOS
