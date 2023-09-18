@@ -40,7 +40,13 @@ cp builddir/pestutils/pestutils.dll pypestutils/lib/
 
 #### Build pestutils on Windows
 
-There are two methods to compile Fortran code on Windows, using MSYS2 via bash or a conda environment via cmd. MSYS2 can use `./scripts/build_lib.sh` similar to Linux or to use a conda environment with `m2w64-gcc-fortran` and `meson` and `call .\scripts\build_lib.bat`. On Windows, the shared library name is `pestutils.dll`, which needs to be copied into the module path `pypestutils\lib\` to enable it to be found.
+There are two methods to compile Fortran code on Windows, using MSYS2 via bash or a conda environment via cmd. 
+
+1. MSYS2 can use `./scripts/build_lib.sh` similar to Linux.
+
+2. To use a conda, install `m2w64-gcc-fortran` and `meson` in a conda environment. With the environment active, call `.\scripts\build_lib.bat`. This will compile the library, writting `pestutils.dll` in the `.\inst\bin\` folder. Copy `pestutils.dll` into the module path `pypestutils\lib\` to enable it to be found. 
+
+Then, install the local version of this package with pip.
 
 #### Install pypestutils
 
