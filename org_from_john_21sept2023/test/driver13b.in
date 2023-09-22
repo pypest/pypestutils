@@ -1,0 +1,10 @@
+blockmodel.spc
+20                        /layers in model
+2                         /zones option
+pp3db.dat
+500,500,30                /ahmax,ahmin,avert
+60,0,45                   /bearing,dip,rake
+2.0                       /inverse power of distance
+n                         /n=natural;l=log
+0                         / no interp value
+interptabb_ipd.dat

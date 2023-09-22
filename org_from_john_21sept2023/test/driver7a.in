@@ -1,0 +1,13 @@
+rectmodel.spc
+mean.ref
+anis.ref
+bearing.ref
+zones.inf
+pp.dat
+0                  /kriging type
+factors1.dat
+t
+n                  /(n/l)=(natural/log)
+1.1e30
+interpolated1.ref
+

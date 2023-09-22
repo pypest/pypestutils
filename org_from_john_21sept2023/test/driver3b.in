@@ -1,0 +1,15 @@
+lockyer.spc
+1
+grid1
+lock_bore.csv
+lock.hds
+grid1
+114
+1
+1e20
+head
+lock_heads_wells.dat
+lockwells_meastime.dat
+L
+2.0
+lock_heads_wells_time_interp.dat

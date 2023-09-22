@@ -1,0 +1,14 @@
+1200
+22
+wellzone.dat
+20
+umodel_usg_wel.cbc
+temp.dat
+wel
+umodel_wellflow.dat
+y
+umodel_obstimes.dat
+c
+0.0
+1e30
+umodel_wellflow_interp.dat

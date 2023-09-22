@@ -1,0 +1,13 @@
+blockmodel.spc
+20                        /layers in model
+1                         /zones option
+pp3da.dat
+500,200,50                /ahmax,ahmin,avert
+60,30,0                   /bearing,dip,rake
+2.0                       /inverse power of distance
+1000,500,100              /ahmax,ahmin,avert
+150,-30,0                 /bearing,dip,rake
+2.0                       /inverse power of distance
+l                         /n=natural;l=log
+0                         /no interp value
+interptaba_ipd.dat

@@ -1,0 +1,20 @@
+blockmodel.spc
+20                       /layers in model
+1                        /zones option
+pp3da.dat
+0                        /kriging type
+2                        /var type zone 1
+500,200,50               /ahmax,ahmin,avert
+60,30,0                  /bearing,dip,rake
+30.0                     /mean value
+2                        /var type zone 2
+1000,500,100             /ahmax,ahmin,avert
+150,-30,0                /bearing,dip,rake
+50.0                     /mean value
+1e30,1e30,1e30           /search radii
+1000,1                   /maxpts and minpts
+factors3da.dat
+t                       /t=text;b=binary
+l                       /n=natural;l=log
+0                       / no interp value
+interptaba.dat
