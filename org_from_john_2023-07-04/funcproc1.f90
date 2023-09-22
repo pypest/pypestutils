@@ -11,8 +11,8 @@ integer (kind=c_int) function inquire_modflow_binary_file_specs(FileIn,FileOut,i
 
        implicit none
 
-       character (kind=c_char), intent(in)        :: FileIn(LENFILENAME)
-       character (kind=c_char), intent(in)        :: FileOut(LENFILENAME)
+       character (kind=c_char), intent(in)        :: FileIn(:)
+       character (kind=c_char), intent(in)        :: FileOut(:)
        integer(kind=c_int), intent(in)            :: isim             ! Simulator
        integer(kind=c_int), intent(in)            :: itype            ! 1 = system state; 2 = flows
        integer(kind=c_int), intent(out)           :: iprec            ! 1 = single; 2 = double
@@ -317,9 +317,9 @@ integer (kind=c_int) function inquire_modflow_binary_file_specs(FileIn,FileOut,i
              if(nlist.lt.0) go to 800
              if(nlist.gt.ibig) go to 800
              if(iprec.eq.1)then
-               read(inunit,err=800,end=800) (itemp,rtemp,i=1,nlist)
+               read(inunit,err=800,end=800) ((itemp,rtemp),i=1,nlist)
              else
-               read(inunit,err=800,end=800) (itemp,dtemp,i=1,nlist)
+               read(inunit,err=800,end=800) ((itemp,dtemp),i=1,nlist)
              end if
            else if(imeth.eq.3)then
              if(isim.eq.22)then
@@ -345,9 +345,9 @@ integer (kind=c_int) function inquire_modflow_binary_file_specs(FileIn,FileOut,i
              if(nlist.gt.ibig) go to 800
              if((nlist.gt.0).and.(ndat.gt.0))then
                if(iprec.eq.1)then
-                 read(inunit,err=800,end=800)(itemp,(rtemp,i=1,ndat),j=1,nlist)
+                 read(inunit,err=800,end=800)((itemp,(rtemp,i=1,ndat)),j=1,nlist)
                else
-                 read(inunit,err=800,end=800)(itemp,(dtemp,i=1,ndat),j=1,nlist)
+                 read(inunit,err=800,end=800)((itemp,(dtemp,i=1,ndat)),j=1,nlist)
                end if
              end if
            else if(imeth.eq.6)then
@@ -362,9 +362,9 @@ integer (kind=c_int) function inquire_modflow_binary_file_specs(FileIn,FileOut,i
              if(nlist.gt.ibig) go to 800
              if(nlist.gt.0)then
                if(iprec.eq.1)then
-                 read(inunit,err=800,end=800) (itemp,itemp,(rtemp,i=1,ndat),j=1,nlist)
+                 read(inunit,err=800,end=800) ((itemp,itemp,(rtemp,i=1,ndat)),j=1,nlist)
                else
-                 read(inunit,err=800,end=800) (itemp,itemp,(dtemp,i=1,ndat),j=1,nlist)
+                 read(inunit,err=800,end=800) ((itemp,itemp,(dtemp,i=1,ndat)),j=1,nlist)
                end if
              end if
            end if
@@ -440,7 +440,7 @@ integer (kind=c_int) function retrieve_error_message(errormessage) bind(c, name=
        use utilities
        implicit none
 
-       character (kind=c_char,len=1), intent(out) :: errormessage(LENMESSAGE)
+       character (kind=c_char,len=1), intent(out) :: errormessage(:)
        integer                                    :: lenmess
 
        if(amessage.eq.' ')then
@@ -468,7 +468,7 @@ integer (kind=c_int) function install_structured_grid(gridname,ncol,nrow,nlay,ic
        use utilities
        implicit none
 
-       character (kind=c_char), intent(in)  :: gridname(LENGRIDNAME)
+       character (kind=c_char), intent(in)  :: gridname(:)
        integer (kind=c_int), intent(in)     :: ncol,nrow,nlay
        integer (kind=c_int), intent(in)     :: icorner             ! 1=top left; 2=bottom left
        real (kind=c_double), intent(in)     :: e0,n0,rotation
@@ -630,7 +630,7 @@ integer (kind=c_int) function uninstall_structured_grid(gridname)               
        use high_level_utilities
        implicit none
 
-       character (kind=c_char), intent(in)  :: gridname(LENGRIDNAME)
+       character (kind=c_char), intent(in)  :: gridname(:)
        integer                              :: igrid,ierr
        character (len=LENGRIDNAME)          :: aname
 
@@ -744,12 +744,12 @@ integer (kind=c_int) function interp_from_structured_grid(                   &
        use high_level_utilities
        implicit none
 
-       character (kind=c_char), intent(in)  :: gridname(LENGRIDNAME)                ! name of installed structured grid
-       character (kind=c_char), intent(in)  :: depvarfile(LENFILENAME)              ! name of binary file to read
+       character (kind=c_char), intent(in)  :: gridname(:)                ! name of installed structured grid
+       character (kind=c_char), intent(in)  :: depvarfile(:)              ! name of binary file to read
        integer(kind=c_int), intent(in)      :: isim                       ! -1 for MT3D; 1 for MODFLOW
        integer(kind=c_int), intent(in)      :: iprec                      ! 1 for single; 2 for double
        integer(kind=c_int), intent(in)      :: ntime                      ! number of output times
-       character (kind=c_char), intent(in)  :: vartype(17)                 ! only read arrays of this type
+       character (kind=c_char), intent(in)  :: vartype(:)                 ! only read arrays of this type
        real(kind=c_double), intent(in)      :: interpthresh               ! abs threshold for dry or inactive
        real(kind=c_double), intent(in)      :: nointerpval                ! no-interpolation-possible value
        integer(kind=c_int), intent(in)      :: npts                       ! number of points for which interpolation required
@@ -1247,8 +1247,8 @@ integer (kind=c_int) function install_mf6_grid_from_file(gridname,grbfile,      
        use high_level_utilities
        implicit none
 
-       character (kind=c_char,len=1), intent(in)  :: gridname(LENGRIDNAME)       ! Name of installed grid
-       character (kind=c_char,len=1), intent(in)  :: grbfile(LENFILENAME)        ! MF6 GRB file from which grid specs read
+       character (kind=c_char,len=1), intent(in)  :: gridname(:)       ! Name of installed grid
+       character (kind=c_char,len=1), intent(in)  :: grbfile(:)        ! MF6 GRB file from which grid specs read
        integer(kind=c_int), intent(out)           :: idis              ! 1=DIS; 2=DISV
        integer(kind=c_int), intent(out)           :: ncells            ! Number of cells in the grid
        integer(kind=c_int), intent(out)           :: ndim1,ndim2,ndim3 ! Grid dimensions
@@ -1622,7 +1622,7 @@ integer (kind=c_int) function uninstall_mf6_grid(gridname)            &
        use high_level_utilities
        implicit none
 
-       character (kind=c_char,len=1), intent(in)  :: gridname(LENGRIDNAME)  ! Grid name to uninstall
+       character (kind=c_char,len=1), intent(in)  :: gridname(:)  ! Grid name to uninstall
 
        integer                        :: igrid,ierr
        character (len=LENGRIDNAME)    :: aname
@@ -1688,13 +1688,13 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
        use utilities
        implicit none
 
-       character (kind=c_char,len=1), intent(in)   :: gridname(LENGRIDNAME)                ! name of installed MF6 grid
+       character (kind=c_char,len=1), intent(in)   :: gridname(:)                ! name of installed MF6 grid
        integer(kind=c_int), intent(in)             :: npts                       ! number of points for which interpolation required
        real(kind=c_double), intent(in)             :: ecoord(npts),ncoord(npts)  ! eastings and northing of points
        integer(kind=c_int), intent(in)             :: layer(npts)                ! layers of points
-       character(kind=c_char,len=1), intent(in)    :: factorfile(LENFILENAME)              ! name of factor file
+       character(kind=c_char,len=1), intent(in)    :: factorfile(:)              ! name of factor file
        integer(kind=c_int), intent(in)             :: factorfiletype             ! 0=binary; 1=text
-       character(kind=c_char,len=1), intent(in)    :: blnfile(LENFILENAME)                 ! name of bln file to write
+       character(kind=c_char,len=1), intent(in)    :: blnfile(:)                 ! name of bln file to write
        integer(kind=c_int), intent(out)            :: interp_success(npts)       ! 1=success; 0=failure
 
        integer                        :: ierr,i
@@ -2338,11 +2338,11 @@ integer (kind=c_int) function interp_from_mf6_depvar_file(             &
        use utilities
        implicit none
 
-       character(kind=c_char,len=1), intent(in)   :: depvarfile(LENFILENAME)        ! Dependent variable file written by MODFLOW 6
-       character(kind=c_char,len=1), intent(in)   :: factorfile(LENFILENAME)        ! File containing spatial interpolation factors
+       character(kind=c_char,len=1), intent(in)   :: depvarfile(:)        ! Dependent variable file written by MODFLOW 6
+       character(kind=c_char,len=1), intent(in)   :: factorfile(:)        ! File containing spatial interpolation factors
        integer(kind=c_int), intent(in)            :: factorfiletype       ! 0 for binary; 1 for ascii
        integer(kind=c_int), intent(in)            :: ntime                ! First dimension of simtime and simstate arrays
-       character (kind=c_char,len=1), intent(in)  :: vartype(17)           ! Only read arrays of this type
+       character (kind=c_char,len=1), intent(in)  :: vartype(:)           ! Only read arrays of this type
        real(kind=c_double), intent(in)            :: interpthresh         ! Abs threshold for dry or inactive
        integer(kind=c_int), intent(in)            :: reapportion          ! 0 for no; 1 for yes
        real(kind=c_double), intent(in)            :: nointerpval          ! No-interpolation-possible value
@@ -2660,8 +2660,8 @@ integer (kind=c_int) function extract_flows_from_cbc_file(     &
        use utilities
        implicit none
 
-       character (kind=c_char,len=1), intent(in)  :: cbcfile(LENFILENAME)            ! Cell-by-cell flow term file written by any MF version.
-       character (kind=c_char,len=1), intent(in)  :: flowtype(17)           ! Type of flow to read.
+       character (kind=c_char,len=1), intent(in)  :: cbcfile(:)            ! Cell-by-cell flow term file written by any MF version.
+       character (kind=c_char,len=1), intent(in)  :: flowtype(:)           ! Type of flow to read.
        integer(kind=c_int), intent(in)            :: isim                  ! Simulator type
        integer(kind=c_int), intent(in)            :: iprec                 ! Precision used to record real variables in cbc file
        integer(kind=c_int), intent(in)            :: ncell                 ! Number of cells in the model
@@ -2992,9 +2992,9 @@ integer (kind=c_int) function extract_flows_from_cbc_file(     &
              if(nlist.gt.ibig) go to 9000
              if(iflag.eq.0)then
                if(iprec.eq.1)then
-                 read(inunit,err=9100,end=9100) (itemp,rtemp,ilist=1,nlist)
+                 read(inunit,err=9100,end=9100) ((itemp,rtemp),ilist=1,nlist)
                else
-                 read(inunit,err=9100,end=9100) (itemp,dtemp,ilist=1,nlist)
+                 read(inunit,err=9100,end=9100) ((itemp,dtemp),ilist=1,nlist)
                end if
              else
                ndimtemp=max(nlist,ncell)
@@ -3033,9 +3033,9 @@ integer (kind=c_int) function extract_flows_from_cbc_file(     &
                  end if
                end if
                if(iprec.eq.1)then
-                 read(inunit,err=9100,end=9100) (iarray(ilist),rarray(ilist),ilist=1,nlist)
+                 read(inunit,err=9100,end=9100) ((iarray(ilist),rarray(ilist)),ilist=1,nlist)
                else
-                 read(inunit,err=9100,end=9100) (iarray(ilist),darray(ilist),ilist=1,nlist)
+                 read(inunit,err=9100,end=9100) ((iarray(ilist),darray(ilist)),ilist=1,nlist)
                end if
                do ilist=1,nlist
                  icell=iarray(ilist)
@@ -3212,9 +3212,9 @@ integer (kind=c_int) function extract_flows_from_cbc_file(     &
              if(iflag.eq.0)then
                if((nlist.gt.0).and.(ndat.gt.0))then
                  if(iprec.eq.1)then
-                   read(inunit,err=9400,end=9400)(itemp,(rtemp,idat=1,ndat),ilist=1,nlist)
+                   read(inunit,err=9400,end=9400)((itemp,(rtemp,idat=1,ndat)),ilist=1,nlist)
                  else
-                   read(inunit,err=9400,end=9400)(itemp,(dtemp,idat=1,ndat),ilist=1,nlist)
+                   read(inunit,err=9400,end=9400)((itemp,(dtemp,idat=1,ndat)),ilist=1,nlist)
                  end if
                endif
              else
@@ -3257,10 +3257,10 @@ integer (kind=c_int) function extract_flows_from_cbc_file(     &
                end if
                if(iprec.eq.1)then
                  read(inunit,err=9400,end=9400)    &
-                 (iarray(ilist),rarray(ilist),(rtemp,idat=1,ndat-1),ilist=1,nlist)
+                 ((iarray(ilist),rarray(ilist),(rtemp,idat=1,ndat-1)),ilist=1,nlist)
                else
                  read(inunit,err=9400,end=9400)    &
-                 (iarray(ilist),darray(ilist),(dtemp,idat=1,ndat-1),ilist=1,nlist)
+                 ((iarray(ilist),darray(ilist),(dtemp,idat=1,ndat-1)),ilist=1,nlist)
                end if
              end if
              if(iprec.eq.1)then
@@ -3302,9 +3302,9 @@ integer (kind=c_int) function extract_flows_from_cbc_file(     &
              if(nlist.gt.0)then
                if(iflag.eq.0)then
                  if(iprec.eq.1)then
-                   read(inunit,err=9100,end=9100) (itemp,itemp,(rtemp,idat=1,ndat),ilist=1,nlist)
+                   read(inunit,err=9100,end=9100) ((itemp,itemp,(rtemp,idat=1,ndat)),ilist=1,nlist)
                  else
-                   read(inunit,err=9100,end=9100) (itemp,itemp,(dtemp,idat=1,ndat),ilist=1,nlist)
+                   read(inunit,err=9100,end=9100) ((itemp,itemp,(dtemp,idat=1,ndat)),ilist=1,nlist)
                  end if
                else
                  ndimtemp=max(nlist,ncell)
@@ -3346,10 +3346,10 @@ integer (kind=c_int) function extract_flows_from_cbc_file(     &
                  end if
                  if(iprec.eq.1)then
                    read(inunit,err=9500,end=9500)    &
-                   (iarray(ilist),itemp,rarray(ilist),(rtemp,idat=1,ndat-1),ilist=1,nlist)
+                   ((iarray(ilist),itemp,rarray(ilist),(rtemp,idat=1,ndat-1)),ilist=1,nlist)
                  else
                    read(inunit,err=9500,end=9500)    &
-                   (iarray(ilist),itemp,darray(ilist),(dtemp,idat=1,ndat-1),ilist=1,nlist)
+                   ((iarray(ilist),itemp,darray(ilist),(dtemp,idat=1,ndat-1)),ilist=1,nlist)
                  end if
                  if(iprec.eq.1)then
                    do ilist=1,nlist
