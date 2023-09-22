@@ -38,7 +38,7 @@ integer function extract_flows_from_cbc_file(             &
        integer                        :: ialloci,iallocr
        integer                        :: icell,iz
        integer                        :: kstp,kper,ndim1,ndim2,ndim3,imeth
-       integer                        :: ilist,nlist,idat,ndat,numreal,ilay,jcell,ierr,numread
+       integer                        :: ilist,nlist,idat,ndat,numreal,ilay,jcell
        real                           :: rbig,delt,pertim,totim
        real                           :: rtemp
        double precision               :: dbig,ddelt,dpertim,dtotim
@@ -566,10 +566,10 @@ integer function extract_flows_from_cbc_file(             &
                  end if
                end if
                if(iprec.eq.1)then
-                 read(inunit,err=9400,end=9400)    &
+                 read(inunit,,err=9400,end=9400)    &
                  ((iarray(ilist),rarray(ilist),(rtemp,idat=1,ndat-1)),ilist=1,nlist)
                else
-                 read(inunit,err=9400,end=9400)    &
+                 read(inunit,,err=9400,end=9400)    &
                  ((iarray(ilist),darray(ilist),(rtemp,idat=1,ndat-1)),ilist=1,nlist)
                end if
              end if
@@ -651,10 +651,10 @@ integer function extract_flows_from_cbc_file(             &
                    end if
                  end if
                  if(iprec.eq.1)then
-                   read(inunit,err=9500,end=9500)    &
+                   read(inunit,,err=9500,end=9500)    &
                    ((iarray(ilist),itemp,rarray(ilist),(rtemp,idat=1,ndat-1)),ilist=1,nlist)
                  else
-                   read(inunit,err=9500,end=9500)    &
+                   read(inunit,,err=9500,end=9500)    &
                    ((iarray(icell),itemp,darray(ilist),(dtemp,idat=1,ndat-1)),ilist=1,nlist)
                  end if
                end if
