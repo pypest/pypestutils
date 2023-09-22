@@ -34,6 +34,18 @@ module function_interfaces
        real (kind=c_double), intent(in)     :: delr(ncol),delc(nrow)
     end function install_structured_grid
 
+    integer (kind=c_int) function get_cell_centres_structured(         &
+                         gridname,                                     &
+                         ncpl,                                         &
+                         cellx,celly)                                  &
+                     bind(c,name="get_cell_centres_structured")
+       use iso_c_binding, only: c_int,c_double,c_char
+       character (kind=c_char,len=1), intent(in)  :: gridname(*)
+       integer(kind=c_int), intent(in)            :: ncpl
+       real(kind=c_double), intent(out)           :: cellx(ncpl)
+       real(kind=c_double), intent(out)           :: celly(ncpl)
+    end function get_cell_centres_structured
+
     integer (kind=c_int) function uninstall_structured_grid(gridname)                &
                      bind(c,name="uninstall_structured_grid")
        use iso_c_binding, only: c_int,c_char
@@ -100,6 +112,18 @@ module function_interfaces
        integer(kind=c_int), intent(out)           :: ncells
        integer(kind=c_int), intent(out)           :: ndim1,ndim2,ndim3
     end function install_mf6_grid_from_file
+
+    integer (kind=c_int) function get_cell_centres_mf6(gridname,        &
+                              ncells,                                   &
+                              cellx,celly,cellz)                        &
+                     bind(c,name="get_cell_centres_mf6")
+       use iso_c_binding, only: c_int,c_double,c_char
+       character (kind=c_char,len=1), intent(in)  :: gridname(*)
+       integer(kind=c_int), intent(in)            :: ncells
+       real(kind=c_double), intent(out)           :: cellx(ncells)
+       real(kind=c_double), intent(out)           :: celly(ncells)
+       real(kind=c_double), intent(out)           :: cellz(ncells)
+    end function get_cell_centres_mf6
 
     integer (kind=c_int) function uninstall_mf6_grid(gridname)         &
                      bind(c,name="uninstall_mf6_grid")

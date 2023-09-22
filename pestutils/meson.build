@@ -62,4 +62,7 @@ executable('driver14', ['driver14.f90', 'driversubs.f90'],
   link_with: [lib], install_rpath: inst_rpath, install: inst_drvs)
 executable('driver15', ['driver15.f90', 'driversubs.f90'],
   link_with: [lib], install_rpath: inst_rpath, install: inst_drvs)
-
+executable('driver16', ['driver16.f90', 'driversubs.f90'],
+  link_with: [lib], install_rpath: inst_rpath, install: inst_drvs)
+executable('driver17', ['driver17.f90', 'driversubs.f90'],
+  link_with: [lib], install_rpath: inst_rpath, install: inst_drvs)

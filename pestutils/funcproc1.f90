@@ -3448,3 +3448,315 @@ end function extract_flows_from_cbc_file
 
 
 
+integer (kind=c_int) function get_cell_centres_mf6(gridname,                &
+                              ncells,                                       &
+                              cellx,celly,cellz)                            &
+                 bind(c,name="get_cell_centres_mf6")
+
+! -- This function obtains the centres of model cells of an installed MF6 grid.
+
+       use iso_c_binding, only: c_int,c_double,c_char
+       use dimvar
+       use deftypes
+       use utilities
+       implicit none
+
+       character (kind=c_char,len=1), intent(in)  :: gridname(LENGRIDNAME)   ! Name of installed grid
+       integer(kind=c_int), intent(in)            :: ncells                  ! Dimensions of grid
+       real(kind=c_double), intent(out)           :: cellx(ncells)           ! x coordinates of cell centres
+       real(kind=c_double), intent(out)           :: celly(ncells)           ! y coordinates of cell centres
+       real(kind=c_double), intent(out)           :: cellz(ncells)           ! z coordinates of cell centres
+
+       integer                                     :: igrid,distype
+       integer                                     :: nlay,ncpl
+       integer                                     :: ncol,nrow,icol,irow,ilay,icpl,icpl1
+       integer                                     :: icell,lasticell,icell1
+       double precision                            :: xorigin,yorigin,cosang,sinang,angrot
+       double precision                            :: sum,xx,yy
+       double precision, pointer, dimension(:)     :: delr,delc
+       double precision, pointer, dimension(:,:,:) :: botm
+       double precision, pointer, dimension(:,:)   :: botmv
+       character (len=LENGRIDNAME)    :: aname
+
+! -- Initialisation
+
+       function_name='get_cell_centres_mf6()'
+       get_cell_centres_mf6=0
+
+! -- Text strings are converted to character variables.
+
+       call utl_string2char(LENGRIDNAME,gridname,aname)
+       aname=adjustl(aname)
+       call utl_casetrans(aname,'lo')
+       if(aname.eq.' ')then
+         write(amessage,50) 'GRIDNAME', trim(function_name)
+50       format('The ',a,' argument of function ',a,' is supplied as blank.')
+         go to 9890
+       end if
+       if(ncells.le.0)then
+         write(amessage,110) 'NCELLS',trim(function_name)
+110      format('The ',a,' argument of function ',a,' must be greater than zero.')
+         go to 9890
+       end if
+
+! -- We see if the grid has been installed and that dimensions as are expected.
+
+       do igrid=1,MAXMF6MODGRID
+         if(mf6modgrid(igrid)%name.eq.aname) go to 150
+       end do
+       write(amessage,140) trim(aname)
+140    format('"',a,'" is not an installed grid.')
+       go to 9890
+150    continue
+       distype=mf6modgrid(igrid)%distype
+       if(ncells.ne.mf6modgrid(igrid)%ncells)then
+         write(amessage,160) 'NCELLS',trim(function_name)
+160      format('The ',a,' argument of function ',a,' does not match the ', &
+         'dimensions of the installed MF6 grid.')
+         go to 9890
+       end if
+
+! -- We now obtain dimensions and check with function input arguments.
+
+       if(distype.eq.1)then
+         nrow=mf6modgrid(igrid)%nrow
+         ncol=mf6modgrid(igrid)%ncol
+         ncpl=nrow*ncol
+       else if(distype.eq.2)then
+         ncpl=mf6modgrid(igrid)%ncpl
+       end if
+       nlay=mf6modgrid(igrid)%nlay
+
+! -- We calculate horizontal coordinates.
+
+       xorigin=mf6modgrid(igrid)%xorigin
+       yorigin=mf6modgrid(igrid)%yorigin
+       angrot=mf6modgrid(igrid)%angrot
+       cosang=cos(angrot*pi/180.0d0)
+       sinang=sin(angrot*pi/180.0d0)
+
+       if(distype.eq.1)then
+         delr=>mf6modgrid(igrid)%delr
+         delc=>mf6modgrid(igrid)%delc
+         cellx(1)=delr(1)*0.5
+         if(ncol.gt.1)then
+           do icol=2,ncol
+             cellx(icol)=cellx(icol-1)+(delr(icol)+delr(icol-1))*0.5
+           end do
+         end if
+         sum=0.0d0
+         do irow=1,nrow
+           sum=sum+delc(irow)
+         end do
+         celly(1)=sum-delc(1)*0.5
+         lasticell=1
+         if(nrow.gt.1)then
+           do irow=2,nrow
+             icell=(irow-1)*ncol+1
+             celly(icell)=celly(lasticell)-(delc(irow)+delc(irow-1))*0.5
+             lasticell=icell
+           end do
+         end if
+         if(nrow.gt.1)then
+           do irow=2,nrow
+             do icol=1,ncol
+               icell=(irow-1)*ncol+icol
+               cellx(icell)=cellx(icol)
+             end do
+           end do
+         end if
+         if(ncol.gt.1)then
+           do irow=1,nrow
+             icell1=(irow-1)*ncol+1
+             do icol=2,ncol
+               icell=(irow-1)*ncol+icol
+               celly(icell)=celly(icell1)
+             end do
+           end do
+         end if
+       else
+         do icell=1,ncpl
+           cellx(icell)=mf6modgrid(igrid)%cellx(icell)
+           celly(icell)=mf6modgrid(igrid)%celly(icell)
+         end do
+       end if
+       if(angrot.ne.0.0d0)then
+         do icell=1,ncpl
+           xx=cellx(icell)
+           yy=celly(icell)
+           cellx(icell)=xx*cosang-yy*sinang
+           celly(icell)=xx*sinang+yy*cosang
+         end do
+       end if
+       cellx=cellx+xorigin    ! an array
+       celly=celly+yorigin    ! an array
+       if(nlay.gt.1)then
+         icpl1=ncpl
+         do ilay=2,nlay
+           do icpl=1,ncpl
+             icpl1=icpl1+1
+             cellx(icpl1)=cellx(icpl)
+             celly(icpl1)=celly(icpl)
+           end do
+         end do
+       end if
+
+! -- Vertical coordinates are now calculated.
+
+       if(distype.eq.1)then
+         botm=>mf6modgrid(igrid)%botm
+         icell=0
+         do ilay=1,nlay
+           do irow=1,nrow
+             do icol=1,ncol
+               icell=icell+1
+               cellz(icell)=(botm(icol,irow,ilay)+botm(icol,irow,ilay-1))*0.5
+             end do
+           end do
+         end do
+       else if(distype.eq.2)then
+         botmv=>mf6modgrid(igrid)%botmv
+         icell=0
+         do ilay=1,nlay
+           do icpl=1,ncpl
+             icell=icell+1
+             cellz(icell)=(botmv(icpl,ilay)+botmv(icpl,ilay-1))*0.5
+           end do
+         end do
+       end if
+
+       go to 9900
+
+9890   continue
+       get_cell_centres_mf6=1
+
+9900   continue
+
+end function get_cell_centres_mf6
+
+
+
+integer (kind=c_int) function get_cell_centres_structured(gridname,         &
+                              ncpl,                                         &
+                              cellx,celly)                                  &
+                 bind(c,name="get_cell_centres_structured")
+
+! -- This function obtains the centres of model cells of a single layer of an installed structured grid.
+
+       use iso_c_binding, only: c_int,c_double,c_char
+       use dimvar
+       use deftypes
+       use utilities
+       implicit none
+
+       character (kind=c_char,len=1), intent(in)  :: gridname(LENGRIDNAME)   ! Name of installed grid
+       integer(kind=c_int), intent(in)            :: ncpl                    ! Dimensions of grid
+       real(kind=c_double), intent(out)           :: cellx(ncpl)             ! x coordinates of cell centres
+       real(kind=c_double), intent(out)           :: celly(ncpl)             ! y coordinates of cell centres
+
+       integer                                     :: igrid
+       integer                                     :: ncol,nrow,icol,irow
+       integer                                     :: icell,lasticell,icell1
+       double precision                            :: e0,n0,cosang,sinang,rotation
+       double precision                            :: xx,yy
+       double precision, pointer, dimension(:)     :: delr,delc
+       character (len=LENGRIDNAME)    :: aname
+
+! -- Initialisation
+
+       function_name='get_cell_centres_structured()'
+       get_cell_centres_structured=0
+
+! -- Text strings are converted to character variables.
+
+       call utl_string2char(LENGRIDNAME,gridname,aname)
+       aname=adjustl(aname)
+       call utl_casetrans(aname,'lo')
+       if(aname.eq.' ')then
+         write(amessage,50) 'GRIDNAME', trim(function_name)
+50       format('The ',a,' argument of function ',a,' is supplied as blank.')
+         go to 9890
+       end if
+       if(ncpl.le.0)then
+         write(amessage,110) 'NCPL',trim(function_name)
+110      format('The value of the ',a,' argument of function ',a,' must be greater than zero.')
+         go to 9890
+       end if
+
+! -- We see if the grid has been installed and that dimensions as are expected.
+
+       do igrid=1,MAXSTRUCMODGRID
+         if(strucmodgrid(igrid)%name.eq.aname) go to 150
+       end do
+       write(amessage,140) trim(aname)
+140    format('"',a,'" is not an installed structured grid.')
+       go to 9890
+150    continue
+       nrow=strucmodgrid(igrid)%nrow
+       ncol=strucmodgrid(igrid)%ncol
+       if(ncpl.ne.ncol*nrow)then
+         write(amessage,160) 'NCPL',trim(function_name)
+160      format('The value of the ',a,' argument of function ',a,' does not match the ', &
+         'dimensions of the installed structured grid.')
+         go to 9890
+       end if
+
+! -- We calculate horizontal coordinates.
+
+       rotation=strucmodgrid(igrid)%rotation
+       cosang=strucmodgrid(igrid)%cosang
+       sinang=strucmodgrid(igrid)%sinang
+       delr=>strucmodgrid(igrid)%delr
+       delc=>strucmodgrid(igrid)%delc
+       cellx(1)=delr(1)*0.5
+       if(ncol.gt.1)then
+         do icol=2,ncol
+           cellx(icol)=cellx(icol-1)+(delr(icol)+delr(icol-1))*0.5
+         end do
+       end if
+       celly(1)=-delc(1)*0.5
+       lasticell=1
+       if(nrow.gt.1)then
+         do irow=2,nrow
+           icell=(irow-1)*ncol+1
+           celly(icell)=celly(lasticell)-(delc(irow)+delc(irow-1))*0.5
+           lasticell=icell
+         end do
+       end if
+       if(nrow.gt.1)then
+         do irow=2,nrow
+           do icol=1,ncol
+             icell=(irow-1)*ncol+icol
+             cellx(icell)=cellx(icol)
+           end do
+         end do
+       end if
+       if(ncol.gt.1)then
+         do irow=1,nrow
+           icell1=(irow-1)*ncol+1
+           do icol=2,ncol
+             icell=(irow-1)*ncol+icol
+             celly(icell)=celly(icell1)
+           end do
+         end do
+       end if
+       if(rotation.ne.0.0d0)then
+         do icell=1,ncpl
+           xx=cellx(icell)
+           yy=celly(icell)
+           cellx(icell)=xx*cosang-yy*sinang
+           celly(icell)=xx*sinang+yy*cosang
+         end do
+       end if
+       cellx=cellx+strucmodgrid(igrid)%e0    ! an array
+       celly=celly+strucmodgrid(igrid)%n0    ! an array
+
+       go to 9900
+
+9890   continue
+       get_cell_centres_structured=1
+
+9900   continue
+
+end function get_cell_centres_structured
+
