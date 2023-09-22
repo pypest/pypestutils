@@ -554,10 +554,10 @@ subroutine kb2d_1(n_ndmin,n_ndmax,r_radius,k_ktype,s_skmean,    &
                   end if                                                !jd
                   if(aoutfile.eq.'f')then                               !jd
                     write(outunit,aformat) icell,na,rrtemp, &           !jd
-                    (inumdat(nums(i)),real(s(i)),i=1,na)              !jd
+                    ((inumdat(nums(i)),real(s(i))),i=1,na)              !jd
                   else                                                  !jd
                     write(outunit)   icell,na,rrtemp, &                 !jd
-                    (inumdat(nums(i)),real(s(i)),i=1,na)              !jd
+                    ((inumdat(nums(i)),real(s(i))),i=1,na)              !jd
                   end if                                                !jd
             endif
 !            if(idbg.ge.2) then
@@ -2365,10 +2365,10 @@ end subroutine kb2d_1
             end if                                                   !jd
             if(aoutfile.eq.'f')then                                  !jd
               write(outunit,aformat) icell,na,rrtemp, &              !jd
-              (inumdat(nint(sec3(nint(close(i))))),real(s(i)),i=1,na)         !jd
+              ((inumdat(nint(sec3(nint(close(i))))),real(s(i))),i=1,na)         !jd
             else                                                     !jd
               write(outunit)   icell,na,rrtemp, &                    !jd
-              (inumdat(nint(sec3(nint(close(i))))),real(s(i)),i=1,na)         !jd
+              ((inumdat(nint(sec3(nint(close(i))))),real(s(i))),i=1,na)         !jd
             end if                                                   !jd
 
 !
