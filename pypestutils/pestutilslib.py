@@ -203,6 +203,36 @@ class PestUtilsLib:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("installed structured grid %r from specs", gridname)
 
+    def get_cell_centres_structured(self, gridname: str, ncpl: int) -> tuple:
+        """Get cell centres of a single layer of an installed structured grid.
+
+        Parameters
+        ----------
+        gridname : str
+            Name of installed structured grid.
+        ncpl : int
+            Dimensions of grid (nrow x ncol).
+
+        Returns
+        -------
+        cellx, cellx : npt.NDArray[np.float64]
+            Coordinates of cell centres with dimensions (ncpl,).
+        """
+        cellx = np.zeros(ncpl, np.float64, order="F")
+        celly = np.zeros(ncpl, np.float64, order="F")
+        res = self.pestutils.get_cell_centres_structured(
+            byref(self.create_char_array(gridname, "LENGRIDNAME")),
+            byref(c_int(ncpl)),
+            cellx,
+            celly,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info(
+            "evaluated %d cell centres from structured grid %r", ncpl, gridname
+        )
+        return cellx.copy("A"), celly.copy("A")
+
     def uninstall_structured_grid(self, gridname: str) -> None:
         """Uninstall structured grid set by :meth:`install_structured_grid`.
 
@@ -445,6 +475,36 @@ class PestUtilsLib:
             "ndim2": ndim2.value,
             "ndim3": ndim3.value,
         }
+
+    def get_cell_centres_mf6(self, gridname: str, ncells: int) -> tuple:
+        """Get cell centres from an installed MF6 grid.
+
+        Parameters
+        ----------
+        gridname : str
+            Name of installed MF6 grid.
+        ncells : int
+            Dimensions of grid.
+
+        Returns
+        -------
+        cellx, cellx, cellz : npt.NDArray[np.float64]
+            Coordinates of cell centres with dimensions (ncells,).
+        """
+        cellx = np.zeros(ncells, np.float64, order="F")
+        celly = np.zeros(ncells, np.float64, order="F")
+        cellz = np.zeros(ncells, np.float64, order="F")
+        res = self.pestutils.get_cell_centres_mf6(
+            byref(self.create_char_array(gridname, "LENGRIDNAME")),
+            byref(c_int(ncells)),
+            cellx,
+            celly,
+            cellz,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info("evaluated %d cell centres from MF6 grid %r", ncells, gridname)
+        return cellx.copy("A"), celly.copy("A"), cellz.copy("A")
 
     def uninstall_mf6_grid(self, gridname: str) -> None:
         """Uninstall MF6 grid set by :meth:`install_mf6_grid_from_file`.
