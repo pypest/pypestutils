@@ -10,6 +10,10 @@ This package is currently in pre-alpha development, and is not suitable for use,
 
 There are several jupyter notebook examples of using pypestutils for a structured and quadtree Freyberg model.  These notebooks rely on both [flopy](https://github.com/modflowpy/flopy) and [pyEMU](https://github.com/pypest/pyemu) to help with visualization and processing.
 
+## Documentation
+
+The documentation for the shared FORTRAN library can be found [here](fortran_lib_doc/fortran_library_documentation.md)
+
 ## Installation
 
 ### Dependencies
