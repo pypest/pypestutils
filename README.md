@@ -10,7 +10,25 @@ This package is currently in pre-alpha development, and is not suitable for use,
 
 There are several jupyter notebook examples of using pypestutils for a structured and quadtree Freyberg model.  These notebooks rely on both [flopy](https://github.com/modflowpy/flopy) and [pyEMU](https://github.com/pypest/pyemu) to help with visualization and processing.
 
+The use the low-level python interface to the shared fortran library, you create a `PESTUTILSLIB` instance and then can directly call the shared library routines:
+
+```
+from pypestutils.pestutilslib import PestUtilsLib
+lib = PestUtilsLib() #the constructor searches for the shared lib
+grid_info = lib.install_mf6_grid_from_file("grid","freyberg6.disv.grb")
+easting,northing,elev = lib.get_cell_centres_mf6("grid",grid_info["ncells"])
+```
+
+The higher-level helper functions obsecure the calls the fortran library and string together multiple low-level function calls:
+
+```
+import pypestutils.helpers as helpers
+grid_info = helpers.get_grid_info_from_file("freyberg6.disv.grb")
+```
+
 ## Documentation
+
+
 
 The documentation for the shared FORTRAN library can be found [here](fortran_lib_doc/fortran_library_documentation.md)
 
