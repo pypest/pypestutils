@@ -29,6 +29,7 @@ dependencies:
   - pip:
     - git+https://github.com/pypest/pyemu.git
     - git+https://github.com/modflowpy/flopy.git
+    - pdoc3
 
 
 # Win64 may also want

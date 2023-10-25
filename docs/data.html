@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pypestutils.data API documentation</title>
+<meta name="description" content="Data module." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pypestutils.data</code></h1>
+</header>
+<section id="section-intro">
+<p>Data module.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Data module.&#34;&#34;&#34;
+from __future__ import annotations
+
+from enum import Enum
+from inspect import isclass
+from typing import Any
+
+import numpy as np
+import numpy.typing as npt
+
+from pypestutils.enum import ParamEnum
+
+__all__ = [&#34;ManyArrays&#34;, &#34;validate_scalar&#34;]
+
+
+def validate_scalar(name: str, value: Any, **kwargs) -&gt; None:
+    &#34;&#34;&#34;Validate scalar value according to supported kwargs.
+
+    Parameters
+    ----------
+    name : str
+        Name of parameter, used for error message.
+    value : any
+        Value of parameter.
+    kwargs : dict
+        Supported validation keywords are: isfinite, gt, ge, lt, le, isin,
+        enum, minlen, maxlen and leneq.
+
+    Raises
+    ------
+    ValueError
+        When value fails validation criteria.
+    TypeError
+        When parameter use is not expected.
+    NotImplementedError
+        When keyword is not recognized.
+    &#34;&#34;&#34;
+    if not np.isscalar(value):
+        raise TypeError(f&#34;&#39;{name}&#39; is not a scalar value&#34;)
+    if &#34;isfinite&#34; in kwargs:
+        if kwargs.pop(&#34;isfinite&#34;) is not True:
+            raise TypeError(&#34;isfinite must be True&#34;)
+        if not np.isfinite(value):
+            raise ValueError(f&#34;&#39;{name}&#39; must be finite (was {value!r})&#34;)
+    if &#34;gt&#34; in kwargs:
+        gt = kwargs.pop(&#34;gt&#34;)
+        if not (value &gt; gt):
+            raise ValueError(f&#34;&#39;{name}&#39; must be greater than {gt} (was {value!r})&#34;)
+    if &#34;ge&#34; in kwargs:
+        ge = kwargs.pop(&#34;ge&#34;)
+        if not (value &gt;= ge):
+            raise ValueError(
+                f&#34;&#39;{name}&#39; must be greater than or equal to {ge} (was {value!r})&#34;
+            )
+    if &#34;lt&#34; in kwargs:
+        lt = kwargs.pop(&#34;lt&#34;)
+        if not (value &lt; lt):
+            raise ValueError(f&#34;&#39;{name}&#39; must be less than {lt} (was {value!r})&#34;)
+    if &#34;le&#34; in kwargs:
+        le = kwargs.pop(&#34;le&#34;)
+        if not (value &lt;= le):
+            raise ValueError(
+                f&#34;&#39;{name}&#39; must be less than or equal to {le} (was {value!r})&#34;
+            )
+    if &#34;isin&#34; in kwargs:
+        isin = kwargs.pop(&#34;isin&#34;)
+        if not np.isin(value, isin):
+            raise ValueError(f&#34;&#39;{name}&#39; must be in {isin} (was {value!r})&#34;)
+    if &#34;enum&#34; in kwargs:
+        enum_t = kwargs.pop(&#34;enum&#34;)
+        if not (isclass(enum_t) and issubclass(enum_t, ParamEnum)):
+            raise TypeError(&#34;enum must be a subclass of ParamEnum&#34;)
+        elif isinstance(value, Enum) and not isinstance(value, enum_t):
+            raise TypeError(f&#34;&#39;{value!s}&#39; is not an enum {enum_t.__name__}&#34;)
+        elif not isinstance(value, int):
+            raise TypeError(f&#34;enum value must be either {enum_t.__name__} or int&#34;)
+        valid_options = enum_t.get_valid_options()
+        if not np.isin(value, list(valid_options.keys())):
+            enum_str = &#34;, &#34;.join([f&#34;{v} ({n})&#34; for (v, n) in valid_options.items()])
+            raise ValueError(
+                f&#34;&#39;{name}&#39; must be in enum {enum_t.__name__} {enum_str} (was {value!r})&#34;
+            )
+    if &#34;minlen&#34; in kwargs:
+        valuelen = len(value)
+        minlen = kwargs.pop(&#34;minlen&#34;)
+        if minlen &lt; 1:
+            raise TypeError(&#34;minlen must be 1 or more&#34;)
+        elif minlen == 1 and valuelen &lt; 1:  # special case `minlen=1`
+            raise ValueError(f&#34;&#39;{name}&#39; cannot have zero len&#34;)
+        elif valuelen &lt; minlen:
+            raise ValueError(f&#34;&#39;{name}&#39; has a min len {minlen} (was {len(value)})&#34;)
+    if &#34;maxlen&#34; in kwargs:
+        valuelen = len(value)
+        maxlen = kwargs.pop(&#34;maxlen&#34;)
+        if valuelen &gt; maxlen:
+            raise ValueError(f&#34;&#39;{name}&#39; has a max len {maxlen} (was {valuelen})&#34;)
+    if &#34;leneq&#34; in kwargs:
+        valuelen = len(value)
+        leneq = kwargs.pop(&#34;leneq&#34;)
+        if valuelen != leneq:
+            raise ValueError(f&#34;&#39;{name}&#39; must have len {leneq} (was {valuelen})&#34;)
+    if kwargs:
+        raise NotImplementedError(f&#34;unhandled kwargs {kwargs}&#34;)
+
+
+class ManyArrays:
+    &#34;&#34;&#34;Gather and check arrays and, if needed, fill-out scalars.
+
+    All arrays are 1D with the same shape (or length). Float arrays are always
+    float64, and integer arrays are always int32. All arrays are contiguous.
+    This class is used as a pre-processor input for ctypes.
+
+    Parameters
+    ----------
+    float_arrays : dict of array_like, optional
+        Dict of 1D arrays, assume to have same shape.
+    float_any : dict of array_like or float, optional
+        Dict of float or 1D arrays.
+    int_any : dict of array_like or int, optional
+        Dict of int or 1D arrays.
+    ar_len : int, optional
+        If specified, this is used for the expected array size and shape.
+    &#34;&#34;&#34;
+
+    shape = ()  # type: tuple | tuple[int]
+    _names = []  # type: list[str]
+
+    def __init__(
+        self,
+        float_arrays: dict[str, npt.ArrayLike] = {},
+        float_any: dict[str, float | npt.ArrayLike] = {},
+        int_any: dict[str, int | npt.ArrayLike] = {},
+        ar_len: int | None = None,
+    ) -&gt; None:
+        self._names = []
+        # find common array size
+        if ar_len is not None:
+            if not isinstance(ar_len, int):
+                raise TypeError(&#34;&#39;ar_len&#39; must be int&#34;)
+            self.shape = (ar_len,)
+        for name in float_arrays.keys():
+            if name in self._names:
+                raise KeyError(f&#34;&#39;{name}&#39; defined more than once&#34;)
+            self._names.append(name)
+            # Each must be 1D and the same shape
+            ar = np.array(float_arrays[name], np.float64, order=&#34;F&#34;, copy=False)
+            if ar.ndim != 1:
+                raise ValueError(f&#34;expected &#39;{name}&#39; ndim to be 1; found {ar.ndim}&#34;)
+            if not self.shape:
+                self.shape = ar.shape
+            elif ar.shape != self.shape:
+                raise ValueError(
+                    f&#34;expected &#39;{name}&#39; shape to be {self.shape}; found {ar.shape}&#34;
+                )
+            setattr(self, name, ar)
+        for name in float_any.keys():
+            if name in self._names:
+                raise KeyError(f&#34;&#39;{name}&#39; defined more than once&#34;)
+            self._names.append(name)
+            float_any[name] = ar = np.array(
+                float_any[name], np.float64, order=&#34;F&#34;, copy=False
+            )
+            if not self.shape and ar.ndim == 1:
+                self.shape = ar.shape
+        for name in int_any.keys():
+            if name in self._names:
+                raise KeyError(f&#34;&#39;{name}&#39; defined more than once&#34;)
+            self._names.append(name)
+            int_any[name] = ar = np.array(int_any[name], order=&#34;F&#34;, copy=False)
+            if not self.shape and ar.ndim == 1:
+                self.shape = ar.shape
+        if not self.shape:
+            self.shape = (1,)  # if all scalars, assume this size
+        for name in float_any.keys():
+            ar = float_any[name]
+            if ar.ndim == 0:
+                ar = np.full(self.shape, ar)
+            elif ar.ndim != 1:
+                raise ValueError(f&#34;expected &#39;{name}&#39; ndim to be 1; found {ar.ndim}&#34;)
+            elif ar.shape != self.shape:
+                raise ValueError(
+                    f&#34;expected &#39;{name}&#39; shape to be {self.shape}; found {ar.shape}&#34;
+                )
+            setattr(self, name, ar)
+        for name in int_any.keys():
+            ar = int_any[name]
+            if ar.ndim == 0:
+                ar = np.full(self.shape, ar)
+            elif ar.ndim != 1:
+                raise ValueError(f&#34;expected &#39;{name}&#39; ndim to be 1; found {ar.ndim}&#34;)
+            elif ar.shape != self.shape:
+                raise ValueError(
+                    f&#34;expected &#39;{name}&#39; shape to be {self.shape}; found {ar.shape}&#34;
+                )
+            if not np.issubdtype(ar.dtype, np.integer):
+                raise ValueError(
+                    f&#34;expected &#39;{name}&#39; to be integer type; found {ar.dtype}&#34;
+                )
+            setattr(self, name, ar.astype(np.int32, copy=False))
+
+    def __len__(self) -&gt; int:
+        &#34;&#34;&#34;Return length of dimension from shape[0].&#34;&#34;&#34;
+        return self.shape[0]
+
+    def validate(self, name, **kwargs) -&gt; None:
+        &#34;&#34;&#34;Validate array values.
+
+        Parameters
+        ----------
+        name : str
+            Name of parameter.
+        kwargs : dict
+            Supported validation keywords are: isfinite, gt, ge, lt, le, isin
+            and enum.
+
+        Raises
+        ------
+        ValueError
+            When 1 or more array elements fail validation criteria.
+        TypeError
+            When parameter use is not expected.
+        NotImplementedError
+            When keyword is not recognized.
+        &#34;&#34;&#34;
+        if name not in self._names:
+            raise KeyError(f&#34;&#39;{name}&#39; not found&#34;)
+        ar = getattr(self, name)
+        dtp = ar.dtype
+        typ = dtp.type
+        if &#34;isfinite&#34; in kwargs:
+            if kwargs.pop(&#34;isfinite&#34;) is not True:
+                raise TypeError(&#34;isfinite must be True&#34;)
+            if not np.isfinite(ar).all():
+                raise ValueError(f&#34;&#39;{name}&#39; must be finite&#34;)
+        if &#34;gt&#34; in kwargs:
+            gt = typ(kwargs.pop(&#34;gt&#34;))
+            if not (ar &gt; gt).all():
+                raise ValueError(f&#34;&#39;{name}&#39; must be greater than {gt}&#34;)
+        if &#34;ge&#34; in kwargs:
+            ge = typ(kwargs.pop(&#34;ge&#34;))
+            if not (ar &gt;= ge).all():
+                raise ValueError(f&#34;&#39;{name}&#39; must be greater than or equal to {ge}&#34;)
+        if &#34;lt&#34; in kwargs:
+            lt = typ(kwargs.pop(&#34;lt&#34;))
+            if not (ar &lt; lt).all():
+                raise ValueError(f&#34;&#39;{name}&#39; must be less than {lt}&#34;)
+        if &#34;le&#34; in kwargs:
+            le = typ(kwargs.pop(&#34;le&#34;))
+            if not (ar &lt;= le).all():
+                raise ValueError(f&#34;&#39;{name}&#39; must be less than or equal to {le}&#34;)
+        if &#34;isin&#34; in kwargs:
+            isin = kwargs.pop(&#34;isin&#34;)
+            if not np.isin(ar, isin).all():
+                raise ValueError(f&#34;&#39;{name}&#39; must be in {isin}&#34;)
+        if &#34;enum&#34; in kwargs:
+            enum_t = kwargs.pop(&#34;enum&#34;)
+            if not (isclass(enum_t) and issubclass(enum_t, ParamEnum)):
+                raise TypeError(&#34;enum must be a subclass of ParamEnum&#34;)
+            elif not np.issubdtype(dtp, np.integer):
+                raise TypeError(f&#34;&#39;{name}&#39; values must be integer type&#34;)
+            valid_options = enum_t.get_valid_options()
+            if not np.isin(ar, list(valid_options.keys())).all():
+                enum_str = &#34;, &#34;.join([f&#34;{v} ({n})&#34; for (v, n) in valid_options.items()])
+                raise ValueError(
+                    f&#34;&#39;{name}&#39; must be in enum {enum_t.__name__} {enum_str}&#34;
+                )
+        if kwargs:
+            raise NotImplementedError(f&#34;unhandled kwargs {kwargs}&#34;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pypestutils.data.validate_scalar"><code class="name flex">
+<span>def <span class="ident">validate_scalar</span></span>(<span>name: str, value: Any, **kwargs) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Validate scalar value according to supported kwargs.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name of parameter, used for error message.</dd>
+<dt><strong><code>value</code></strong> :&ensp;<code>any</code></dt>
+<dd>Value of parameter.</dd>
+<dt><strong><code>kwargs</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Supported validation keywords are: isfinite, gt, ge, lt, le, isin,
+enum, minlen, maxlen and leneq.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>When value fails validation criteria.</dd>
+<dt><code>TypeError</code></dt>
+<dd>When parameter use is not expected.</dd>
+<dt><code>NotImplementedError</code></dt>
+<dd>When keyword is not recognized.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def validate_scalar(name: str, value: Any, **kwargs) -&gt; None:
+    &#34;&#34;&#34;Validate scalar value according to supported kwargs.
+
+    Parameters
+    ----------
+    name : str
+        Name of parameter, used for error message.
+    value : any
+        Value of parameter.
+    kwargs : dict
+        Supported validation keywords are: isfinite, gt, ge, lt, le, isin,
+        enum, minlen, maxlen and leneq.
+
+    Raises
+    ------
+    ValueError
+        When value fails validation criteria.
+    TypeError
+        When parameter use is not expected.
+    NotImplementedError
+        When keyword is not recognized.
+    &#34;&#34;&#34;
+    if not np.isscalar(value):
+        raise TypeError(f&#34;&#39;{name}&#39; is not a scalar value&#34;)
+    if &#34;isfinite&#34; in kwargs:
+        if kwargs.pop(&#34;isfinite&#34;) is not True:
+            raise TypeError(&#34;isfinite must be True&#34;)
+        if not np.isfinite(value):
+            raise ValueError(f&#34;&#39;{name}&#39; must be finite (was {value!r})&#34;)
+    if &#34;gt&#34; in kwargs:
+        gt = kwargs.pop(&#34;gt&#34;)
+        if not (value &gt; gt):
+            raise ValueError(f&#34;&#39;{name}&#39; must be greater than {gt} (was {value!r})&#34;)
+    if &#34;ge&#34; in kwargs:
+        ge = kwargs.pop(&#34;ge&#34;)
+        if not (value &gt;= ge):
+            raise ValueError(
+                f&#34;&#39;{name}&#39; must be greater than or equal to {ge} (was {value!r})&#34;
+            )
+    if &#34;lt&#34; in kwargs:
+        lt = kwargs.pop(&#34;lt&#34;)
+        if not (value &lt; lt):
+            raise ValueError(f&#34;&#39;{name}&#39; must be less than {lt} (was {value!r})&#34;)
+    if &#34;le&#34; in kwargs:
+        le = kwargs.pop(&#34;le&#34;)
+        if not (value &lt;= le):
+            raise ValueError(
+                f&#34;&#39;{name}&#39; must be less than or equal to {le} (was {value!r})&#34;
+            )
+    if &#34;isin&#34; in kwargs:
+        isin = kwargs.pop(&#34;isin&#34;)
+        if not np.isin(value, isin):
+            raise ValueError(f&#34;&#39;{name}&#39; must be in {isin} (was {value!r})&#34;)
+    if &#34;enum&#34; in kwargs:
+        enum_t = kwargs.pop(&#34;enum&#34;)
+        if not (isclass(enum_t) and issubclass(enum_t, ParamEnum)):
+            raise TypeError(&#34;enum must be a subclass of ParamEnum&#34;)
+        elif isinstance(value, Enum) and not isinstance(value, enum_t):
+            raise TypeError(f&#34;&#39;{value!s}&#39; is not an enum {enum_t.__name__}&#34;)
+        elif not isinstance(value, int):
+            raise TypeError(f&#34;enum value must be either {enum_t.__name__} or int&#34;)
+        valid_options = enum_t.get_valid_options()
+        if not np.isin(value, list(valid_options.keys())):
+            enum_str = &#34;, &#34;.join([f&#34;{v} ({n})&#34; for (v, n) in valid_options.items()])
+            raise ValueError(
+                f&#34;&#39;{name}&#39; must be in enum {enum_t.__name__} {enum_str} (was {value!r})&#34;
+            )
+    if &#34;minlen&#34; in kwargs:
+        valuelen = len(value)
+        minlen = kwargs.pop(&#34;minlen&#34;)
+        if minlen &lt; 1:
+            raise TypeError(&#34;minlen must be 1 or more&#34;)
+        elif minlen == 1 and valuelen &lt; 1:  # special case `minlen=1`
+            raise ValueError(f&#34;&#39;{name}&#39; cannot have zero len&#34;)
+        elif valuelen &lt; minlen:
+            raise ValueError(f&#34;&#39;{name}&#39; has a min len {minlen} (was {len(value)})&#34;)
+    if &#34;maxlen&#34; in kwargs:
+        valuelen = len(value)
+        maxlen = kwargs.pop(&#34;maxlen&#34;)
+        if valuelen &gt; maxlen:
+            raise ValueError(f&#34;&#39;{name}&#39; has a max len {maxlen} (was {valuelen})&#34;)
+    if &#34;leneq&#34; in kwargs:
+        valuelen = len(value)
+        leneq = kwargs.pop(&#34;leneq&#34;)
+        if valuelen != leneq:
+            raise ValueError(f&#34;&#39;{name}&#39; must have len {leneq} (was {valuelen})&#34;)
+    if kwargs:
+        raise NotImplementedError(f&#34;unhandled kwargs {kwargs}&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pypestutils.data.ManyArrays"><code class="flex name class">
+<span>class <span class="ident">ManyArrays</span></span>
+<span>(</span><span>float_arrays: dict[str, npt.ArrayLike] = {}, float_any: dict[str, float | npt.ArrayLike] = {}, int_any: dict[str, int | npt.ArrayLike] = {}, ar_len: int | None = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Gather and check arrays and, if needed, fill-out scalars.</p>
+<p>All arrays are 1D with the same shape (or length). Float arrays are always
+float64, and integer arrays are always int32. All arrays are contiguous.
+This class is used as a pre-processor input for ctypes.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>float_arrays</code></strong> :&ensp;<code>dict</code> of <code>array_like</code>, optional</dt>
+<dd>Dict of 1D arrays, assume to have same shape.</dd>
+<dt><strong><code>float_any</code></strong> :&ensp;<code>dict</code> of <code>array_like</code> or <code>float</code>, optional</dt>
+<dd>Dict of float or 1D arrays.</dd>
+<dt><strong><code>int_any</code></strong> :&ensp;<code>dict</code> of <code>array_like</code> or <code>int</code>, optional</dt>
+<dd>Dict of int or 1D arrays.</dd>
+<dt><strong><code>ar_len</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>If specified, this is used for the expected array size and shape.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ManyArrays:
+    &#34;&#34;&#34;Gather and check arrays and, if needed, fill-out scalars.
+
+    All arrays are 1D with the same shape (or length). Float arrays are always
+    float64, and integer arrays are always int32. All arrays are contiguous.
+    This class is used as a pre-processor input for ctypes.
+
+    Parameters
+    ----------
+    float_arrays : dict of array_like, optional
+        Dict of 1D arrays, assume to have same shape.
+    float_any : dict of array_like or float, optional
+        Dict of float or 1D arrays.
+    int_any : dict of array_like or int, optional
+        Dict of int or 1D arrays.
+    ar_len : int, optional
+        If specified, this is used for the expected array size and shape.
+    &#34;&#34;&#34;
+
+    shape = ()  # type: tuple | tuple[int]
+    _names = []  # type: list[str]
+
+    def __init__(
+        self,
+        float_arrays: dict[str, npt.ArrayLike] = {},
+        float_any: dict[str, float | npt.ArrayLike] = {},
+        int_any: dict[str, int | npt.ArrayLike] = {},
+        ar_len: int | None = None,
+    ) -&gt; None:
+        self._names = []
+        # find common array size
+        if ar_len is not None:
+            if not isinstance(ar_len, int):
+                raise TypeError(&#34;&#39;ar_len&#39; must be int&#34;)
+            self.shape = (ar_len,)
+        for name in float_arrays.keys():
+            if name in self._names:
+                raise KeyError(f&#34;&#39;{name}&#39; defined more than once&#34;)
+            self._names.append(name)
+            # Each must be 1D and the same shape
+            ar = np.array(float_arrays[name], np.float64, order=&#34;F&#34;, copy=False)
+            if ar.ndim != 1:
+                raise ValueError(f&#34;expected &#39;{name}&#39; ndim to be 1; found {ar.ndim}&#34;)
+            if not self.shape:
+                self.shape = ar.shape
+            elif ar.shape != self.shape:
+                raise ValueError(
+                    f&#34;expected &#39;{name}&#39; shape to be {self.shape}; found {ar.shape}&#34;
+                )
+            setattr(self, name, ar)
+        for name in float_any.keys():
+            if name in self._names:
+                raise KeyError(f&#34;&#39;{name}&#39; defined more than once&#34;)
+            self._names.append(name)
+            float_any[name] = ar = np.array(
+                float_any[name], np.float64, order=&#34;F&#34;, copy=False
+            )
+            if not self.shape and ar.ndim == 1:
+                self.shape = ar.shape
+        for name in int_any.keys():
+            if name in self._names:
+                raise KeyError(f&#34;&#39;{name}&#39; defined more than once&#34;)
+            self._names.append(name)
+            int_any[name] = ar = np.array(int_any[name], order=&#34;F&#34;, copy=False)
+            if not self.shape and ar.ndim == 1:
+                self.shape = ar.shape
+        if not self.shape:
+            self.shape = (1,)  # if all scalars, assume this size
+        for name in float_any.keys():
+            ar = float_any[name]
+            if ar.ndim == 0:
+                ar = np.full(self.shape, ar)
+            elif ar.ndim != 1:
+                raise ValueError(f&#34;expected &#39;{name}&#39; ndim to be 1; found {ar.ndim}&#34;)
+            elif ar.shape != self.shape:
+                raise ValueError(
+                    f&#34;expected &#39;{name}&#39; shape to be {self.shape}; found {ar.shape}&#34;
+                )
+            setattr(self, name, ar)
+        for name in int_any.keys():
+            ar = int_any[name]
+            if ar.ndim == 0:
+                ar = np.full(self.shape, ar)
+            elif ar.ndim != 1:
+                raise ValueError(f&#34;expected &#39;{name}&#39; ndim to be 1; found {ar.ndim}&#34;)
+            elif ar.shape != self.shape:
+                raise ValueError(
+                    f&#34;expected &#39;{name}&#39; shape to be {self.shape}; found {ar.shape}&#34;
+                )
+            if not np.issubdtype(ar.dtype, np.integer):
+                raise ValueError(
+                    f&#34;expected &#39;{name}&#39; to be integer type; found {ar.dtype}&#34;
+                )
+            setattr(self, name, ar.astype(np.int32, copy=False))
+
+    def __len__(self) -&gt; int:
+        &#34;&#34;&#34;Return length of dimension from shape[0].&#34;&#34;&#34;
+        return self.shape[0]
+
+    def validate(self, name, **kwargs) -&gt; None:
+        &#34;&#34;&#34;Validate array values.
+
+        Parameters
+        ----------
+        name : str
+            Name of parameter.
+        kwargs : dict
+            Supported validation keywords are: isfinite, gt, ge, lt, le, isin
+            and enum.
+
+        Raises
+        ------
+        ValueError
+            When 1 or more array elements fail validation criteria.
+        TypeError
+            When parameter use is not expected.
+        NotImplementedError
+            When keyword is not recognized.
+        &#34;&#34;&#34;
+        if name not in self._names:
+            raise KeyError(f&#34;&#39;{name}&#39; not found&#34;)
+        ar = getattr(self, name)
+        dtp = ar.dtype
+        typ = dtp.type
+        if &#34;isfinite&#34; in kwargs:
+            if kwargs.pop(&#34;isfinite&#34;) is not True:
+                raise TypeError(&#34;isfinite must be True&#34;)
+            if not np.isfinite(ar).all():
+                raise ValueError(f&#34;&#39;{name}&#39; must be finite&#34;)
+        if &#34;gt&#34; in kwargs:
+            gt = typ(kwargs.pop(&#34;gt&#34;))
+            if not (ar &gt; gt).all():
+                raise ValueError(f&#34;&#39;{name}&#39; must be greater than {gt}&#34;)
+        if &#34;ge&#34; in kwargs:
+            ge = typ(kwargs.pop(&#34;ge&#34;))
+            if not (ar &gt;= ge).all():
+                raise ValueError(f&#34;&#39;{name}&#39; must be greater than or equal to {ge}&#34;)
+        if &#34;lt&#34; in kwargs:
+            lt = typ(kwargs.pop(&#34;lt&#34;))
+            if not (ar &lt; lt).all():
+                raise ValueError(f&#34;&#39;{name}&#39; must be less than {lt}&#34;)
+        if &#34;le&#34; in kwargs:
+            le = typ(kwargs.pop(&#34;le&#34;))
+            if not (ar &lt;= le).all():
+                raise ValueError(f&#34;&#39;{name}&#39; must be less than or equal to {le}&#34;)
+        if &#34;isin&#34; in kwargs:
+            isin = kwargs.pop(&#34;isin&#34;)
+            if not np.isin(ar, isin).all():
+                raise ValueError(f&#34;&#39;{name}&#39; must be in {isin}&#34;)
+        if &#34;enum&#34; in kwargs:
+            enum_t = kwargs.pop(&#34;enum&#34;)
+            if not (isclass(enum_t) and issubclass(enum_t, ParamEnum)):
+                raise TypeError(&#34;enum must be a subclass of ParamEnum&#34;)
+            elif not np.issubdtype(dtp, np.integer):
+                raise TypeError(f&#34;&#39;{name}&#39; values must be integer type&#34;)
+            valid_options = enum_t.get_valid_options()
+            if not np.isin(ar, list(valid_options.keys())).all():
+                enum_str = &#34;, &#34;.join([f&#34;{v} ({n})&#34; for (v, n) in valid_options.items()])
+                raise ValueError(
+                    f&#34;&#39;{name}&#39; must be in enum {enum_t.__name__} {enum_str}&#34;
+                )
+        if kwargs:
+            raise NotImplementedError(f&#34;unhandled kwargs {kwargs}&#34;)</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="pypestutils.data.ManyArrays.shape"><code class="name">var <span class="ident">shape</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pypestutils.data.ManyArrays.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, name, **kwargs) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Validate array values.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name of parameter.</dd>
+<dt><strong><code>kwargs</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Supported validation keywords are: isfinite, gt, ge, lt, le, isin
+and enum.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>When 1 or more array elements fail validation criteria.</dd>
+<dt><code>TypeError</code></dt>
+<dd>When parameter use is not expected.</dd>
+<dt><code>NotImplementedError</code></dt>
+<dd>When keyword is not recognized.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def validate(self, name, **kwargs) -&gt; None:
+    &#34;&#34;&#34;Validate array values.
+
+    Parameters
+    ----------
+    name : str
+        Name of parameter.
+    kwargs : dict
+        Supported validation keywords are: isfinite, gt, ge, lt, le, isin
+        and enum.
+
+    Raises
+    ------
+    ValueError
+        When 1 or more array elements fail validation criteria.
+    TypeError
+        When parameter use is not expected.
+    NotImplementedError
+        When keyword is not recognized.
+    &#34;&#34;&#34;
+    if name not in self._names:
+        raise KeyError(f&#34;&#39;{name}&#39; not found&#34;)
+    ar = getattr(self, name)
+    dtp = ar.dtype
+    typ = dtp.type
+    if &#34;isfinite&#34; in kwargs:
+        if kwargs.pop(&#34;isfinite&#34;) is not True:
+            raise TypeError(&#34;isfinite must be True&#34;)
+        if not np.isfinite(ar).all():
+            raise ValueError(f&#34;&#39;{name}&#39; must be finite&#34;)
+    if &#34;gt&#34; in kwargs:
+        gt = typ(kwargs.pop(&#34;gt&#34;))
+        if not (ar &gt; gt).all():
+            raise ValueError(f&#34;&#39;{name}&#39; must be greater than {gt}&#34;)
+    if &#34;ge&#34; in kwargs:
+        ge = typ(kwargs.pop(&#34;ge&#34;))
+        if not (ar &gt;= ge).all():
+            raise ValueError(f&#34;&#39;{name}&#39; must be greater than or equal to {ge}&#34;)
+    if &#34;lt&#34; in kwargs:
+        lt = typ(kwargs.pop(&#34;lt&#34;))
+        if not (ar &lt; lt).all():
+            raise ValueError(f&#34;&#39;{name}&#39; must be less than {lt}&#34;)
+    if &#34;le&#34; in kwargs:
+        le = typ(kwargs.pop(&#34;le&#34;))
+        if not (ar &lt;= le).all():
+            raise ValueError(f&#34;&#39;{name}&#39; must be less than or equal to {le}&#34;)
+    if &#34;isin&#34; in kwargs:
+        isin = kwargs.pop(&#34;isin&#34;)
+        if not np.isin(ar, isin).all():
+            raise ValueError(f&#34;&#39;{name}&#39; must be in {isin}&#34;)
+    if &#34;enum&#34; in kwargs:
+        enum_t = kwargs.pop(&#34;enum&#34;)
+        if not (isclass(enum_t) and issubclass(enum_t, ParamEnum)):
+            raise TypeError(&#34;enum must be a subclass of ParamEnum&#34;)
+        elif not np.issubdtype(dtp, np.integer):
+            raise TypeError(f&#34;&#39;{name}&#39; values must be integer type&#34;)
+        valid_options = enum_t.get_valid_options()
+        if not np.isin(ar, list(valid_options.keys())).all():
+            enum_str = &#34;, &#34;.join([f&#34;{v} ({n})&#34; for (v, n) in valid_options.items()])
+            raise ValueError(
+                f&#34;&#39;{name}&#39; must be in enum {enum_t.__name__} {enum_str}&#34;
+            )
+    if kwargs:
+        raise NotImplementedError(f&#34;unhandled kwargs {kwargs}&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pypestutils" href="index.html">pypestutils</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pypestutils.data.validate_scalar" href="#pypestutils.data.validate_scalar">validate_scalar</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pypestutils.data.ManyArrays" href="#pypestutils.data.ManyArrays">ManyArrays</a></code></h4>
+<ul class="">
+<li><code><a title="pypestutils.data.ManyArrays.shape" href="#pypestutils.data.ManyArrays.shape">shape</a></code></li>
+<li><code><a title="pypestutils.data.ManyArrays.validate" href="#pypestutils.data.ManyArrays.validate">validate</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
