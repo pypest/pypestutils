@@ -28,7 +28,7 @@ grid_info = helpers.get_grid_info_from_file("freyberg6.disv.grb")
 
 ## Documentation
 
-The documentation for pypestutils can be found [here](docs/index.html)
+The documentation for pypestutils can be found [here](https://pypest.github.io/pypestutils/)
 
 The documentation for the shared FORTRAN library can be found [here](docs/pestutilslib/fortran_library_documentation.md)
 
