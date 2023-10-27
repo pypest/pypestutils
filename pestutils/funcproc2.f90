@@ -6,7 +6,6 @@ integer (kind=c_int) function calc_kriging_factors_2d(npts,ecs,ncs,zns,     &
                                    factorfile,factorfiletype,               &
                                    icount_interp)                           &
                  bind(C,name="calc_kriging_factors_2d")
-!DIR$ ATTRIBUTES DLLEXPORT :: calc_kriging_factors_2d
 
 ! -- This function calculates 2D kriging factors. Anisotropy, and anisotropy bearing
 !    can be spatially variable.
@@ -374,7 +373,6 @@ integer (kind=c_int) function calc_kriging_factors_auto_2d(npts,ecs,ncs,zns,  &
                                    factorfile,factorfiletype,                 &
                                    icount_interp)                             &
                  bind(C,name="calc_kriging_factors_auto_2d")
-!DIR$ ATTRIBUTES DLLEXPORT :: calc_kriging_factors_auto_2d
 
 ! -- This function calculates 2D kriging factors. Anisotropy, and anisotropy bearing
 !    can be spatially variable. Some variogram properties are determined automatically.
@@ -805,7 +803,6 @@ integer (kind=c_int) function calc_kriging_factors_3d(            &
                                    factorfile,factorfiletype,     &
                                    icount_interp)                 &
                  bind(C,name="calc_kriging_factors_3d")
-!DIR$ ATTRIBUTES DLLEXPORT :: calc_kriging_factors_3d
 
 ! -- This function calculates 3D kriging factors.
 
@@ -1315,7 +1312,6 @@ integer (kind=c_int) function krige_using_file(factorfile,factorfiletype,      &
                                                icount_interp,                  &
                                                meanval)                        &
                  bind(C,name="krige_using_file")
-!DIR$ ATTRIBUTES DLLEXPORT :: krige_using_file
 
 ! -- This function applies interpolation factors that are calculated by other functions.
 
@@ -1547,7 +1543,6 @@ integer (kind=c_int) function build_covar_matrix_2d(        &
                               nugget,aa,sill,anis,bearing,  &
                               ldcovmat,covmat)              &
                  bind(C,name="build_covar_matrix_2d")
-!DIR$ ATTRIBUTES DLLEXPORT :: build_covar_matrix_2d
 
 ! -- This function calculates a covariance matrix for a set of 2D pilot points.
 !    Variogram specifications can change with pilot point location.
@@ -1831,7 +1826,6 @@ integer (kind=c_int) function build_covar_matrix_3d(        &
                               bearing,dip,rake,             &
                               ldcovmat,covmat)              &
                  bind(C,name="build_covar_matrix_3d")
-!DIR$ ATTRIBUTES DLLEXPORT :: build_covar_matrix_3d
 
 ! -- This function calculates a covariance matrix for a set of 3D pilot points.
 !    Variogram specifications can change with pilot point location.
@@ -2163,7 +2157,6 @@ integer (kind=c_int) function calc_structural_overlay_factors(     &
                      factorfile,factorfiletype,                    &
                      icount_interp)                                &
                  bind(C,name="calc_structural_overlay_factors")
-!DIR$ ATTRIBUTES DLLEXPORT :: calc_structural_overlay_factors
 
 ! -- This function calculates interpolation/blending factors for structural overlay parameters.
 
@@ -2602,7 +2595,6 @@ integer (kind=c_int) function interpolate_blend_using_file(                    &
                                                sourceval,targval,              &
                                                icount_interp)                  &
                  bind(C,name="interpolate_blend_using_file")
-!DIR$ ATTRIBUTES DLLEXPORT :: interpolate_blend_using_file
 
 ! -- This function applies interpolation factors calculated by function calc_structural_overlay_factors.
 
@@ -2825,7 +2817,6 @@ integer (kind=c_int) function ipd_interpolate_2d(npts,             &
                                         transtype,                 &
                                         anis,bearing,invpow)       &
                  bind(C,name="ipd_interpolate_2d")
-!DIR$ ATTRIBUTES DLLEXPORT :: ipd_interpolate_2d
 
 ! -- This function undertakes 2D inverse-power-of-distance spatial interpolation.
 
@@ -3040,7 +3031,6 @@ integer (kind=c_int) function ipd_interpolate_3d(npts,                &
                                         bearing,dip,rake,             &
                                         invpow)                       &
                  bind(C,name="ipd_interpolate_3d")
-!DIR$ ATTRIBUTES DLLEXPORT :: ipd_interpolate_3d
 
 ! -- This function undertakes 3D inverse-power-of-distance spatial interpolation.
 
@@ -3294,7 +3284,6 @@ end function ipd_interpolate_3d
 
 integer (kind=c_int) function initialize_randgen(iseed) &
                  bind(C,name="initialize_randgen")
-!DIR$ ATTRIBUTES DLLEXPORT :: initialize_randgen
 
 ! -- Initialize the random number generator.
 
@@ -3325,7 +3314,6 @@ integer (kind=c_int) function fieldgen2d_sva(                &
                               transtype,avetype,power,       &
                               ldrand,nreal,randfield)        &
                  bind(C,name="fieldgen2d_sva")
-!DIR$ ATTRIBUTES DLLEXPORT :: fieldgen2d_sva
 
 ! -- This function generates stochastic fields based on a spatially varying variogram.
 ! -- It does this by 2D spatial convolution of an averaging function.
@@ -3590,7 +3578,6 @@ integer (kind=c_int) function fieldgen3d_sva(                &
                               transtype,avetype,power,       &
                               ldrand,nreal,randfield)        &
                  bind(C,name="fieldgen3d_sva")
-!DIR$ ATTRIBUTES DLLEXPORT :: fieldgen3d_sva
 
 ! -- This function generates 3D stochastic fields based on a spatially varying variogram.
 ! -- It does this by spatial convolution using an averaging function.

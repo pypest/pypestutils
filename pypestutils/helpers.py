@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import numpy as np
 import pandas as pd
@@ -5,85 +7,370 @@ import pandas as pd
 from .pestutilslib import PestUtilsLib
 
 
-def get_grid_info_from_gridspec(gridspec_fname):
+def mod2obs_mf6(gridinfo_fname: str,depvar_fname: str,obscsv_fname: str ,model_type: int,start_datetime: str | pd.TimeStamp,depvar_ftype=1,
+                depvar_name="head",interp_thresh=1.0e+30,no_interp_val=1.0e+30,model_timeunit="d",
+                time_extrap=1.0)->dict:
+
+    """python implementation of mod2smp and mod2obs using modflow6 binary grid files
+    Parameters
+    ----------
+    gridinfo_fname: str
+        grid information file
+    depvar_fname: str
+        MODFLOW-6 output binary file
+    obscsv_fname: str | pd.DataFrame
+        observation information.  Must contain columns "site","x","y","datetime",and "layer"
+    model_type: int
+        type of model.  Must be either 31 (dis mf6) or 32 (disv mf6)
+    start_datetime: str | datetime
+        the simulation start datetime
+    depvar_ftype : int
+        the modflow-6 output file type.  1 for states, 2 or cell-by-cell budgets
+    depvar_name: str
+        the name of the dependent variable in `depvar_fname` to extract (for example "head")
+    interp_thresh: float
+        the upper limit above which extracted values are treated as invalid.  Default is 1.0+30
+    no_interp_val: float
+        value used to fill invalid/null extracted/interpolated values
+    model_time_unit: str
+        pandas style time unit.  Default is "d"ay
+    time_extrap: float
+        length of time units to extrapolate.  Default is 1.0 time unit
+
+    Returns
+    -------
+    all_results: pd.DataFrame
+        all simulated times at observation locations (ie mod2smp)
+    interpolated_results: pd.DataFrame
+        temporally interpolated simulated results at observation locations (ie mod2obs)
+    """
+
+    for fname in [gridinfo_fname,depvar_fname]:
+        assert os.path.exists(fname),"file {0} not found".format(fname)
+    lib = PestUtilsLib()
+    is_mf6 = False
+    is_structured = True
+    model_type = int(model_type)
+    if model_type == 1:
+        is_mf6 = False
+    elif model_type == 21:
+        pass
+    elif model_type == 22:
+        is_structured = False
+    elif model_type == 31:
+        is_mf6 = True
+    elif model_type == 32:
+        is_mf6 = True
+        is_structured = False
+    elif model_type == 33:
+        is_mf6 = True
+        is_structured = False
+    else:
+        raise Exception("unrecognized 'model_type':{0}".format(model_type))
+
+    depvar_ftype = int(depvar_ftype)
+    if depvar_ftype not in [1,2]:
+        raise Exception("unrecognized 'depvar_ftype':{0}".format(depvar_ftype))
+
+    if is_mf6:
+        grid_info = lib.install_mf6_grid_from_file("grid",gridinfo_fname)
+    else:
+        raise NotImplementedError()
+    
+    if isinstance(start_datetime,str):
+        start_datetime = pd.to_datetime(start_datetime)
+
+    depvar_info = lib.inquire_modflow_binary_file_specs(depvar_fname,depvar_fname+".out.csv",model_type,depvar_ftype)    
+    depvar_df = pd.read_csv(depvar_fname+".out.csv")
+    depvar_df.columns = [c.lower() for c in depvar_df.columns]
+    #print(depvar_df)
+
+    if isinstance(obscsv_fname,str):
+        if not os.path.exists(obscsv_fname):
+            raise Exception("obscsv_fname '{0}' not found".format(obscsv_fname))
+        # todo: think about supporting a site sample file maybe?
+        obsdf = pd.read_csv(os.path.join(obscsv_fname),parse_dates=["datetime"])
+    elif isinstance(obscsv_fname,pd.DataFrame):
+        obsdf = obscsv_fname.copy()
+    else:
+        raise Exception("obscsv arg type not recognized (looking for str or pd.DataFrame):'{0}'".format(type(obscsv_fname)))
+    #check obsdf
+    obsdf.columns = [c.lower() for c in obsdf.columns]
+    for req_col in ["site","x","y","datetime","layer"]:
+        if req_col not in obsdf.columns:
+            raise Exception("observation dataframe missing column '{0}'".format(req_col))
+    usitedf = obsdf.groupby("site").first()
+    pth = os.path.split(depvar_fname)[0]
+    fac_file = os.path.join(pth,"obs_interp_fac.bin")
+    bln_file = fac_file.replace(".bin",".bln")
+    interp_fac_results = lib.calc_mf6_interp_factors("grid",usitedf.x.values,usitedf.y.values,usitedf.layer.values,fac_file,"binary",bln_file)
+    if 0 in interp_fac_results:
+        print("warning: the following site(s) failed to have interpolation factors calculated:")
+        fsites = usitedf.site.iloc[interp_fac_results==0].to_list()
+        print(fsites)
+    all_results = lib.interp_from_mf6_depvar_file(depvar_fname,fac_file,"binary",depvar_info["ntime"],"head",interp_thresh,True,
+        no_interp_val,usitedf.shape[0])
+    datetimes = start_datetime+pd.to_timedelta(all_results["simtime"],unit=model_timeunit)
+    allresults_df = pd.DataFrame(all_results["simstate"],index=datetimes,columns=usitedf.index)
+    allresults_df.to_csv(depvar_fname+".all.csv")
+
+    if "totim" in obsdf:
+        print("WARNING: replacing existing 'totim' column in observation dataframe")
+    obsdf.loc[:,"totim"] = obsdf.datetime.apply(lambda x: x  - start_datetime).dt.days 
+
+    usite = obsdf.site.unique()
+    usite.sort()
+    usite_dict = {s:c for s,c in zip(usite,np.arange(usite.shape[0],dtype=int))}
+    obsdf.loc[:,"isite"] = obsdf.site.apply(lambda x: usite_dict[x])
+    obsdf.sort_values(by=["isite","totim"],inplace=True)
+    
+    interp_results = lib.interp_to_obstime(all_results["nproctime"],all_results["simtime"],all_results["simstate"],interp_thresh,"L",
+        time_extrap,no_interp_val,obsdf.isite.values,obsdf.totim.values)
+
+    obsdf.loc[:,"simulated"] = interp_results
+    lib.uninstall_mf6_grid('grid')
+    lib.free_all_memory()
+    return {"all_results":allresults_df,"interpolated_results":obsdf}
+
+def get_grid_info_from_gridspec(gridspec_fname: str) -> dict:
+    """Read structured grid info from a PEST-style grid specificatin file
+    Parameters
+    ----------
+    gridspec_fname : str
+        PEST-style grid specification file
+    
+    Returns
+    -------
+    grid_info: dict
+        grid information
+    """
+
+    if not os.path.exists(gridspec_fname):
+        raise FileNotFoundError(gridspec_fname)
     sr = SpatialReference.from_gridspec(gridspec_fname)
     return {
-        "easting": sr.xcentergrid.flatten(),
-        "northing": sr.ycentergrid.flatten(),
+        "x": sr.xcentergrid.flatten(),
+        "y": sr.ycentergrid.flatten(),
         "area": sr.areagrid.flatten(),
         "nrow": sr.nrow,
         "ncol": sr.ncol,
+        "delr": sr.delr,
+        "delc": sr.delc
     }
 
 
-def get_grid_info_from_mf6_grb(grb_fname):
-    pass
+def get_grid_info_from_mf6_grb(grb_fname: str) -> dict:
+    """Read grid info from a MODFLOW-6 binary grid file
+    Parameters
+    ----------
+    grb_fname: str
+        MODFLOW-6 binary grid file
+    
+    Returns
+    -------
+    grid_info: dict
+        grid information
+    """
+    if not os.path.exists(grb_fname):
+        raise FileNotFoundError(grb_fname)
+    lib = PestUtilsLib()
+    data = lib.install_mf6_grid_from_file("grid",grb_fname)
+    data["x"],data["y"],data["z"] = lib.get_cell_centres_mf6("grid",data["ncells"])
+    lib.uninstall_mf6_grid("grid")
+    lib.free_all_memory()
+    return data
+
+def get_2d_grid_info_from_file(fname: str,layer=None) -> dict:
+    """Try to read 2-D grid info from a variety of filename sources
+    Parameters
+    ----------
+    fname: str
+        filename that stores 2-D grid info.  Optionally, a pandas DataFrame
+        at least columns 'x','y' and possibly 'layer'.
+    layer: int (optional)
+        the layer number to use for 2-D.  If None and 
+        grid info is 3-D, a value of 1 is used
+    
+    Returns
+    -------
+    grid_info: dict
+        grid information
+    """ 
+
+    grid_info = None
+    if isinstance(fname,str):
+        if not os.path.exists(fname):
+            raise FileNotFoundError(fname)
+        if fname.lower().endswith(".csv"):
+            grid_info = pd.read_csv(fname)
+            grid_info.columns = [c.lower() for c in grid_info.columns]
+            fname = grid_info # for  checks and processing below
+            
+        else:
+            try:
+                grid_info = get_grid_info_from_gridspec(fname)
+            except Exception as e1:
+                try:
+                    grid_info = get_2d_grid_info_from_mf6_grb(fname,layer=layer)
+                except Exception as e2:
+                    
+                    raise Exception("error getting grid info from file '{0}'".format(fname))
+        
+    if isinstance(fname,pd.DataFrame):
+        if 'x' not in fname.columns:
+            raise Exception("required 'x' column not found in grid info dataframe")
+        if 'y' not in fname.columns:
+            raise Exception("required 'y' column not found in grid info dataframe")
+        if layer is not None and 'layer' not in fname.columns:
+            print("WARNING: 'layer' arg is not None but 'layer' not found in grid info dataframe...")
+        # I think these should just be references to column values (not copies)
+        grid_info = {c:fname[c].values for c in fname.columns}
+    
+    return grid_info
+
+
+def get_2d_grid_info_from_mf6_grb(grb_fname: str,layer=None) -> dict:
+    """Read grid info from a MODFLOW-6 binary grid file
+    Parameters
+    ----------
+    grb_fname: str
+        MODFLOW-6 binary grid file
+    layer: int (optional)
+        the layer number to use for 2-D.  If None,
+        a value of 1 is used
+    
+    Returns
+    -------
+    grid_info: dict
+        grid information
+    """
+    grid_info = get_grid_info_from_mf6_grb(grb_fname)
+    nnodes = grid_info["ncells"]
+    x = grid_info["x"].copy()
+    y = grid_info["y"].copy()
+    nrow,ncol = None,None
+    if grid_info["idis"] == 1:
+        nlay = grid_info["ndim3"]
+        if layer is not None:
+            if layer > nlay:
+                raise Exception("user-supplied 'layer' {0} greater than nlay {1}".format(layer,nlay))
+        else:
+            layer = 1
+        nrow = grid_info["ndim2"]
+        ncol = grid_info["ndim1"]
+        x = x.reshape((nlay,nrow,ncol))[layer-1]
+        y = y.reshape((nlay,nrow,ncol))[layer-1]
+        grid_info["nnodes"] = nrow * ncol
+        grid_info["x"] = x
+        grid_info["y"] = y
+        grid_info["nrow"] = nrow
+        grid_info["ncol"] = ncol
+
+    elif grid_info["idis"] == 2:
+        nlay = grid_info["ndim3"]
+        if layer is not None:
+            if layer > nlay:
+                raise Exception("user-supplied 'layer' {0} greater than nlay {1}".format(layer,nlay))
+        else:
+            layer = 1
+        ncpl = grid_info["ndim1"]
+        x = x.reshape((nlay,ncpl))[layer-1]
+        y = y.reshape((nlay,ncpl))[layer-1]
+        grid_info["nnodes"] = ncpl
+        grid_info["x"] = x
+        grid_info["y"] = y
+    return grid_info
 
 
 def get_2d_pp_info_structured_grid(
-    pp_space,
-    gridspec_fname,
-    zone_array=None,
-    existing_array=None,
-    name_prefix="pp",
-    bearing_array=None,
-    aniso_array=None,
-    corrlen_array=None,
-):
-    sr = SpatialReference.from_gridspec(gridspec_fname)
-    pname, px, py, pzone, pval = [], [], [], [], []
+    pp_space: int,
+    gridinfo_fname: str,
+    array_dict = {},
+    name_prefix="pp"
+) -> pandas.DataFrame:
+    """Create a grid of pilot point locations for a 
+    2-D structured grid
+    Parameters
+    ----------
+    pp_space: int
+        row and column spacing for pilot point locations
+    gridinfo_fname: str
+        file contain grid information
+    array_dict: dict (optional)
+        a dict of 2-D grid-shape arrays used to populate 
+        pilot point attributes.  Special values include:
+        "value","zone","bearing","aniso" and "corrlen", 
+        although any number of arrays can be passed and will
+        sampled at pilot point locations
+    name_prefix: str
+        pilot point name prefix. Default is "pp"
+    
+    Returns
+    -------
+    ppdf: pd.DataaFrame
+        dataframe of pilot point information
+
+    """
+
+    grid_info = get_2d_grid_info_from_file(gridinfo_fname)
+    pname, px, py, pval = [], [], [], []
     pi, pj = [], []
+    parr_dict = {k:[] for k in array_dict.keys()}
     count = 0
-    for i in range(int(pp_space / 2), sr.nrow, pp_space):
-        for j in range(int(pp_space / 2), sr.ncol, pp_space):
+    nrow = grid_info["nrow"]
+    ncol = grid_info["ncol"]
+    nlay = grid_info.get("nlay",1)
+
+    zone_array = array_dict.get("zone",None)
+
+    x = grid_info['x']
+    y = grid_info['y']
+    x = x.reshape((nlay,nrow,ncol))[0,:,:]
+    y = y.reshape((nlay,nrow,ncol))[0,:,:]
+    if nrow is None:
+        raise Exception("unstructured grid loaded from gridinfo_fname '{0}'".format(gridspec_fname))
+    for i in range(int(pp_space / 2), nrow, pp_space):
+        for j in range(int(pp_space / 2), ncol, pp_space):
             if zone_array is not None and zone_array[i, j] <= 0:
                 continue
+            px.append(x[i, j])
+            py.append(y[i, j])
+            #if zone_array is not None:
+            #    pzone.append(zone_array[i, j])
+            #else:
+            #    pzone.append(1)
 
-            if existing_array is not None:
-                pval.append(existing_array[i, j])
-            else:
-                pval.append(1)
-            px.append(sr.xcentergrid[i, j])
-            py.append(sr.ycentergrid[i, j])
-            if zone_array is not None:
-                pzone.append(zone_array[i, j])
-            else:
-                pzone.append(1)
             pname.append(name_prefix + "{0}".format(count))
             pi.append(i)
             pj.append(j)
             count += 1
     df = pd.DataFrame(
         {
-            "name": pname,
+            "ppname": pname,
             "x": px,
             "y": py,
-            "zone": pzone,
-            "value": pval,
             "i": pi,
             "j": pj,
         },
         index=pname,
     )
+    df.loc[:,"value"] = 1.0
     df.loc[:, "bearing"] = 0.0
-    if bearing_array is not None:
-        df.loc[:, "bearing"] = bearing_array[df.i, df.j]
     df.loc[:, "aniso"] = 1.0
-    if aniso_array is not None:
-        df.loc[:, "aniso"] = aniso_array[df.i, df.j]
-    df.loc[:, "corrlen"] = (
-        max(sr.xcentergrid.max(), sr.ycentergrid.max()) * pp_space * 5
-    )  # ?
-    if corrlen_array is not None:
-        df.loc[:, "corrlen"] = corrlen_array[df.i, df.j]
+    delx = pp_space * 5 * int((x.max() - x.min()) / float(ncol))
+    dely = pp_space * 5 * int((y.max() - y.min()) / float(nrow))
+    df.loc[:, "corrlen"] = max(delx,dely)  # ?
+    df.loc[:,"zone"] = 1
+    for k,arr in array_dict.items():
+        df.loc[:,k] = arr[df.i,df.j]
     df["zone"] = df.zone.astype(int)
 
     return df
 
 
 def interpolate_with_sva_pilotpoints_2d(
-    pp_info,
-    gridinfo_fname,
+    pp_info: pandas.DataFrame,
+    gridinfo_fname: str,
     vartype="exp",
     krigtype="ordinary",
     vartransform="none",
@@ -91,9 +378,52 @@ def interpolate_with_sva_pilotpoints_2d(
     min_pts=1,
     search_dist=1e30,
     zone_array=1,
-):
-    # todo somechecks on pp_info
-    req_cols = ["name", "x", "y", "value"]
+    verbose=True,
+    layer=None
+) -> dict:
+    """Perform 2-D pilot point interpolation using
+    spatially varying geostatistical hyper-parameters
+    Parameters
+    ----------
+    pp_info: pandas.DataFrame
+        dataframe with pilot point info.  Required columns 
+        include: "x","y",and "value".  optional columns include:
+        "zone","bearing","aniso",and "corrlen"    
+    gridinfo_fname: str
+        file name storing grid information
+    vartype: str
+        variogram type.  Default is "exp"onential
+    krigtype: str
+        kriging type.  Default is "ordinary"
+    vartransform: str
+        variogram transformation.  Default is "none"
+    max_pts: int
+        maximum number of pilot points to use in interpolation.
+        Default is 50
+    min_pts: int
+        minimum number of pilot points to use in interplation.
+        Default is 1
+    search_dict: float
+        search distance to use when looking for nearby pilot points.
+        Default is 1.0e+30
+    zone_array: int | numpy.ndarray
+        the zone array to match up with "zone" value in `pp_info`.  If 
+        integer type, a constant zone array of value "zone_array" is used.
+        Default is 1
+    verbose: bool
+        flag to output.  Default is True
+    layer: int
+        layer number to use if gridinfo_fname points to 3-D grid info.
+        Default is None, which results in layer 1 being used
+
+    Returns
+    -------
+    results: dict
+        resulting arrays of the various interpolation from pilot 
+        points to grid-shaped arrays
+    """
+    # some checks on pp_info
+    req_cols = ["ppname", "x", "y", "value"]
     missing = []
     for req_col in req_cols:
         if req_col not in pp_info.columns:
@@ -109,33 +439,37 @@ def interpolate_with_sva_pilotpoints_2d(
         pp_info.loc[:, "zone"] = 1
 
     nnodes, nrow, ncol = None, None, None
-    easting, northing, area = None, None, None
-    try:
-        sr = SpatialReference.from_gridspec(gridinfo_fname)
-        nnodes = sr.nrow * sr.ncol
-        nrow = sr.nrow
-        ncol = sr.ncol
-        easting = sr.xcentergrid
-        northing = sr.ycentergrid
-        area = sr.areagrid
-    except Exception as e:
-        # some messaging here
-        # then try for an mf6 unstructured grid
+    x, y, area = None, None, None
 
-        raise Exception(
-            "failed to load grid spec file {0}: {1}".format(gridspec_fname, str(e))
-        )
-
-    if not isinstance(zone_array, np.ndarray):
-        zone_array = np.ones((nnodes), dtype=int)
-    elif zone_array.dtype != int:
-        # TODO warn here
-        zone_array = zone_array.astype(int)
+    nrow, ncol = None, None
+    x, y, area = None, None, None
+    grid_info = get_2d_grid_info_from_file(gridinfo_fname)
+    nrow = grid_info.get("nrow",None)
+    ncol = grid_info.get("ncol",None)
+    x = grid_info['x']
+    y = grid_info['y']
+    area = grid_info.get("area",None)
+    idis = grid_info.get("idis",None)
+    nnodes = grid_info.get("nnodes",None)
+    if area is None:
+        area = np.ones_like(x)
+    if nnodes is None:
+        nnodes = x.shape[0]
 
     lib = PestUtilsLib()
 
-    hyperfac_fname = "temp.fac"
-    hyperfac_ftype = "text"
+    if not isinstance(zone_array, np.ndarray):
+        zone_array = np.ones((nnodes), dtype=int)
+        lib.logger.info("using 1s as zone array for interpolation")
+    elif zone_array.dtype != int:
+        # TODO warn here
+        lib.logger.info("casting zone_array from %r to int", zone_array.dtype)
+        zone_array = zone_array.astype(int)
+    
+    
+    hyperfac_ftype = "binary"
+    if verbose:
+        hyperfac_ftype = "text"
     hyperbearing = 0.0
     hyperaniso = 1.0
     hypervartype = "exp"
@@ -143,17 +477,22 @@ def interpolate_with_sva_pilotpoints_2d(
     hypertrans = "none"
 
     fac_files = []
+    lib.logger.info("using bearing of %r and aniso of %r for hyperpar interpolation", hyperbearing, hyperaniso)
+    lib.logger.info("using %r variogram with %r transform for hyperpar interpolation",hypervartype,hypertrans)
+       
+    results = {}    
 
-    bearing = np.zeros_like(easting)
+    bearing = np.zeros_like(x)
     if "bearing" in pp_info.columns:
         hypernoint = pp_info.bearing.mean()
+        lib.logger.info("using no-interpolation value of %r for 'bearing' hyperpar interpolation", hypernoint)
         hyperfac_fname = "tempbearing.fac"
         npts = lib.calc_kriging_factors_auto_2d(
             pp_info.x.values,
             pp_info.y.values,
             pp_info.zone.values.astype(int),
-            easting.flatten(),
-            northing.flatten(),
+            x.flatten(),
+            y.flatten(),
             zone_array.flatten().astype(int),
             hyperkrigtype,
             hyperaniso,
@@ -173,17 +512,26 @@ def interpolate_with_sva_pilotpoints_2d(
         )
         bearing = result["targval"]
         fac_files.append(hyperfac_fname)
+        if verbose:
+            if nrow is not None:
+                np.savetxt("bearing.txt",bearing.reshape(nrow,ncol),fmt="%15.6E")
+            else:
+                np.savetxt("bearing.txt",bearing,fmt="%15.6E")
+    results["bearing"] = bearing
+    
 
-    aniso = np.zeros_like(easting)
+    aniso = np.zeros_like(x)
     if "aniso" in pp_info.columns:
         hypernoint = pp_info.aniso.mean()
+        lib.logger.info("using no-interpolation value of %r for 'aniso' hyperpar interpolation", hypernoint)
+        
         hyperfac_fname = "tempaniso.fac"
         npts = lib.calc_kriging_factors_auto_2d(
             pp_info.x.values,
             pp_info.y.values,
             pp_info.zone.values,
-            easting.flatten(),
-            northing.flatten(),
+            x.flatten(),
+            y.flatten(),
             zone_array.flatten().astype(int),
             hyperkrigtype,
             hyperaniso,
@@ -202,18 +550,26 @@ def interpolate_with_sva_pilotpoints_2d(
             hypernoint,
         )
         aniso = result["targval"]
+        if verbose:
+            if nrow is not None:
+                np.savetxt("aniso.txt",aniso.reshape(nrow,ncol),fmt="%15.6E")
+            else:
+                np.savetxt("aniso.txt",aniso,fmt="%15.6E")
+
+    results["aniso"] = aniso
 
     use_auto = False
     corrlen = None
     if "corrlen" in pp_info.columns:
         hypernoint = pp_info.corrlen.mean()
+        lib.logger.info("using no-interpolation value of %r for 'corrlen' hyperpar interpolation", hypernoint)
         hyperfac_fname = "tempcorrlen.fac"
         npts = lib.calc_kriging_factors_auto_2d(
             pp_info.x.values,
             pp_info.y.values,
             pp_info.zone.values,
-            easting.flatten(),
-            northing.flatten(),
+            x.flatten(),
+            y.flatten(),
             zone_array.flatten().astype(int),
             hyperkrigtype,
             hyperaniso,
@@ -234,24 +590,33 @@ def interpolate_with_sva_pilotpoints_2d(
         corrlen = result["targval"]
         fac_files.append(hyperfac_fname)
         use_auto = False
+        if verbose:
+            if nrow is not None:
+                np.savetxt("corrlen.txt",corrlen.reshape(nrow,ncol),fmt="%15.6E")
+            else:
+                np.savetxt("corrlen.txt",corrlen,fmt="%15.6E")
+        results["corrlen"] = corrlen
 
-    for fac_file in fac_files:
-        try:
-            os.remove(fac_file)
-        except Exception as e:
-            pass
+    if not verbose:
+        for fac_file in fac_files:
+            try:
+                os.remove(fac_file)
+            except Exception as e:
+                pass
 
     # todo: maybe make these args?
     fac_fname = "var.fac"
     fac_ftype = "binary"
+    if verbose:
+        fac_ftype = "text"
     noint = pp_info.loc[:, "value"].mean()
     if use_auto:
         npts = lib.calc_kriging_factors_auto_2d(
             pp_info.x.values,
             pp_info.y.values,
             pp_info.zone.values,
-            easting.flatten(),
-            northing.flatten(),
+            x.flatten(),
+            y.flatten(),
             zone_array.flatten().astype(int),
             krigtype,
             aniso.flatten(),
@@ -264,8 +629,8 @@ def interpolate_with_sva_pilotpoints_2d(
             pp_info.x.values,
             pp_info.y.values,
             pp_info.zone.values,
-            easting.flatten(),
-            northing.flatten(),
+            x.flatten(),
+            y.flatten(),
             zone_array.flatten().astype(int),
             vartype,
             krigtype,
@@ -289,16 +654,17 @@ def interpolate_with_sva_pilotpoints_2d(
         noint,
         noint,
     )
+    results["result"] = result["targval"]
 
     if nrow is not None:
-        arr = result["targval"].reshape(nrow, ncol)
-    else:
-        arr = results[targval]
-    return arr
+        for k,v in results.items():
+            results[k] = v.reshape(nrow,ncol)
+
+    return results
 
 
 def generate_2d_grid_realizations(
-    gridinfo_fname,
+    gridinfo_fname: str,
     num_reals=100,
     variotype="exp",
     mean=1.0,
@@ -309,31 +675,73 @@ def generate_2d_grid_realizations(
     varioaniso=1.0,
     variobearing=0.0,
     random_seed=12345,
-):
-    nrow, ncol = None, None
-    easting, northing, area = None, None, None
-    try:
-        sr = SpatialReference.from_gridspec(gridinfo_fname)
-        nnodes = sr.nrow * sr.ncol
-        nrow = sr.nrow
-        ncol = sr.ncol
-        easting = sr.xcentergrid
-        northing = sr.ycentergrid
-        area = sr.areagrid
+    layer=None,
+) ->np.NDArray[float]:
+    """draw 2-D realizations using sequential gaussian 
+    simulations and optionally using spatially varying 
+    geostatistical hyper parameters.
+    Parameters
+    ----------
+    gridinfo_fname: str
+        file containing grid information
+    num_real : int
+        number of realizations to generate
+    variotype: str
+        variogram type.  Default is "exp"onential
+    mean: float or numpy.ndarray
+        field mean.  Either a scalar or array of shape nnodes.  Default is 1.0
+    variance: float
+        field variance. Either a scalar or array of shape nnodes.  Default is 1.0
+    variorange: float
+        range of the variogram. Either a scalar or array of shape nnodes.
+    variotransform: str
+        variogram transform.  Default is "none".
+    zone_array: int or numpy.ndarray
+        the zone array
+    varioaniso: float or numpy.ndarray
+        the variogram anisotropy ratio.  Either a scalar or array of shape nnodes.
+    variobearing: flaot or numpy.ndarray
+        the variogram anisotropy bearing.  Either a scalar or array of shape nnodes
+    random_seed: int
+        the random seed.  Default is 12345
+    layer : int or None
+        the layer to use of gridinfo_fname contains 3-D info.  Default
+        is None, which results in layer 1 being used
 
-    except Exception as e:
-        # some messaging here
-        # then try for an mf6 unstructured grid
-        raise Exception(
-            "failed to load grid spec file {0}: {1}".format(gridspec_fname, str(e))
-        )
+    Returns
+    -------
+    results: numpy.ndarray(float)
+        realizations (if `grid_info` indicates a structured grid, realizations
+        will be reshaped to NROW X NCOL)
+    """
+
+    
+
+    nrow, ncol = None, None
+    x, y, area = None, None, None
+    grid_info = get_2d_grid_info_from_file(gridinfo_fname)
+    nrow = grid_info.get("nrow",None)
+    ncol = grid_info.get("ncol",None)
+    x = grid_info['x']
+    y = grid_info['y']
+    area = grid_info.get("area",None)
+    idis = grid_info.get("idis",None)
+    nnodes = grid_info.get("nnodes",None)
+    if area is None:
+        area = np.ones_like(x)
+    if nnodes is None:
+        nnodes = x.shape[0]
+
 
     if not isinstance(mean, np.ndarray):
         mean = np.zeros((nnodes)) + mean
     if not isinstance(variance, np.ndarray):
         variance = np.zeros((nnodes)) + variance
     if variorange is None:
-        variorange = np.zeros((nnodes)) + max(sr.delc.max(), sr.delr.max()) * 3  # ?
+        delx = x.max() - x.min()
+        dely = y.max() - y.min()
+
+        variorange = np.zeros((nnodes)) + max(delx,dely) / 10 # ?
     elif not isinstance(variorange, np.ndarray):
         variorange = np.zeros((nnodes)) + variorange
 
@@ -349,14 +757,16 @@ def generate_2d_grid_realizations(
         # TODO warn here
         zone_array = zone_array.astype(int)
 
-    lib = PestUtilsLib()
-    lib.initialize_randgen(random_seed)
+    
 
     power = 1.0
 
+    lib = PestUtilsLib()
+    lib.initialize_randgen(random_seed)
+
     reals = lib.fieldgen2d_sva(
-        easting.flatten(),
-        northing.flatten(),
+        x.flatten(),
+        y.flatten(),
         area.flatten(),
         zone_array.flatten(),
         mean.flatten(),
@@ -369,6 +779,7 @@ def generate_2d_grid_realizations(
         power,
         num_reals,
     )
+    lib.free_all_memory()
     if nrow is not None:
         return reals.transpose().reshape((num_reals, nrow, ncol))
     else:
@@ -379,13 +790,18 @@ class SpatialReference(object):
     """
     a class to locate a structured model grid in x-y space.
 
-    Args:
-
-        delr (`numpy ndarray`): the model discretization delr vector (An array of spacings along a row)
-        delc (`numpy ndarray`): the model discretization delc vector (An array of spacings along a column)
-        xul (`float`): The x coordinate of the upper left corner of the grid. Enter either xul and yul or xll and yll.
-        yul (`float`): The y coordinate of the upper left corner of the grid. Enter either xul and yul or xll and yll.
-        rotation (`float`): The counter-clockwise rotation (in degrees) of the grid
+    Parameters
+    ----------
+    delr:  numpy.ndarray
+        the model discretization delr vector (An array of spacings along a row)
+    delc: numpy ndarray
+        the model discretization delc vector (An array of spacings along a column)
+    xul: float
+        The x coordinate of the upper left corner of the grid. Enter either xul and yul or xll and yll.
+    yul: float
+        The y coordinate of the upper left corner of the grid. Enter either xul and yul or xll and yll.
+    rotation: float
+        The counter-clockwise rotation (in degrees) of the grid
     """
 
     def __init__(self, delr, delc, xul, yul, rotation=0.0):
@@ -409,26 +825,44 @@ class SpatialReference(object):
         self._ycentergrid = None
 
     @property
-    def xll(self):
-        # calculate coords for lower left corner
+    def xll(self)->float:
+        """lower left x coord
+        """
         xll = self.xul - (np.sin(self.theta) * self.yedge[0])
         return xll
 
     @property
-    def yll(self):
+    def yll(self)->float:
+        """lower left y coord
+        """
         yll = self.yul - (np.cos(self.theta) * self.yedge[0])
         return yll
 
     @property
-    def nrow(self):
+    def nrow(self)->int:
+        """number of rows
+        """
         return self.delc.shape[0]
 
     @property
-    def ncol(self):
+    def ncol(self)->int:
+        """number of cols
+        """
         return self.delr.shape[0]
 
     @classmethod
-    def from_gridspec(cls, gridspec_file):
+    def from_gridspec(cls, gridspec_file)->SpatialReference:
+        """instantiate from a pest-style grid specification file
+        Parameters
+        ----------
+        gridspec_file: str
+            grid specification file name
+
+        Returns
+        -------
+        sr: SpatialReference
+            sr instance
+        """
         f = open(gridspec_file, "r")
         raw = f.readline().strip().split()
         nrow = int(raw[0])
@@ -465,51 +899,71 @@ class SpatialReference(object):
         return cls(np.array(delr), np.array(delc), xul=xul, yul=yul, rotation=rot)
 
     @property
-    def theta(self):
+    def theta(self)->float:
+        """rotation in radians
+        """
         return -self.rotation * np.pi / 180.0
 
     @property
-    def xedge(self):
+    def xedge(self)->np.NDArray[float]:
+        """the xedge array of the grid
+        """
         return self.get_xedge_array()
 
     @property
-    def yedge(self):
+    def yedge(self)->np.NDArray[float]:
+        """the yedge array of the grid
+        """
         return self.get_yedge_array()
 
     @property
-    def xgrid(self):
+    def xgrid(self)->np.NDArray[float]:
+        """xgrid array
+        """
         if self._xgrid is None:
             self._set_xygrid()
         return self._xgrid
 
     @property
-    def ygrid(self):
+    def ygrid(self)->np.NDArray[float]:
+        """ygrid array
+        """
         if self._ygrid is None:
             self._set_xygrid()
         return self._ygrid
 
     @property
-    def xcenter(self):
+    def xcenter(self)->np.NDArray[float]:
+        """grid x center array
+        """
         return self.get_xcenter_array()
 
     @property
-    def ycenter(self):
+    def ycenter(self)->np.NDArray[float]:
+        """grid y center array
+        """
         return self.get_ycenter_array()
 
     @property
-    def ycentergrid(self):
+    def ycentergrid(self)->np.NDArray[float]:
+        """grid y center array
+        """
         if self._ycentergrid is None:
             self._set_xycentergrid()
         return self._ycentergrid
 
     @property
-    def xcentergrid(self):
+    def xcentergrid(self)->np.NDArray[float]:
+        """grid x center array
+        """
         if self._xcentergrid is None:
             self._set_xycentergrid()
         return self._xcentergrid
 
     @property
-    def areagrid(self):
+    def areagrid(self)->np.NDArray[float]:
+        """area of grid nodes
+        """
         dr, dc = np.meshgrid(self.delr, self.delc)
         return dr * dc
 
@@ -523,9 +977,9 @@ class SpatialReference(object):
         self._xgrid, self._ygrid = np.meshgrid(self.xedge, self.yedge)
         self._xgrid, self._ygrid = self.transform(self._xgrid, self._ygrid)
 
-    def get_xedge_array(self):
+    def get_xedge_array(self)->np.NDArray[float]:
         """
-        Return a numpy one-dimensional float array that has the cell edge x
+        a numpy one-dimensional float array that has the cell edge x
         coordinates for every column in the grid in model space - not offset
         or rotated.  Array is of size (ncol + 1)
 
@@ -536,9 +990,9 @@ class SpatialReference(object):
         xedge = np.concatenate(([0.0], np.add.accumulate(self.delr)))
         return xedge
 
-    def get_yedge_array(self):
+    def get_yedge_array(self)->np.NDArray[float]:
         """
-        Return a numpy one-dimensional float array that has the cell edge y
+        a numpy one-dimensional float array that has the cell edge y
         coordinates for every row in the grid in model space - not offset or
         rotated. Array is of size (nrow + 1)
 
@@ -550,9 +1004,9 @@ class SpatialReference(object):
         yedge = np.concatenate(([length_y], length_y - np.add.accumulate(self.delc)))
         return yedge
 
-    def get_xcenter_array(self):
+    def get_xcenter_array(self)->np.NDArray[float]:
         """
-        Return a numpy one-dimensional float array that has the cell center x
+        a numpy one-dimensional float array that has the cell center x
         coordinate for every column in the grid in model space - not offset or rotated.
 
         """
@@ -562,9 +1016,9 @@ class SpatialReference(object):
         x = np.add.accumulate(self.delr) - 0.5 * self.delr
         return x
 
-    def get_ycenter_array(self):
+    def get_ycenter_array(self)->np.NDArray[float]:
         """
-        Return a numpy one-dimensional float array that has the cell center x
+        a numpy one-dimensional float array that has the cell center x
         coordinate for every row in the grid in model space - not offset of rotated.
 
         """
@@ -614,7 +1068,7 @@ class SpatialReference(object):
             y -= self.yll
         return x, y
 
-    def get_extent(self):
+    def get_extent(self)->tuple[float]:
         """
         Get the extent of the rotated and offset grid
 
@@ -643,7 +1097,7 @@ class SpatialReference(object):
 
         return (xmin, xmax, ymin, ymax)
 
-    def get_vertices(self, i, j):
+    def get_vertices(self, i, j)->list[list[float]]:
         """Get vertices for a single cell or sequence if i, j locations."""
         pts = []
         xgrid, ygrid = self.xgrid, self.ygrid
@@ -658,19 +1112,10 @@ class SpatialReference(object):
             vrts = np.array(pts).transpose([2, 0, 1])
             return [v.tolist() for v in vrts]
 
-    def get_ij(self, x, y):
+    def get_ij(self, x, y)->tuple(int):
         """Return the row and column of a point or sequence of points
         in real-world coordinates.
 
-        Args:
-            x (`float`): scalar or sequence of x coordinates
-            y (`float`): scalar or sequence of y coordinates
-
-        Returns:
-            tuple of
-
-            - **int** : row or sequence of rows (zero-based)
-            - **int** : column or sequence of columns (zero-based)
         """
         if np.isscalar(x):
             c = (np.abs(self.xcentergrid[0] - x)).argmin()
@@ -683,7 +1128,15 @@ class SpatialReference(object):
         return r, c
 
     def write_gridspec(self, filename):
-        """write a PEST-style grid specification file"""
+
+        """write a PEST-style grid specification file
+        Parameters
+        ----------
+        filename: str
+            file to write
+
+
+        """
         f = open(filename, "w")
         f.write("{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
         f.write(
@@ -702,6 +1155,3 @@ class SpatialReference(object):
         f.write("\n")
         return
 
-
-if __name__ == "__main__":
-    pass

@@ -46,6 +46,10 @@ def test_install_structured_grid():
     ...
 
 
+def test_get_cell_centres_structured():
+    ...
+
+
 def test_uninstall_structured_grid():
     ...
 
@@ -63,6 +67,10 @@ def test_interp_to_obstime():
 
 
 def test_install_mf6_grid_from_file():
+    ...
+
+
+def test_get_cell_centres_mf6():
     ...
 
 

@@ -1,0 +1,3 @@
+  upstream  sfr  upstream
+  downstream  sfr  downstream
+  gage-1  inflow  1000

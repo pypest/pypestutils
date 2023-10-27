@@ -110,6 +110,15 @@ def prototype(lib) -> None:
     )
     lib.install_structured_grid.restype = c_int
 
+    # get_cell_centres_structured(gridname,ncpl,cellx,celly)
+    lib.get_cell_centres_structured.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(c_int),  # ncpl, in
+        ndpointer(c_double, ndim=1, flags=("F", "W")),  # cellx(ncells), out
+        ndpointer(c_double, ndim=1, flags=("F", "W")),  # celly(ncells), out
+    )
+    lib.get_cell_centres_structured.restype = c_int
+
     # uninstall_structured_grid(gridname)
     lib.uninstall_structured_grid.argtypes = (POINTER(gridname_t),)  # gridname, in
     lib.uninstall_structured_grid.restype = c_int
@@ -172,6 +181,16 @@ def prototype(lib) -> None:
         POINTER(c_int),  # ndim3, out
     )
     lib.install_mf6_grid_from_file.restype = c_int
+
+    # get_cell_centres_mf6(gridname,ncells,cellx,celly,cellz)
+    lib.get_cell_centres_mf6.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(c_int),  # ncells, in
+        ndpointer(c_double, ndim=1, flags=("F", "W")),  # cellx(ncells), out
+        ndpointer(c_double, ndim=1, flags=("F", "W")),  # celly(ncells), out
+        ndpointer(c_double, ndim=1, flags=("F", "W")),  # cellz(ncells), out
+    )
+    lib.get_cell_centres_mf6.restype = c_int
 
     # uninstall_mf6_grid(gridname)
     lib.uninstall_mf6_grid.argtypes = (POINTER(gridname_t),)  # gridname, in

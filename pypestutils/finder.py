@@ -41,6 +41,7 @@ def load() -> ctypes.CDLL:
             try:
                 rt = ctypes.cdll.LoadLibrary(os.path.join(path, lib_name))
                 if rt is not None:
+                    print("lib found at",path)
                     return rt
             except OSError:
                 pass
@@ -85,6 +86,7 @@ def load() -> ctypes.CDLL:
                 # try loading the target file candidate
                 rt = ctypes.cdll.LoadLibrary(target)
                 if rt is not None:
+                    print("lib found at",path)
                     return rt
             except BaseException as err:
                 print(f"pypestutils.finder ({target}) unexpected error: {err!s}")
@@ -95,6 +97,7 @@ def load() -> ctypes.CDLL:
         # try loading library using LD path search
         path = find_library("libpestutils")
         if path is not None:
+            print("lib found at",path)
             return ctypes.cdll.LoadLibrary(path)
 
     except BaseException:
