@@ -7,7 +7,6 @@ module function_interfaces
     integer (kind=c_int) function inquire_modflow_binary_file_specs(            &
                          FileIn,FileOut,isim,itype,iprec,narray,ntime)          &
                      bind(C,name="inquire_modflow_binary_file_specs")
-    !DIR$ ATTRIBUTES DLLEXPORT :: inquire_modflow_binary_file_specs
        use iso_c_binding, only: c_int,c_char
        character (kind=c_char), intent(in)        :: FileIn(*)
        character (kind=c_char), intent(in)        :: FileOut(*)
@@ -20,7 +19,6 @@ module function_interfaces
 
     integer (kind=c_int) function retrieve_error_message(errormessage)             &
                     bind(c, name="retrieve_error_message")
-    !DIR$ ATTRIBUTES DLLEXPORT :: retrieve_error_message
        use iso_c_binding, only: c_int,c_char
        character (kind=c_char), intent(out) :: errormessage(*)
     end function retrieve_error_message
@@ -28,7 +26,6 @@ module function_interfaces
     integer (kind=c_int) function install_structured_grid                            &
                        (gridname,ncol,nrow,nlay,icorner,e0,n0,rotation,delr,delc)    &
                      bind(c,name="install_structured_grid")
-    !DIR$ ATTRIBUTES DLLEXPORT :: install_structured_grid
        use iso_c_binding, only: c_int,c_char,c_double
        character (kind=c_char), intent(in)  :: gridname(*)
        integer (kind=c_int), intent(in)     :: ncol,nrow,nlay
@@ -37,16 +34,26 @@ module function_interfaces
        real (kind=c_double), intent(in)     :: delr(ncol),delc(nrow)
     end function install_structured_grid
 
+    integer (kind=c_int) function get_cell_centres_structured(         &
+                         gridname,                                     &
+                         ncpl,                                         &
+                         cellx,celly)                                  &
+                     bind(c,name="get_cell_centres_structured")
+       use iso_c_binding, only: c_int,c_double,c_char
+       character (kind=c_char,len=1), intent(in)  :: gridname(*)
+       integer(kind=c_int), intent(in)            :: ncpl
+       real(kind=c_double), intent(out)           :: cellx(ncpl)
+       real(kind=c_double), intent(out)           :: celly(ncpl)
+    end function get_cell_centres_structured
+
     integer (kind=c_int) function uninstall_structured_grid(gridname)                &
                      bind(c,name="uninstall_structured_grid")
-    !DIR$ ATTRIBUTES DLLEXPORT :: uninstall_structured_grid
        use iso_c_binding, only: c_int,c_char
        character (kind=c_char), intent(in)  :: gridname(*)
     end function uninstall_structured_grid
 
     integer (kind=c_int) function free_all_memory() &
                      bind(c,name="free_all_memory")
-    !DIR$ ATTRIBUTES DLLEXPORT :: free_all_memory
        use iso_c_binding, only: c_int
     end function free_all_memory
 
@@ -56,7 +63,6 @@ module function_interfaces
                              npts,ecoord,ncoord,layer,                       &
                              nproctime,simtime,simstate)                     &
                      bind(c,name="interp_from_structured_grid")
-    !DIR$ ATTRIBUTES DLLEXPORT :: interp_from_structured_grid
        use iso_c_binding, only: c_int,c_double,c_char
        character (kind=c_char), intent(in)  :: gridname(*)
        character (kind=c_char), intent(in)  :: depvarfile(*)
@@ -79,7 +85,6 @@ module function_interfaces
                              interpthresh,how_extrap,time_extrap,nointerpval,  &
                              nobs,obspoint,obstime,obssimval)                  &
                      bind(c,name="interp_to_obstime")
-    !DIR$ ATTRIBUTES DLLEXPORT :: interp_to_obstime
        use iso_c_binding, only: c_int,c_double,c_char
        integer(kind=c_int), intent(in)         :: nsimtime
        integer(kind=c_int), intent(in)         :: nproctime
@@ -100,7 +105,6 @@ module function_interfaces
                          gridname,grbfile,                            &
                          idis,ncells,ndim1,ndim2,ndim3)               &
                      bind(c,name="install_mf6_grid_from_file")
-    !DIR$ ATTRIBUTES DLLEXPORT :: install_mf6_grid_from_file
        use iso_c_binding, only: c_int,c_char
        character (kind=c_char,len=1), intent(in)  :: gridname(*)
        character (kind=c_char,len=1), intent(in)  :: grbfile(*)
@@ -109,9 +113,20 @@ module function_interfaces
        integer(kind=c_int), intent(out)           :: ndim1,ndim2,ndim3
     end function install_mf6_grid_from_file
 
+    integer (kind=c_int) function get_cell_centres_mf6(gridname,        &
+                              ncells,                                   &
+                              cellx,celly,cellz)                        &
+                     bind(c,name="get_cell_centres_mf6")
+       use iso_c_binding, only: c_int,c_double,c_char
+       character (kind=c_char,len=1), intent(in)  :: gridname(*)
+       integer(kind=c_int), intent(in)            :: ncells
+       real(kind=c_double), intent(out)           :: cellx(ncells)
+       real(kind=c_double), intent(out)           :: celly(ncells)
+       real(kind=c_double), intent(out)           :: cellz(ncells)
+    end function get_cell_centres_mf6
+
     integer (kind=c_int) function uninstall_mf6_grid(gridname)         &
                      bind(c,name="uninstall_mf6_grid")
-    !DIR$ ATTRIBUTES DLLEXPORT :: uninstall_mf6_grid
        use iso_c_binding, only: c_int,c_char
        character (kind=c_char,len=1), intent(in)  :: gridname(*)
     end function uninstall_mf6_grid
@@ -122,7 +137,6 @@ module function_interfaces
                               factorfile, factorfiletype,              &
                               blnfile,interp_success)                  &
                      bind(c,name="calc_mf6_interp_factors")
-    !DIR$ ATTRIBUTES DLLEXPORT :: calc_mf6_interp_factors
        use iso_c_binding, only: c_int,c_double,c_char
        character (kind=c_char,len=1), intent(in)   :: gridname(*)
        integer(kind=c_int), intent(in)             :: npts
@@ -139,7 +153,6 @@ module function_interfaces
                          ntime,vartype,interpthresh,reapportion,nointerpval,   &
                          npts,nproctime,simtime,simstate)                      &
                      bind(c,name="interp_from_mf6_depvar_file")
-    !DIR$ ATTRIBUTES DLLEXPORT :: interp_from_mf6_depvar_file
            use iso_c_binding, only: c_int,c_char,c_double
            character(kind=c_char,len=1), intent(in)   :: depvarfile(*)
            character(kind=c_char,len=1), intent(in)   :: factorfile(*)
@@ -162,7 +175,6 @@ module function_interfaces
                          ntime,nproctime,                          &
                          timestep,stressperiod,simtime,simflow)    &
                      bind(c,name="extract_flows_from_cbc_file")
-    !DIR$ ATTRIBUTES DLLEXPORT :: extract_flows_from_cbc_file
        use iso_c_binding, only: c_int,c_char,c_double
        character (kind=c_char,len=1), intent(in)  :: cbcfile(*)
        character (kind=c_char,len=1), intent(in)  :: flowtype(*)
@@ -196,7 +208,6 @@ module function_interfaces
                             factorfile,factorfiletype,            &
                             icount_interp)                        &
                      bind(c,name="calc_kriging_factors_2d")
-    !DIR$ ATTRIBUTES DLLEXPORT :: calc_kriging_factors_2d
        use iso_c_binding, only: c_int,c_char,c_double
        integer(kind=c_int), intent(in)           :: npts
        real(kind=c_double), intent(in)           :: ecs(npts),ncs(npts)
@@ -224,7 +235,6 @@ module function_interfaces
                                    factorfile,factorfiletype,       &
                                    icount_interp)                   &
                      bind(c,name="calc_kriging_factors_auto_2d")
-    !DIR$ ATTRIBUTES DLLEXPORT :: calc_kriging_factors_auto_2d
        use iso_c_binding, only: c_int,c_char,c_double
        integer(kind=c_int), intent(in)           :: npts
        real(kind=c_double), intent(in)           :: ecs(npts),ncs(npts)
@@ -248,7 +258,6 @@ module function_interfaces
                          icount_interp,                  &
                          meanval)                        &
                      bind(c,name="krige_using_file")
-    !DIR$ ATTRIBUTES DLLEXPORT :: krige_using_file
        use iso_c_binding, only: c_int,c_char,c_double
        character (kind=c_char,len=1), intent(in) :: factorfile(*)
        integer(kind=c_int), intent(in)           :: factorfiletype
@@ -275,7 +284,6 @@ module function_interfaces
                                    factorfile,factorfiletype,     &
                                    icount_interp)                 &
                      bind(c,name="calc_kriging_factors_3d")
-    !DIR$ ATTRIBUTES DLLEXPORT :: calc_kriging_factors_3d
        use iso_c_binding, only: c_int,c_char,c_double
        integer(kind=c_int), intent(in)         :: npts
        real(kind=c_double), intent(in)         :: ecs(npts),ncs(npts),zcs(npts)
@@ -306,7 +314,6 @@ module function_interfaces
                               nugget,aa,sill,anis,bearing,  &
                               ldcovmat,covmat)              &
                      bind(c,name="build_covar_matrix_2d")
-    !DIR$ ATTRIBUTES DLLEXPORT :: build_covar_matrix_2d
        use iso_c_binding, only: c_int,c_double
        integer(kind=c_int), intent(in)         :: npts
        real(kind=c_double), intent(in)         :: ec(npts),nc(npts)
@@ -329,7 +336,6 @@ module function_interfaces
                                   bearing,dip,rake,             &
                                   ldcovmat,covmat)              &
                      bind(c,name="build_covar_matrix_3d")
-    !DIR$ ATTRIBUTES DLLEXPORT :: build_covar_matrix_3d
        use iso_c_binding, only: c_int,c_double
        integer(kind=c_int), intent(in)         :: npts
        real(kind=c_double), intent(in)         :: ec(npts),nc(npts),zc(npts)
@@ -353,7 +359,6 @@ module function_interfaces
                          factorfile,factorfiletype,                    &
                          icount_interp)                                &
                      bind(c,name="calc_structural_overlay_factors")
-    !DIR$ ATTRIBUTES DLLEXPORT :: calc_structural_overlay_factors
        use iso_c_binding, only: c_int,c_char,c_double
        integer(kind=c_int), intent(in)           :: npts
        real(kind=c_double), intent(in)           :: ecs(npts),ncs(npts)
@@ -377,7 +382,6 @@ module function_interfaces
                                  sourceval,targval,                &
                                  icount_interp)                    &
                     bind(c,name="interpolate_blend_using_file")
-   !DIR$ ATTRIBUTES DLLEXPORT :: interpolate_blend_using_file
        use iso_c_binding, only: c_int,c_char,c_double
        character (kind=c_char,len=1), intent(in) :: factorfile(*)
        integer(kind=c_int), intent(in)           :: factorfiletype
@@ -398,7 +402,6 @@ module function_interfaces
                               transtype,                 &
                               anis,bearing,invpow)       &
                     bind(c,name="ipd_interpolate_2d")
-   !DIR$ ATTRIBUTES DLLEXPORT :: ipd_interpolate_2d
        use iso_c_binding, only: c_int,c_double
        integer(kind=c_int), intent(in)           :: npts
        real(kind=c_double), intent(in)           :: ecs(npts),ncs(npts)
@@ -424,7 +427,6 @@ module function_interfaces
                         bearing,dip,rake,             &
                         invpow)                       &
                     bind(c,name="ipd_interpolate_3d")
-   !DIR$ ATTRIBUTES DLLEXPORT :: ipd_interpolate_3d
        use iso_c_binding, only: c_int,c_double
        integer(kind=c_int), intent(in)    :: npts
        real(kind=c_double), intent(in)    :: ecs(npts),ncs(npts),zcs(npts)
@@ -442,7 +444,6 @@ module function_interfaces
 
    integer (kind=c_int) function initialize_randgen(iseed) &
                     bind(c,name="initialize_randgen")
-   !DIR$ ATTRIBUTES DLLEXPORT :: initialize_randgen
        use iso_c_binding, only: c_int
        integer(kind=c_int), intent(in)    :: iseed
    end function initialize_randgen
@@ -454,7 +455,6 @@ module function_interfaces
                               transtype,avetype,power,       &
                               ldrand,nreal,randfield)        &
                     bind(c,name="fieldgen2d_sva")
-   !DIR$ ATTRIBUTES DLLEXPORT :: fieldgen2d_sva
        use iso_c_binding, only: c_int,c_double
        integer(kind=c_int), intent(in)   :: nnode
        real(kind=c_double), intent(in)   :: ec(nnode),nc(nnode)
@@ -483,7 +483,6 @@ module function_interfaces
                               transtype,avetype,power,       &
                               ldrand,nreal,randfield)        &
                     bind(c,name="fieldgen3d_sva")
-   !DIR$ ATTRIBUTES DLLEXPORT :: fieldgen3d_sva
        use iso_c_binding, only: c_int,c_double
        integer(kind=c_int), intent(in)   :: nnode
        real(kind=c_double), intent(in)   :: ec(nnode),nc(nnode),zc(nnode)

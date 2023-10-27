@@ -4,12 +4,9 @@ module dimvar_c
   implicit none
 
   integer(c_int), bind(C, name="LENFILENAME") :: LENFILENAME_C = LENFILENAME
-  !DIR$ ATTRIBUTES DLLEXPORT :: LENFILENAME
 
   integer(c_int), bind(C, name="LENMESSAGE") :: LENMESSAGE_C = LENMESSAGE
-  !DIR$ ATTRIBUTES DLLEXPORT :: LENMESSAGE
 
   integer(c_int), bind(C, name="LENGRIDNAME") :: LENGRIDNAME_C = LENGRIDNAME
-  !DIR$ ATTRIBUTES DLLEXPORT :: LENGRIDNAME
 
 end module dimvar_c

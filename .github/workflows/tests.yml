@@ -1,14 +1,10 @@
 name: Tests
 
-on:
+on: 
+  schedule:
+    - cron: '0 8 * * *' # run at 8 AM UTC (12 AM PST, 8 PM NZST)
   push:
-    branches:
-      - main
-      - develop
   pull_request:
-    branches:
-      - main
-      - develop
 
 jobs:
   tests:
@@ -30,7 +26,7 @@ jobs:
 
       - name: Update pip
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
 
       - name: Install MinGW-w64 tools (Windows)
         if: runner.os == 'Windows'
@@ -54,14 +50,20 @@ jobs:
       - name: Install build dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          pip install meson ninja
+          pip install meson ninja pandas numpy matplotlib pyemu flopy jupyter notebook nbconvert
+
+      - name: Install build dependencies (macOS)
+        if: runner.os == 'Windows'
+        run: |
+          pip install meson ninja pandas numpy matplotlib pyemu flopy jupyter notebook nbconvert
+
 
       - name: Install build dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y gfortran
-          pip install meson ninja
+          pip install meson ninja pandas numpy matplotlib pyemu flopy jupyter notebook nbconvert
 
       - name: Build pestutils (Windows)
         if: runner.os == 'Windows'

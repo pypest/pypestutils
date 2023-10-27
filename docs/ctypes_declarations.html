@@ -1,0 +1,1180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pypestutils.ctypes_declarations API documentation</title>
+<meta name="description" content="Low-level Fortran-Python ctypes functions." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pypestutils.ctypes_declarations</code></h1>
+</header>
+<section id="section-intro">
+<p>Low-level Fortran-Python ctypes functions.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Low-level Fortran-Python ctypes functions.&#34;&#34;&#34;
+from __future__ import annotations
+
+from ctypes import ARRAY, CDLL, POINTER, c_char, c_double, c_int
+
+from numpy.ctypeslib import ndpointer
+
+# Cache variables by uppercase dimvar name
+_dimvar_cache = {}
+_char_array_cache = {}
+# other lengths not defined in dimvar
+_misc_lengths = {
+    &#34;LENVARTYPE&#34;: 17,
+    &#34;LENFLOWTYPE&#34;: 17,
+}
+
+
+def get_dimvar_int(lib: CDLL, name: str) -&gt; int:
+    &#34;&#34;&#34;Get dimvar constant integer from library instance.
+
+    Parameters
+    ----------
+    lib : CDLL
+        Ctypes library instance.
+    name : str
+        Uppercase name of variable in dimvar or other custom name.
+
+    Returns
+    -------
+    int
+
+    Raises
+    ------
+    ValueError
+        If name is not defined in lib object.
+    &#34;&#34;&#34;
+    if name in _dimvar_cache:
+        return _dimvar_cache[name]
+    elif name in _misc_lengths:
+        # Special consideration for constants not specified by dimvar
+        return _misc_lengths[name]
+    c_var = c_int.in_dll(lib, name)
+    _dimvar_cache[name] = c_var.value
+    return c_var.value
+
+
+def get_char_array(lib: CDLL, name: str):
+    &#34;&#34;&#34;Get c_char Array with a fixed size from dimvar.
+
+    Parameters
+    ----------
+    lib : CDLL
+        Ctypes library instance.
+    name : str
+        Uppercase name of variable in dimvar or other custom name.
+    &#34;&#34;&#34;
+    if name in _char_array_cache:
+        return _char_array_cache[name]
+    size = get_dimvar_int(lib, name)
+    array_type = ARRAY(c_char, size)
+    _char_array_cache[name] = array_type
+    return array_type
+
+
+def prototype(lib) -&gt; None:
+    &#34;&#34;&#34;Add ctypes prototypes for each function in pestutils.
+
+    Parameters
+    ----------
+    lib : CDLL
+        Ctypes library instance, which is modified in-place
+    &#34;&#34;&#34;
+    # Generate c_char Array types based on dimvar sizes
+    filename_t = get_char_array(lib, &#34;LENFILENAME&#34;)
+    message_t = get_char_array(lib, &#34;LENMESSAGE&#34;)
+    gridname_t = get_char_array(lib, &#34;LENGRIDNAME&#34;)
+    vartype_t = get_char_array(lib, &#34;LENVARTYPE&#34;)
+    flowtype_t = get_char_array(lib, &#34;LENFLOWTYPE&#34;)
+
+    # inquire_modflow_binary_file_specs(
+    #   filein,fileout,isim,itype,iprec,narray,ntime)
+    lib.inquire_modflow_binary_file_specs.argtypes = (
+        POINTER(filename_t),  # filein, in
+        POINTER(filename_t),  # fileout, in
+        POINTER(c_int),  # isim, in
+        POINTER(c_int),  # itype, in
+        POINTER(c_int),  # iprec, out
+        POINTER(c_int),  # narray, out
+        POINTER(c_int),  # ntime, out
+    )
+    lib.inquire_modflow_binary_file_specs.restype = c_int
+
+    # retrieve_error_message(errormessage)
+    lib.retrieve_error_message.argtypes = (POINTER(message_t),)  # errormessage, out
+    lib.retrieve_error_message.restype = c_int
+
+    # install_structured_grid(
+    #   gridname,ncol,nrow,nlay,icorner,e0,n0,rotation,delr,delc)
+    lib.install_structured_grid.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(c_int),  # ncol, in
+        POINTER(c_int),  # nrow, in
+        POINTER(c_int),  # nlay, in
+        POINTER(c_int),  # icorner, in
+        POINTER(c_double),  # e0, in
+        POINTER(c_double),  # n0, in
+        POINTER(c_double),  # rotation, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # delr(ncol), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # delc(nrow), in
+    )
+    lib.install_structured_grid.restype = c_int
+
+    # get_cell_centres_structured(gridname,ncpl,cellx,celly)
+    lib.get_cell_centres_structured.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(c_int),  # ncpl, in
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # cellx(ncells), out
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # celly(ncells), out
+    )
+    lib.get_cell_centres_structured.restype = c_int
+
+    # uninstall_structured_grid(gridname)
+    lib.uninstall_structured_grid.argtypes = (POINTER(gridname_t),)  # gridname, in
+    lib.uninstall_structured_grid.restype = c_int
+
+    # free_all_memory()
+    lib.free_all_memory.argtypes = ()
+    lib.free_all_memory.restype = c_int
+
+    # interp_from_structured_grid(
+    #   gridname,depvarfile,isim,iprec,ntime,vartype,interpthresh,nointerpval,
+    #   npts,ecoord,ncoord,layer,nproctime,simtime,simstate)
+    lib.interp_from_structured_grid.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(filename_t),  # depvarfile, in
+        POINTER(c_int),  # isim, in
+        POINTER(c_int),  # iprec, in
+        POINTER(c_int),  # ntime, in
+        POINTER(vartype_t),  # vartype, in
+        POINTER(c_double),  # interpthresh, in
+        POINTER(c_double),  # nointerpval, in
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecoord, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncoord, in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # layer, in
+        POINTER(c_int),  # nproctime, out
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # simtime(ntime), out
+        ndpointer(c_double, ndim=2, flags=(&#34;F&#34;, &#34;W&#34;)),  # simstate(ntime,npts), out
+    )
+    lib.interp_from_structured_grid.restype = c_int
+
+    # interp_to_obstime(
+    #   nsimtime,nproctime,npts,simtime,simval,interpthresh,how_extrap,
+    #   time_extrap,nointerpval,nobs,obspoint,obstime,obssimval)
+    lib.interp_to_obstime.argtypes = (
+        POINTER(c_int),  # nsimtime, in
+        POINTER(c_int),  # nproctime, in
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # simtime(nsimtime), in
+        ndpointer(c_double, ndim=2, flags=&#34;F&#34;),  # simval(nsimtime,npts), in
+        POINTER(c_double),  # interpthresh, in
+        POINTER(c_char),  # how_extrap, in
+        POINTER(c_double),  # time_extrap, in
+        POINTER(c_double),  # nointerpval, in
+        POINTER(c_int),  # nobs, in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # obspoint(nobs), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # obstime(nobs), in
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # obssimval(nobs), out
+    )
+    lib.interp_to_obstime.restype = c_int
+
+    # install_mf6_grid_from_file(
+    #   gridname,grbfile,idis,ncells,ndim1,ndim2,ndim3)
+    lib.install_mf6_grid_from_file.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(filename_t),  # grbfile, in
+        POINTER(c_int),  # idis, out
+        POINTER(c_int),  # ncells, out
+        POINTER(c_int),  # ndim1, out
+        POINTER(c_int),  # ndim2, out
+        POINTER(c_int),  # ndim3, out
+    )
+    lib.install_mf6_grid_from_file.restype = c_int
+
+    # get_cell_centres_mf6(gridname,ncells,cellx,celly,cellz)
+    lib.get_cell_centres_mf6.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(c_int),  # ncells, in
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # cellx(ncells), out
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # celly(ncells), out
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # cellz(ncells), out
+    )
+    lib.get_cell_centres_mf6.restype = c_int
+
+    # uninstall_mf6_grid(gridname)
+    lib.uninstall_mf6_grid.argtypes = (POINTER(gridname_t),)  # gridname, in
+    lib.uninstall_mf6_grid.restype = c_int
+
+    # calc_mf6_interp_factors(
+    #   gridname,npts,ecoord,ncoord,layer,factorfile,
+    #   factorfiletype,blnfile,interp_success)
+    lib.calc_mf6_interp_factors.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecoord, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncoord, in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # layer, in
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(filename_t),  # blnfile, in
+        ndpointer(c_int, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # interp_success, out
+    )
+    lib.calc_mf6_interp_factors.restype = c_int
+
+    # interp_from_mf6_depvar_file(
+    #   depvarfile,factorfile,factorfiletype,ntime,vartype,interpthresh,
+    #   reapportion,nointerpval,npts,nproctime,simtime,simstate)
+    lib.interp_from_mf6_depvar_file.argtypes = (
+        POINTER(filename_t),  # depvarfile, in
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # ntime, in
+        POINTER(vartype_t),  # vartype(17), in
+        POINTER(c_double),  # interpthresh, in
+        POINTER(c_int),  # reapportion, in
+        POINTER(c_double),  # nointerpval, in
+        POINTER(c_int),  # npts, in
+        POINTER(c_int),  # nproctime, out
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # simtime(ntime), out
+        ndpointer(c_double, ndim=2, flags=(&#34;F&#34;, &#34;W&#34;)),  # simstate(ntime,npts), out
+    )
+    lib.interp_from_mf6_depvar_file.restype = c_int
+
+    # extract_flows_from_cbc_file(
+    #   cbcfile,flowtype,isim,iprec,ncell,izone,nzone,numzone,zonenumber,
+    #   ntime,nproctime,timestep,stressperiod,simtime,simflow)
+    lib.extract_flows_from_cbc_file.argtypes = (
+        POINTER(filename_t),  # cbcfile, in
+        POINTER(flowtype_t),  # flowtype, in
+        POINTER(c_int),  # isim, in
+        POINTER(c_int),  # iprec, in
+        POINTER(c_int),  # ncell, in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # izone(ncell), in
+        POINTER(c_int),  # nzone, in
+        POINTER(c_int),  # numzone, out
+        ndpointer(c_int, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # zonenumber(nzone), out
+        POINTER(c_int),  # ntime, in
+        POINTER(c_int),  # nproctime, out
+        ndpointer(c_int, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # timestep(ntime), out
+        ndpointer(c_int, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # stressperiod(ntime), out
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # simtime(ntime), out
+        ndpointer(c_double, ndim=2, flags=(&#34;F&#34;, &#34;W&#34;)),  # simflow(ntime,nzone), out
+    )
+    lib.extract_flows_from_cbc_file.restype = c_int
+
+    # calc_kriging_factors_2d(
+    #   npts,ecs,ncs,zns,mpts,ect,nct,znt,vartype,krigtype,aa,anis,bearing,
+    #   searchrad,maxpts,minpts,factorfile,factorfiletype,icount_interp)
+    lib.calc_kriging_factors_2d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncs(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zns(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nct(mpts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # znt(mpts), in
+        POINTER(c_int),  # vartype, in
+        POINTER(c_int),  # krigtype, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # aa(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # anis(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(mpts), in
+        POINTER(c_double),  # searchrad, in
+        POINTER(c_int),  # maxpts, in
+        POINTER(c_int),  # minpts, in
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.calc_kriging_factors_2d.restype = c_int
+
+    # calc_kriging_factors_auto_2d(
+    #   npts,ecs,ncs,zns,mpts,ect,nct,znt,krigtype,anis,bearing,
+    #   factorfile,factorfiletype,icount_interp)
+    lib.calc_kriging_factors_auto_2d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncs(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zns(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nct(mpts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # znt(mpts), in
+        POINTER(c_int),  # krigtype, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # anis(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(mpts), in
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.calc_kriging_factors_auto_2d.restype = c_int
+
+    # calc_kriging_factors_3d(
+    #   npts,ecs,ncs,zcs,zns,mpts,ect,nct,zct,znt,krigtype,nzone,zonenum,
+    #   vartype,ahmax,ahmin,avert,bearing,dip,rake,srhmax,srhmin,srvert,
+    #   maxpts,minpts,factorfile,factorfiletype,icount_interp)
+    lib.calc_kriging_factors_3d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # zcs(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zns(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nct(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # zct(mpts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # znt(mpts), in
+        POINTER(c_int),  # krigtype, in
+        POINTER(c_int),  # nzone, in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zonenum(nzone), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # vartype(nzone), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmax(nzone), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmin(nzone), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # avert(nzone), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(nzone), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # dip(nzone), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # rake(nzone), in
+        POINTER(c_double),  # srhmax, in
+        POINTER(c_double),  # srhmin, in
+        POINTER(c_double),  # srvert, in
+        POINTER(c_int),  # maxpts, in
+        POINTER(c_int),  # minpts, in
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.calc_kriging_factors_3d.restype = c_int
+
+    # krige_using_file(
+    #   factorfile,factorfiletype,npts,mpts,krigtype,transtype,
+    #   sourceval,targval,icount_interp,meanval)
+    lib.krige_using_file.argtypes = (
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # npts, in
+        POINTER(c_int),  # mpts, in
+        POINTER(c_int),  # krigtype, in
+        POINTER(c_int),  # transtype, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # sourceval(npts), in
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # targval(mpts), out
+        POINTER(c_int),  # icount_interp, out
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # meanval(mpts), in, optional
+    )
+    lib.krige_using_file.restype = c_int
+
+    # build_covar_matrix_2d(
+    #   npts,ec,nc,zn,vartype,nugget,aa,sill,anis,bearing,ldcovmat,covmat)
+    lib.build_covar_matrix_2d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ec(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nc(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zn(npts), in
+        POINTER(c_int),  # vartype, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nugget(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # aa(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # sill(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # anis(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(npts), in
+        POINTER(c_int),  # ldcovmat, in
+        ndpointer(c_double, ndim=2, flags=(&#34;F&#34;, &#34;W&#34;)),  # covmat(ldcovmat,npts), out
+    )
+    lib.build_covar_matrix_2d.restype = c_int
+
+    # build_covar_matrix_3d(
+    #   npts,ec,nc,zc,zn,vartype,
+    # nugget,sill,ahmax,ahmin,avert,bearing,dip,rake,ldcovmat,covmat)
+    lib.build_covar_matrix_3d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ec(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nc(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # zc(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zn(npts), in
+        POINTER(c_int),  # vartype, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nugget(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # sill(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmax(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmin(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # avert(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # dip(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # rake(npts), in
+        POINTER(c_int),  # ldcovmat, in
+        ndpointer(c_double, ndim=2, flags=(&#34;F&#34;, &#34;W&#34;)),  # covmat(ldcovmat,npts), out
+    )
+    lib.build_covar_matrix_3d.restype = c_int
+
+    # calc_structural_overlay_factors(
+    #   npts,ecs,ncs,ids,conwidth,aa,structype,inverse_power,
+    #   mpts,ect,nct,active,factorfile,factorfiletype,icount_interp)
+    lib.calc_structural_overlay_factors.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncs(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # ids(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # conwidth(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # aa(npts), in
+        POINTER(c_int),  # structype, in
+        POINTER(c_double),  # inverse_power, in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nct(mpts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # active(mpts), in
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.calc_structural_overlay_factors.restype = c_int
+
+    # interpolate_blend_using_file(
+    #   factorfile,factorfiletype,npts,mpts,transtype,
+    #   lt_target,gt_target,sourceval,targval,icount_interp)
+    lib.interpolate_blend_using_file.argtypes = (
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # npts, in
+        POINTER(c_int),  # mpts, in
+        POINTER(c_int),  # transtype, in
+        POINTER(c_char),  # lt_target, in
+        POINTER(c_char),  # gt_target, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # sourceval(npts), in
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # targval(mpts), inout
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.interpolate_blend_using_file.restype = c_int
+
+    # ipd_interpolate_2d(npts,ecs,ncs,zns,sourceval,
+    #   mpts,ect,nct,znt,targval,transtype,anis,bearing,invpow)
+    lib.ipd_interpolate_2d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncs(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zns(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # sourceval(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nct(mpts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # znt(mpts), in
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # targval(mpts), out
+        POINTER(c_int),  # transtype, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # anis(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # invpow(mpts), in
+    )
+    lib.ipd_interpolate_2d.restype = c_int
+
+    # ipd_interpolate_3d(npts,ecs,ncs,zcs,zns,sourceval,mpts,ect,nct,zct,znt,
+    #   targval,transtype,ahmax,ahmin,avert,bearing,dip,rake,invpow)
+    lib.ipd_interpolate_3d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # zcs(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zns(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # sourceval(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nct(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # zct(mpts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # znt(mpts), in
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # targval(mpts), out
+        POINTER(c_int),  # transtype, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmax(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmin(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # avert(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # dip(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # rake(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # invpow(mpts), in
+    )
+    lib.ipd_interpolate_3d.restype = c_int
+
+    # initialize_randgen(iseed)
+    lib.initialize_randgen.argtypes = (POINTER(c_int),)  # iseed, in
+    lib.initialize_randgen.restype = c_int
+
+    # fieldgen2d_sva(
+    #   nnode,ec,nc,area,active,mean,var,aa,anis,bearing,
+    #   transtype,avetype,power,ldrand,nreal,randfield)
+    lib.fieldgen2d_sva.argtypes = (
+        POINTER(c_int),  # nnode, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ec(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nc(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # area(nnode), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # active(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # mean(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # var(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # aa(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # anis(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(nnode), in
+        POINTER(c_int),  # transtype, in
+        POINTER(c_int),  # avetype, in
+        POINTER(c_double),  # power, in
+        POINTER(c_int),  # ldrand, in
+        POINTER(c_int),  # nreal, in
+        ndpointer(c_double, ndim=2, flags=(&#34;F&#34;, &#34;W&#34;)),  # randfield(ldrand,nreal), out
+    )
+    lib.fieldgen2d_sva.restype = c_int
+
+    # fieldgen3d_sva(
+    #   nnode,ec,nc,zc,area,height,active,mean,var,ahmax,ahmin,avert,
+    #   bearing,dip,rake,transtype,avetype,power,ldrand,nreal,randfield)
+    lib.fieldgen3d_sva.argtypes = (
+        POINTER(c_int),  # nnode, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ec(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nc(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # zc(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # area(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # height(nnode), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # active(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # mean(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # var(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmax(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmin(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # avert(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # dip(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # rake(nnode), in
+        POINTER(c_int),  # transtype, in
+        POINTER(c_int),  # avetype, in
+        POINTER(c_double),  # power, in
+        POINTER(c_int),  # ldrand, in
+        POINTER(c_int),  # nreal, in
+        ndpointer(c_double, ndim=2, flags=(&#34;F&#34;, &#34;W&#34;)),  # randfield(ldrand,nreal), out
+    )
+    lib.fieldgen3d_sva.restype = c_int</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pypestutils.ctypes_declarations.get_char_array"><code class="name flex">
+<span>def <span class="ident">get_char_array</span></span>(<span>lib: CDLL, name: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get c_char Array with a fixed size from dimvar.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>lib</code></strong> :&ensp;<code>CDLL</code></dt>
+<dd>Ctypes library instance.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Uppercase name of variable in dimvar or other custom name.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_char_array(lib: CDLL, name: str):
+    &#34;&#34;&#34;Get c_char Array with a fixed size from dimvar.
+
+    Parameters
+    ----------
+    lib : CDLL
+        Ctypes library instance.
+    name : str
+        Uppercase name of variable in dimvar or other custom name.
+    &#34;&#34;&#34;
+    if name in _char_array_cache:
+        return _char_array_cache[name]
+    size = get_dimvar_int(lib, name)
+    array_type = ARRAY(c_char, size)
+    _char_array_cache[name] = array_type
+    return array_type</code></pre>
+</details>
+</dd>
+<dt id="pypestutils.ctypes_declarations.get_dimvar_int"><code class="name flex">
+<span>def <span class="ident">get_dimvar_int</span></span>(<span>lib: CDLL, name: str) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get dimvar constant integer from library instance.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>lib</code></strong> :&ensp;<code>CDLL</code></dt>
+<dd>Ctypes library instance.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Uppercase name of variable in dimvar or other custom name.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If name is not defined in lib object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_dimvar_int(lib: CDLL, name: str) -&gt; int:
+    &#34;&#34;&#34;Get dimvar constant integer from library instance.
+
+    Parameters
+    ----------
+    lib : CDLL
+        Ctypes library instance.
+    name : str
+        Uppercase name of variable in dimvar or other custom name.
+
+    Returns
+    -------
+    int
+
+    Raises
+    ------
+    ValueError
+        If name is not defined in lib object.
+    &#34;&#34;&#34;
+    if name in _dimvar_cache:
+        return _dimvar_cache[name]
+    elif name in _misc_lengths:
+        # Special consideration for constants not specified by dimvar
+        return _misc_lengths[name]
+    c_var = c_int.in_dll(lib, name)
+    _dimvar_cache[name] = c_var.value
+    return c_var.value</code></pre>
+</details>
+</dd>
+<dt id="pypestutils.ctypes_declarations.prototype"><code class="name flex">
+<span>def <span class="ident">prototype</span></span>(<span>lib) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add ctypes prototypes for each function in pestutils.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>lib</code></strong> :&ensp;<code>CDLL</code></dt>
+<dd>Ctypes library instance, which is modified in-place</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def prototype(lib) -&gt; None:
+    &#34;&#34;&#34;Add ctypes prototypes for each function in pestutils.
+
+    Parameters
+    ----------
+    lib : CDLL
+        Ctypes library instance, which is modified in-place
+    &#34;&#34;&#34;
+    # Generate c_char Array types based on dimvar sizes
+    filename_t = get_char_array(lib, &#34;LENFILENAME&#34;)
+    message_t = get_char_array(lib, &#34;LENMESSAGE&#34;)
+    gridname_t = get_char_array(lib, &#34;LENGRIDNAME&#34;)
+    vartype_t = get_char_array(lib, &#34;LENVARTYPE&#34;)
+    flowtype_t = get_char_array(lib, &#34;LENFLOWTYPE&#34;)
+
+    # inquire_modflow_binary_file_specs(
+    #   filein,fileout,isim,itype,iprec,narray,ntime)
+    lib.inquire_modflow_binary_file_specs.argtypes = (
+        POINTER(filename_t),  # filein, in
+        POINTER(filename_t),  # fileout, in
+        POINTER(c_int),  # isim, in
+        POINTER(c_int),  # itype, in
+        POINTER(c_int),  # iprec, out
+        POINTER(c_int),  # narray, out
+        POINTER(c_int),  # ntime, out
+    )
+    lib.inquire_modflow_binary_file_specs.restype = c_int
+
+    # retrieve_error_message(errormessage)
+    lib.retrieve_error_message.argtypes = (POINTER(message_t),)  # errormessage, out
+    lib.retrieve_error_message.restype = c_int
+
+    # install_structured_grid(
+    #   gridname,ncol,nrow,nlay,icorner,e0,n0,rotation,delr,delc)
+    lib.install_structured_grid.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(c_int),  # ncol, in
+        POINTER(c_int),  # nrow, in
+        POINTER(c_int),  # nlay, in
+        POINTER(c_int),  # icorner, in
+        POINTER(c_double),  # e0, in
+        POINTER(c_double),  # n0, in
+        POINTER(c_double),  # rotation, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # delr(ncol), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # delc(nrow), in
+    )
+    lib.install_structured_grid.restype = c_int
+
+    # get_cell_centres_structured(gridname,ncpl,cellx,celly)
+    lib.get_cell_centres_structured.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(c_int),  # ncpl, in
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # cellx(ncells), out
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # celly(ncells), out
+    )
+    lib.get_cell_centres_structured.restype = c_int
+
+    # uninstall_structured_grid(gridname)
+    lib.uninstall_structured_grid.argtypes = (POINTER(gridname_t),)  # gridname, in
+    lib.uninstall_structured_grid.restype = c_int
+
+    # free_all_memory()
+    lib.free_all_memory.argtypes = ()
+    lib.free_all_memory.restype = c_int
+
+    # interp_from_structured_grid(
+    #   gridname,depvarfile,isim,iprec,ntime,vartype,interpthresh,nointerpval,
+    #   npts,ecoord,ncoord,layer,nproctime,simtime,simstate)
+    lib.interp_from_structured_grid.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(filename_t),  # depvarfile, in
+        POINTER(c_int),  # isim, in
+        POINTER(c_int),  # iprec, in
+        POINTER(c_int),  # ntime, in
+        POINTER(vartype_t),  # vartype, in
+        POINTER(c_double),  # interpthresh, in
+        POINTER(c_double),  # nointerpval, in
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecoord, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncoord, in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # layer, in
+        POINTER(c_int),  # nproctime, out
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # simtime(ntime), out
+        ndpointer(c_double, ndim=2, flags=(&#34;F&#34;, &#34;W&#34;)),  # simstate(ntime,npts), out
+    )
+    lib.interp_from_structured_grid.restype = c_int
+
+    # interp_to_obstime(
+    #   nsimtime,nproctime,npts,simtime,simval,interpthresh,how_extrap,
+    #   time_extrap,nointerpval,nobs,obspoint,obstime,obssimval)
+    lib.interp_to_obstime.argtypes = (
+        POINTER(c_int),  # nsimtime, in
+        POINTER(c_int),  # nproctime, in
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # simtime(nsimtime), in
+        ndpointer(c_double, ndim=2, flags=&#34;F&#34;),  # simval(nsimtime,npts), in
+        POINTER(c_double),  # interpthresh, in
+        POINTER(c_char),  # how_extrap, in
+        POINTER(c_double),  # time_extrap, in
+        POINTER(c_double),  # nointerpval, in
+        POINTER(c_int),  # nobs, in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # obspoint(nobs), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # obstime(nobs), in
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # obssimval(nobs), out
+    )
+    lib.interp_to_obstime.restype = c_int
+
+    # install_mf6_grid_from_file(
+    #   gridname,grbfile,idis,ncells,ndim1,ndim2,ndim3)
+    lib.install_mf6_grid_from_file.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(filename_t),  # grbfile, in
+        POINTER(c_int),  # idis, out
+        POINTER(c_int),  # ncells, out
+        POINTER(c_int),  # ndim1, out
+        POINTER(c_int),  # ndim2, out
+        POINTER(c_int),  # ndim3, out
+    )
+    lib.install_mf6_grid_from_file.restype = c_int
+
+    # get_cell_centres_mf6(gridname,ncells,cellx,celly,cellz)
+    lib.get_cell_centres_mf6.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(c_int),  # ncells, in
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # cellx(ncells), out
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # celly(ncells), out
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # cellz(ncells), out
+    )
+    lib.get_cell_centres_mf6.restype = c_int
+
+    # uninstall_mf6_grid(gridname)
+    lib.uninstall_mf6_grid.argtypes = (POINTER(gridname_t),)  # gridname, in
+    lib.uninstall_mf6_grid.restype = c_int
+
+    # calc_mf6_interp_factors(
+    #   gridname,npts,ecoord,ncoord,layer,factorfile,
+    #   factorfiletype,blnfile,interp_success)
+    lib.calc_mf6_interp_factors.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecoord, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncoord, in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # layer, in
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(filename_t),  # blnfile, in
+        ndpointer(c_int, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # interp_success, out
+    )
+    lib.calc_mf6_interp_factors.restype = c_int
+
+    # interp_from_mf6_depvar_file(
+    #   depvarfile,factorfile,factorfiletype,ntime,vartype,interpthresh,
+    #   reapportion,nointerpval,npts,nproctime,simtime,simstate)
+    lib.interp_from_mf6_depvar_file.argtypes = (
+        POINTER(filename_t),  # depvarfile, in
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # ntime, in
+        POINTER(vartype_t),  # vartype(17), in
+        POINTER(c_double),  # interpthresh, in
+        POINTER(c_int),  # reapportion, in
+        POINTER(c_double),  # nointerpval, in
+        POINTER(c_int),  # npts, in
+        POINTER(c_int),  # nproctime, out
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # simtime(ntime), out
+        ndpointer(c_double, ndim=2, flags=(&#34;F&#34;, &#34;W&#34;)),  # simstate(ntime,npts), out
+    )
+    lib.interp_from_mf6_depvar_file.restype = c_int
+
+    # extract_flows_from_cbc_file(
+    #   cbcfile,flowtype,isim,iprec,ncell,izone,nzone,numzone,zonenumber,
+    #   ntime,nproctime,timestep,stressperiod,simtime,simflow)
+    lib.extract_flows_from_cbc_file.argtypes = (
+        POINTER(filename_t),  # cbcfile, in
+        POINTER(flowtype_t),  # flowtype, in
+        POINTER(c_int),  # isim, in
+        POINTER(c_int),  # iprec, in
+        POINTER(c_int),  # ncell, in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # izone(ncell), in
+        POINTER(c_int),  # nzone, in
+        POINTER(c_int),  # numzone, out
+        ndpointer(c_int, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # zonenumber(nzone), out
+        POINTER(c_int),  # ntime, in
+        POINTER(c_int),  # nproctime, out
+        ndpointer(c_int, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # timestep(ntime), out
+        ndpointer(c_int, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # stressperiod(ntime), out
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # simtime(ntime), out
+        ndpointer(c_double, ndim=2, flags=(&#34;F&#34;, &#34;W&#34;)),  # simflow(ntime,nzone), out
+    )
+    lib.extract_flows_from_cbc_file.restype = c_int
+
+    # calc_kriging_factors_2d(
+    #   npts,ecs,ncs,zns,mpts,ect,nct,znt,vartype,krigtype,aa,anis,bearing,
+    #   searchrad,maxpts,minpts,factorfile,factorfiletype,icount_interp)
+    lib.calc_kriging_factors_2d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncs(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zns(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nct(mpts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # znt(mpts), in
+        POINTER(c_int),  # vartype, in
+        POINTER(c_int),  # krigtype, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # aa(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # anis(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(mpts), in
+        POINTER(c_double),  # searchrad, in
+        POINTER(c_int),  # maxpts, in
+        POINTER(c_int),  # minpts, in
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.calc_kriging_factors_2d.restype = c_int
+
+    # calc_kriging_factors_auto_2d(
+    #   npts,ecs,ncs,zns,mpts,ect,nct,znt,krigtype,anis,bearing,
+    #   factorfile,factorfiletype,icount_interp)
+    lib.calc_kriging_factors_auto_2d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncs(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zns(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nct(mpts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # znt(mpts), in
+        POINTER(c_int),  # krigtype, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # anis(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(mpts), in
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.calc_kriging_factors_auto_2d.restype = c_int
+
+    # calc_kriging_factors_3d(
+    #   npts,ecs,ncs,zcs,zns,mpts,ect,nct,zct,znt,krigtype,nzone,zonenum,
+    #   vartype,ahmax,ahmin,avert,bearing,dip,rake,srhmax,srhmin,srvert,
+    #   maxpts,minpts,factorfile,factorfiletype,icount_interp)
+    lib.calc_kriging_factors_3d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # zcs(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zns(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nct(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # zct(mpts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # znt(mpts), in
+        POINTER(c_int),  # krigtype, in
+        POINTER(c_int),  # nzone, in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zonenum(nzone), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # vartype(nzone), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmax(nzone), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmin(nzone), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # avert(nzone), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(nzone), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # dip(nzone), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # rake(nzone), in
+        POINTER(c_double),  # srhmax, in
+        POINTER(c_double),  # srhmin, in
+        POINTER(c_double),  # srvert, in
+        POINTER(c_int),  # maxpts, in
+        POINTER(c_int),  # minpts, in
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.calc_kriging_factors_3d.restype = c_int
+
+    # krige_using_file(
+    #   factorfile,factorfiletype,npts,mpts,krigtype,transtype,
+    #   sourceval,targval,icount_interp,meanval)
+    lib.krige_using_file.argtypes = (
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # npts, in
+        POINTER(c_int),  # mpts, in
+        POINTER(c_int),  # krigtype, in
+        POINTER(c_int),  # transtype, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # sourceval(npts), in
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # targval(mpts), out
+        POINTER(c_int),  # icount_interp, out
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # meanval(mpts), in, optional
+    )
+    lib.krige_using_file.restype = c_int
+
+    # build_covar_matrix_2d(
+    #   npts,ec,nc,zn,vartype,nugget,aa,sill,anis,bearing,ldcovmat,covmat)
+    lib.build_covar_matrix_2d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ec(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nc(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zn(npts), in
+        POINTER(c_int),  # vartype, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nugget(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # aa(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # sill(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # anis(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(npts), in
+        POINTER(c_int),  # ldcovmat, in
+        ndpointer(c_double, ndim=2, flags=(&#34;F&#34;, &#34;W&#34;)),  # covmat(ldcovmat,npts), out
+    )
+    lib.build_covar_matrix_2d.restype = c_int
+
+    # build_covar_matrix_3d(
+    #   npts,ec,nc,zc,zn,vartype,
+    # nugget,sill,ahmax,ahmin,avert,bearing,dip,rake,ldcovmat,covmat)
+    lib.build_covar_matrix_3d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ec(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nc(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # zc(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zn(npts), in
+        POINTER(c_int),  # vartype, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nugget(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # sill(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmax(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmin(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # avert(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # dip(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # rake(npts), in
+        POINTER(c_int),  # ldcovmat, in
+        ndpointer(c_double, ndim=2, flags=(&#34;F&#34;, &#34;W&#34;)),  # covmat(ldcovmat,npts), out
+    )
+    lib.build_covar_matrix_3d.restype = c_int
+
+    # calc_structural_overlay_factors(
+    #   npts,ecs,ncs,ids,conwidth,aa,structype,inverse_power,
+    #   mpts,ect,nct,active,factorfile,factorfiletype,icount_interp)
+    lib.calc_structural_overlay_factors.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncs(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # ids(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # conwidth(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # aa(npts), in
+        POINTER(c_int),  # structype, in
+        POINTER(c_double),  # inverse_power, in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nct(mpts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # active(mpts), in
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.calc_structural_overlay_factors.restype = c_int
+
+    # interpolate_blend_using_file(
+    #   factorfile,factorfiletype,npts,mpts,transtype,
+    #   lt_target,gt_target,sourceval,targval,icount_interp)
+    lib.interpolate_blend_using_file.argtypes = (
+        POINTER(filename_t),  # factorfile, in
+        POINTER(c_int),  # factorfiletype, in
+        POINTER(c_int),  # npts, in
+        POINTER(c_int),  # mpts, in
+        POINTER(c_int),  # transtype, in
+        POINTER(c_char),  # lt_target, in
+        POINTER(c_char),  # gt_target, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # sourceval(npts), in
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # targval(mpts), inout
+        POINTER(c_int),  # icount_interp, out
+    )
+    lib.interpolate_blend_using_file.restype = c_int
+
+    # ipd_interpolate_2d(npts,ecs,ncs,zns,sourceval,
+    #   mpts,ect,nct,znt,targval,transtype,anis,bearing,invpow)
+    lib.ipd_interpolate_2d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncs(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zns(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # sourceval(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nct(mpts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # znt(mpts), in
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # targval(mpts), out
+        POINTER(c_int),  # transtype, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # anis(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # invpow(mpts), in
+    )
+    lib.ipd_interpolate_2d.restype = c_int
+
+    # ipd_interpolate_3d(npts,ecs,ncs,zcs,zns,sourceval,mpts,ect,nct,zct,znt,
+    #   targval,transtype,ahmax,ahmin,avert,bearing,dip,rake,invpow)
+    lib.ipd_interpolate_3d.argtypes = (
+        POINTER(c_int),  # npts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ecs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ncs(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # zcs(npts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # zns(npts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # sourceval(npts), in
+        POINTER(c_int),  # mpts, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ect(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nct(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # zct(mpts), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # znt(mpts), in
+        ndpointer(c_double, ndim=1, flags=(&#34;F&#34;, &#34;W&#34;)),  # targval(mpts), out
+        POINTER(c_int),  # transtype, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmax(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmin(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # avert(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # dip(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # rake(mpts), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # invpow(mpts), in
+    )
+    lib.ipd_interpolate_3d.restype = c_int
+
+    # initialize_randgen(iseed)
+    lib.initialize_randgen.argtypes = (POINTER(c_int),)  # iseed, in
+    lib.initialize_randgen.restype = c_int
+
+    # fieldgen2d_sva(
+    #   nnode,ec,nc,area,active,mean,var,aa,anis,bearing,
+    #   transtype,avetype,power,ldrand,nreal,randfield)
+    lib.fieldgen2d_sva.argtypes = (
+        POINTER(c_int),  # nnode, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ec(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nc(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # area(nnode), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # active(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # mean(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # var(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # aa(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # anis(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(nnode), in
+        POINTER(c_int),  # transtype, in
+        POINTER(c_int),  # avetype, in
+        POINTER(c_double),  # power, in
+        POINTER(c_int),  # ldrand, in
+        POINTER(c_int),  # nreal, in
+        ndpointer(c_double, ndim=2, flags=(&#34;F&#34;, &#34;W&#34;)),  # randfield(ldrand,nreal), out
+    )
+    lib.fieldgen2d_sva.restype = c_int
+
+    # fieldgen3d_sva(
+    #   nnode,ec,nc,zc,area,height,active,mean,var,ahmax,ahmin,avert,
+    #   bearing,dip,rake,transtype,avetype,power,ldrand,nreal,randfield)
+    lib.fieldgen3d_sva.argtypes = (
+        POINTER(c_int),  # nnode, in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ec(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # nc(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # zc(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # area(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # height(nnode), in
+        ndpointer(c_int, ndim=1, flags=&#34;F&#34;),  # active(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # mean(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # var(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmax(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # ahmin(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # avert(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # bearing(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # dip(nnode), in
+        ndpointer(c_double, ndim=1, flags=&#34;F&#34;),  # rake(nnode), in
+        POINTER(c_int),  # transtype, in
+        POINTER(c_int),  # avetype, in
+        POINTER(c_double),  # power, in
+        POINTER(c_int),  # ldrand, in
+        POINTER(c_int),  # nreal, in
+        ndpointer(c_double, ndim=2, flags=(&#34;F&#34;, &#34;W&#34;)),  # randfield(ldrand,nreal), out
+    )
+    lib.fieldgen3d_sva.restype = c_int</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pypestutils" href="index.html">pypestutils</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pypestutils.ctypes_declarations.get_char_array" href="#pypestutils.ctypes_declarations.get_char_array">get_char_array</a></code></li>
+<li><code><a title="pypestutils.ctypes_declarations.get_dimvar_int" href="#pypestutils.ctypes_declarations.get_dimvar_int">get_dimvar_int</a></code></li>
+<li><code><a title="pypestutils.ctypes_declarations.prototype" href="#pypestutils.ctypes_declarations.prototype">prototype</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

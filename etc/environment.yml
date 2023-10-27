@@ -1,3 +1,4 @@
+# a conda/mamba env for development and testing
 name: pypestutils
 
 channels:
@@ -21,9 +22,15 @@ dependencies:
   - pytest-xdist
   - flaky
   - cython
+  - jupyter
+  - notebook
+  - nbconvert
   - pip
   - pip:
     - git+https://github.com/pypest/pyemu.git
+    - git+https://github.com/modflowpy/flopy.git
+    - pdoc3
+
 
 # Win64 may also want
 # - m2w64-gcc-fortran
