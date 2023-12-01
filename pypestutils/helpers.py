@@ -287,7 +287,7 @@ def get_2d_pp_info_structured_grid(
     gridinfo_fname: str,
     array_dict = {},
     name_prefix="pp"
-) -> pandas.DataFrame:
+) -> pd.DataFrame:
     """Create a grid of pilot point locations for a 
     2-D structured grid
     Parameters

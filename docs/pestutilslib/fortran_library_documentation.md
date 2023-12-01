@@ -1005,7 +1005,7 @@ Function *uninstall_structured_grid()* returns a value of zero unless an error c
 
 ### Description
 
-The task performed by function *calc_kriging_factors_2d()* resembles that performed by a PLPROC function of the same name. As the name suggests, this function calculates kriging factors. More accurately, it calls modified functions of the SGLIB library (Deutsch and Journel, 1998) to calcite kriging factors. These factors will often be used to implement spatial interpolation from pilot points to a model grid. However function *calc_kriging_factors_2d()* makes no mention of either pilot points nor a model grid. The set of points to which spatial interpolation takes place are specified only by their coordinates. These can be the centres of cells of a structured or unstructured model grid. Alternatively, they may have no relationship to a model grid whatsoever.
+The task performed by function *calc_kriging_factors_2d()* resembles that performed by a PLPROC function of the same name. As the name suggests, this function calculates kriging factors. More accurately, it calls modified functions of the GSLIB library (Deutsch and Journel, 1998) to calculate kriging factors. These factors will often be used to implement spatial interpolation from pilot points to a model grid. However function *calc_kriging_factors_2d()* makes no mention of either pilot points nor a model grid. The set of points to which spatial interpolation takes place are specified only by their coordinates. These can be the centres of cells of a structured or unstructured model grid. Alternatively, they may have no relationship to a model grid whatsoever.
 
 Other features of *calc_kriging_factors_2d* include the following:
 
