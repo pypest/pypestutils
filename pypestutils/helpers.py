@@ -106,7 +106,7 @@ def mod2obs_mf6(gridinfo_fname: str,depvar_fname: str,obscsv_fname: str ,model_t
     interp_fac_results = lib.calc_mf6_interp_factors("grid",usitedf.x.values,usitedf.y.values,usitedf.layer.values,fac_file,"binary",bln_file)
     if 0 in interp_fac_results:
         print("warning: the following site(s) failed to have interpolation factors calculated:")
-        fsites = usitedf.site.iloc[interp_fac_results==0].to_list()
+        fsites = usitedf.reset_index().site.iloc[interp_fac_results==0].to_list()
         print(fsites)
     all_results = lib.interp_from_mf6_depvar_file(depvar_fname,fac_file,"binary",depvar_info["ntime"],"head",interp_thresh,True,
         no_interp_val,usitedf.shape[0])
