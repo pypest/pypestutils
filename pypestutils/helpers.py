@@ -106,7 +106,7 @@ def mod2obs_mf6(gridinfo_fname: str,depvar_fname: str,obscsv_fname: str ,model_t
     interp_fac_results = lib.calc_mf6_interp_factors("grid",usitedf.x.values,usitedf.y.values,usitedf.layer.values,fac_file,"binary",bln_file)
     if 0 in interp_fac_results:
         print("warning: the following site(s) failed to have interpolation factors calculated:")
-        fsites = usitedf.site.iloc[interp_fac_results==0].to_list()
+        fsites = usitedf.reset_index().site.iloc[interp_fac_results==0].to_list()
         print(fsites)
     all_results = lib.interp_from_mf6_depvar_file(depvar_fname,fac_file,"binary",depvar_info["ntime"],"head",interp_thresh,True,
         no_interp_val,usitedf.shape[0])
@@ -180,7 +180,8 @@ def get_grid_info_from_mf6_grb(grb_fname: str) -> dict:
     lib.free_all_memory()
     return data
 
-def get_2d_grid_info_from_file(fname: str,layer=None) -> dict:
+
+def get_2d_grid_info_from_file(fname: str, layer=None) -> dict:
     """Try to read 2-D grid info from a variety of filename sources
     Parameters
     ----------
@@ -188,7 +189,7 @@ def get_2d_grid_info_from_file(fname: str,layer=None) -> dict:
         filename that stores 2-D grid info.  Optionally, a pandas DataFrame
         at least columns 'x','y' and possibly 'layer'.
     layer: int (optional)
-        the layer number to use for 2-D.  If None and 
+        the (one-based) layer number to use for 2-D.  If None and
         grid info is 3-D, a value of 1 is used
     
     Returns
@@ -211,7 +212,7 @@ def get_2d_grid_info_from_file(fname: str,layer=None) -> dict:
                 grid_info = get_grid_info_from_gridspec(fname)
             except Exception as e1:
                 try:
-                    grid_info = get_2d_grid_info_from_mf6_grb(fname,layer=layer)
+                    grid_info = get_2d_grid_info_from_mf6_grb(fname, layer=layer)
                 except Exception as e2:
                     
                     raise Exception("error getting grid info from file '{0}'".format(fname))
@@ -252,6 +253,7 @@ def get_2d_grid_info_from_mf6_grb(grb_fname: str,layer=None) -> dict:
     if grid_info["idis"] == 1:
         nlay = grid_info["ndim3"]
         if layer is not None:
+            assert layer != 0, "Value provided for layer should be 1 based, sorry"
             if layer > nlay:
                 raise Exception("user-supplied 'layer' {0} greater than nlay {1}".format(layer,nlay))
         else:
@@ -287,7 +289,7 @@ def get_2d_pp_info_structured_grid(
     gridinfo_fname: str,
     array_dict = {},
     name_prefix="pp"
-) -> pandas.DataFrame:
+) -> pd.DataFrame:
     """Create a grid of pilot point locations for a 
     2-D structured grid
     Parameters
@@ -413,8 +415,9 @@ def interpolate_with_sva_pilotpoints_2d(
     verbose: bool
         flag to output.  Default is True
     layer: int
-        layer number to use if gridinfo_fname points to 3-D grid info.
-        Default is None, which results in layer 1 being used
+        the (one-based) layer number to use if gridinfo_fname points
+        to 3-D grid info. Default is None, which results in
+        layer 1 being used
 
     Returns
     -------
@@ -423,7 +426,7 @@ def interpolate_with_sva_pilotpoints_2d(
         points to grid-shaped arrays
     """
     # some checks on pp_info
-    req_cols = ["ppname", "x", "y", "value"]
+    req_cols = ["ppname", "x", "y", "value", "corrlen"]
     missing = []
     for req_col in req_cols:
         if req_col not in pp_info.columns:
@@ -443,7 +446,7 @@ def interpolate_with_sva_pilotpoints_2d(
 
     nrow, ncol = None, None
     x, y, area = None, None, None
-    grid_info = get_2d_grid_info_from_file(gridinfo_fname)
+    grid_info = get_2d_grid_info_from_file(gridinfo_fname, layer)
     nrow = grid_info.get("nrow",None)
     ncol = grid_info.get("ncol",None)
     x = grid_info['x']
@@ -520,7 +523,7 @@ def interpolate_with_sva_pilotpoints_2d(
     results["bearing"] = bearing
     
 
-    aniso = np.zeros_like(x)
+    aniso = np.ones_like(x)
     if "aniso" in pp_info.columns:
         hypernoint = pp_info.aniso.mean()
         lib.logger.info("using no-interpolation value of %r for 'aniso' hyperpar interpolation", hypernoint)
@@ -559,7 +562,7 @@ def interpolate_with_sva_pilotpoints_2d(
     results["aniso"] = aniso
 
     use_auto = False
-    corrlen = None
+    corrlen = None  # todo corrlen default where not in ppdf
     if "corrlen" in pp_info.columns:
         hypernoint = pp_info.corrlen.mean()
         lib.logger.info("using no-interpolation value of %r for 'corrlen' hyperpar interpolation", hypernoint)
@@ -705,7 +708,7 @@ def generate_2d_grid_realizations(
     random_seed: int
         the random seed.  Default is 12345
     layer : int or None
-        the layer to use of gridinfo_fname contains 3-D info.  Default
+        the (one-based) layer to use of gridinfo_fname contains 3-D info.  Default
         is None, which results in layer 1 being used
 
     Returns
@@ -719,7 +722,7 @@ def generate_2d_grid_realizations(
 
     nrow, ncol = None, None
     x, y, area = None, None, None
-    grid_info = get_2d_grid_info_from_file(gridinfo_fname)
+    grid_info = get_2d_grid_info_from_file(gridinfo_fname, layer)
     nrow = grid_info.get("nrow",None)
     ncol = grid_info.get("ncol",None)
     x = grid_info['x']
