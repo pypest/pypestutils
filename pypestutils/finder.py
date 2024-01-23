@@ -2,6 +2,7 @@
 import ctypes
 import os
 import platform
+import sys
 from ctypes.util import find_library
 from pathlib import Path
 
@@ -29,6 +30,13 @@ def load() -> ctypes.CDLL:
     if os.name == "nt":
         lib_name = "pestutils.dll"
 
+        # add search paths for conda installs
+        if (
+            os.path.exists(os.path.join(sys.prefix, "conda-meta"))
+            or "conda" in sys.version
+        ):
+            _candidates.append(os.path.join(sys.prefix, "Library", "bin"))
+
         # get the current PATH
         oldenv = os.environ.get("PATH", "").strip().rstrip(";")
         # run through our list of candidate locations
@@ -41,7 +49,6 @@ def load() -> ctypes.CDLL:
             try:
                 rt = ctypes.cdll.LoadLibrary(os.path.join(path, lib_name))
                 if rt is not None:
-                    print("lib found at",path)
                     return rt
             except OSError:
                 pass
@@ -86,7 +93,6 @@ def load() -> ctypes.CDLL:
                 # try loading the target file candidate
                 rt = ctypes.cdll.LoadLibrary(target)
                 if rt is not None:
-                    print("lib found at",path)
                     return rt
             except BaseException as err:
                 print(f"pypestutils.finder ({target}) unexpected error: {err!s}")
@@ -95,9 +101,8 @@ def load() -> ctypes.CDLL:
 
     try:
         # try loading library using LD path search
-        path = find_library("libpestutils")
+        path = find_library("pestutils")
         if path is not None:
-            print("lib found at",path)
             return ctypes.cdll.LoadLibrary(path)
 
     except BaseException:
