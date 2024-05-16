@@ -20,7 +20,7 @@ def test_mf6_mod2obs():
 	obs_df.loc[:,"datetime"] = dts
 	
 
-	ws = os.path.join("data","p09")
+	ws = os.path.join("tests","data","p09")
 	case = "gwf-p09-mf6"
 	obs_csv = os.path.join(ws,"obs.csv")
 	obs_df.to_csv(obs_csv)
