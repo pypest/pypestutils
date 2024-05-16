@@ -2,7 +2,6 @@
 import logging
 import pytest
 import os
-import pyemu
 
 
 # @pytest.mark.parametrize(
@@ -29,6 +28,8 @@ import pyemu
 #     return
 
 def test_notebooks():
+    import pyemu
+
     nb_dir = os.path.join("examples")
     nb_files = [f for f in os.listdir(nb_dir) if f.endswith(".ipynb")]
     for nb_file in nb_files:
