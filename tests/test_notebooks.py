@@ -28,7 +28,7 @@ import os
 #     return
 
 def test_notebooks():
-    import pyemu
+    pyemu = pytest.importorskip("pyemu")
 
     nb_dir = os.path.join("examples")
     nb_files = [f for f in os.listdir(nb_dir) if f.endswith(".ipynb")]
