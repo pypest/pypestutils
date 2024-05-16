@@ -57,32 +57,27 @@ version = {attr = "pypestutils.version.__version__"}
 include = ["pypestutils", "pypestutils.*"]
 
 [tool.cibuildwheel]
-build = "cp38-*"  # pick one; see also [project.requires-python]
-skip = "*-musllinux*"
-build-verbosity = "3"
+build-verbosity = "2"
 repair-wheel-command = "python scripts/repair_wheel.py -w {dest_dir} {wheel}"
 test-requires = "tox"
 test-command = "tox --conf {project} --installpkg {wheel}"
 
 [tool.cibuildwheel.linux]
-archs = ["x86_64", "aarch64"]
 before-build = [
-    "pip install meson ninja",
+    "pip install meson ninja wheel",
     "bash {project}/scripts/build_lib.sh",
 ]
 test-skip = "*aarch64"  # slow!
 
 [tool.cibuildwheel.macos]
-archs = ["x86_64"]  # , "arm64"] - need either native host or fortran cross-compiler
-environment = { MACOSX_DEPLOYMENT_TARGET="10.9", FC="gfortran-13" }
+# see CIBW_ENVIRONMENT_MACOS in release.yml
 before-build = [
-    "pip install meson ninja",
+    "pip install meson ninja wheel",
     "bash {project}/scripts/build_lib.sh",
 ]
-test-skip = "*-macosx_arm64"
 
 [tool.cibuildwheel.windows]
-archs = ["AMD64"]
+before-build = "pip install wheel"
 
 [tool.isort]
 profile = "black"
