@@ -108,7 +108,7 @@ def mod2obs_mf6(gridinfo_fname: str,depvar_fname: str,obscsv_fname: str ,model_t
         print("warning: the following site(s) failed to have interpolation factors calculated:")
         fsites = usitedf.reset_index().site.iloc[interp_fac_results==0].to_list()
         print(fsites)
-    all_results = lib.interp_from_mf6_depvar_file(depvar_fname,fac_file,"binary",depvar_info["ntime"],"head",interp_thresh,True,
+    all_results = lib.interp_from_mf6_depvar_file(depvar_fname,fac_file,"binary",depvar_info["ntime"],depvar_name,interp_thresh,True,
         no_interp_val,usitedf.shape[0])
     datetimes = start_datetime+pd.to_timedelta(all_results["simtime"],unit=model_timeunit)
     allresults_df = pd.DataFrame(all_results["simstate"],index=datetimes,columns=usitedf.index)
