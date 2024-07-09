@@ -27,6 +27,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Hydrology",
 ]
 requires-python = ">=3.8"
@@ -57,10 +58,14 @@ version = {attr = "pypestutils.version.__version__"}
 include = ["pypestutils", "pypestutils.*"]
 
 [tool.cibuildwheel]
-build-verbosity = "2"
+build = "cp39-*"
+build-verbosity = 3
 repair-wheel-command = "python scripts/repair_wheel.py -w {dest_dir} {wheel}"
 test-requires = "tox"
 test-command = "tox --conf {project} --installpkg {wheel}"
+test-skip = [
+    "*-musllinux*",
+]
 
 [tool.cibuildwheel.linux]
 before-build = [

@@ -1,6 +1,8 @@
 name: Build wheels
 
 on:
+  schedule:
+    - cron: '42 8 2-30/2 * *' # At 08:42 UTC on every 2nd day-of-month
   pull_request:
     paths:  # only run this with PRs that touch these files
       - ".github/workflows/release.yml"
@@ -31,9 +33,9 @@ jobs:
           arch: aarch64
         - os: windows-2022
           arch: AMD64
-        - os: macos-11
+        - os: macos-13
           arch: x86_64
-          macosx_deployment_target: "11.0"
+          macosx_deployment_target: "13.0"
           cmake_osx_architectures: x86_64
         - os: macos-14
           arch: arm64
@@ -70,10 +72,8 @@ jobs:
           bash scripts/build_lib.sh
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.18.0
+        uses: pypa/cibuildwheel@v2.19.2
         env:
-          CIBW_BUILD: "cp39-*"  # pick one version
-          CIBW_SKIP: "*-musllinux*"
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_ENVIRONMENT_MACOS:
             FC=gfortran-13
