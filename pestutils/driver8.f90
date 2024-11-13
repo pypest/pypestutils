@@ -249,7 +249,7 @@
 240    format(' Enter maxpts, minpts: ')
        read(5,*,err=230) maxpts,minpts
 
-! -- The name of the factor file is aquired.
+! -- The name of the factor file is acquired.
 
        write(6,*)
 250    write(6,260,advance='no')

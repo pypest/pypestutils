@@ -66,7 +66,7 @@ def test_kb2d_1(tmp_path):
     )
     # crash only happened when this is called first, which deallocated dist
     lib.free_all_memory()
-    # crash happened next, when assigment to dist was attempted
+    # crash happened next, when assignment to dist was attempted
     _ = lib.calc_kriging_factors_auto_2d(
         npts["ecs"],
         npts["ncs"],

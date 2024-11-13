@@ -76,7 +76,7 @@ class PestUtilsLib:
     #            self.logger.warning(&#34;cannot call __del__: %s&#34;, err)
 
     def create_char_array(self, init: str | bytes, name: str):
-        &#34;&#34;&#34;Create c_char Array with a fixed size from dimvar and intial value.
+        &#34;&#34;&#34;Create c_char Array with a fixed size from dimvar and initial value.
 
         Parameters
         ----------
@@ -1121,7 +1121,7 @@ class PestUtilsLib:
         krigtype : int, str, or enum.KrigType,
             Kriging type, where 0:simple, 1:ordinary.
         transtype : int, str, enum.TransType
-            Tranformation type, where 0 is none and 1 is log.
+            Transformation type, where 0 is none and 1 is log.
         sourceval : array_like
             Values at sources, 1D array with shape (npts,).
         meanval : float, array_like, optional
@@ -1434,7 +1434,7 @@ class PestUtilsLib:
         factorfiletype : int, str or enum.FactorFileType
             Factor file type, where 0:binary, 1:text.
         transtype : int, str, enum.TransType
-            Tranformation type, where 0 is none and 1 is log.
+            Transformation type, where 0 is none and 1 is log.
         lt_target, gt_target : str or bool
             Whether to undercut or exceed target, use &#34;Y&#34;/&#34;N&#34; or bool.
         sourceval : array_like
@@ -1516,7 +1516,7 @@ class PestUtilsLib:
         znt : int or array_like
             Target point zones, integer or 1D array with shape (mpts,).
         transtype : int, str, enum.TransType
-            Tranformation type, where 0 is none and 1 is log.
+            Transformation type, where 0 is none and 1 is log.
         anis : float or array_like
             Local anisotropy, float or 1D array with shape (mpts,).
         bearing : float or array_like
@@ -1600,7 +1600,7 @@ class PestUtilsLib:
         znt : int or array_like
             Target point zones, integer or 1D array with shape (mpts,).
         transtype : int, str, enum.TransType
-            Tranformation type, where 0 is none and 1 is log.
+            Transformation type, where 0 is none and 1 is log.
         ahmax, ahmin, avert : float or array_like
             Relative correlation lengths, float or 1D array with shape (mpts,).
         bearing, dip, rake : float or array_like
@@ -1933,7 +1933,7 @@ class PestUtilsLib:
     #            self.logger.warning(&#34;cannot call __del__: %s&#34;, err)
 
     def create_char_array(self, init: str | bytes, name: str):
-        &#34;&#34;&#34;Create c_char Array with a fixed size from dimvar and intial value.
+        &#34;&#34;&#34;Create c_char Array with a fixed size from dimvar and initial value.
 
         Parameters
         ----------
@@ -2978,7 +2978,7 @@ class PestUtilsLib:
         krigtype : int, str, or enum.KrigType,
             Kriging type, where 0:simple, 1:ordinary.
         transtype : int, str, enum.TransType
-            Tranformation type, where 0 is none and 1 is log.
+            Transformation type, where 0 is none and 1 is log.
         sourceval : array_like
             Values at sources, 1D array with shape (npts,).
         meanval : float, array_like, optional
@@ -3291,7 +3291,7 @@ class PestUtilsLib:
         factorfiletype : int, str or enum.FactorFileType
             Factor file type, where 0:binary, 1:text.
         transtype : int, str, enum.TransType
-            Tranformation type, where 0 is none and 1 is log.
+            Transformation type, where 0 is none and 1 is log.
         lt_target, gt_target : str or bool
             Whether to undercut or exceed target, use &#34;Y&#34;/&#34;N&#34; or bool.
         sourceval : array_like
@@ -3373,7 +3373,7 @@ class PestUtilsLib:
         znt : int or array_like
             Target point zones, integer or 1D array with shape (mpts,).
         transtype : int, str, enum.TransType
-            Tranformation type, where 0 is none and 1 is log.
+            Transformation type, where 0 is none and 1 is log.
         anis : float or array_like
             Local anisotropy, float or 1D array with shape (mpts,).
         bearing : float or array_like
@@ -3457,7 +3457,7 @@ class PestUtilsLib:
         znt : int or array_like
             Target point zones, integer or 1D array with shape (mpts,).
         transtype : int, str, enum.TransType
-            Tranformation type, where 0 is none and 1 is log.
+            Transformation type, where 0 is none and 1 is log.
         ahmax, ahmin, avert : float or array_like
             Relative correlation lengths, float or 1D array with shape (mpts,).
         bearing, dip, rake : float or array_like
@@ -4602,7 +4602,7 @@ Each can be a float or 1D array with shape (nzone,).</dd>
 <span>def <span class="ident">create_char_array</span></span>(<span>self, init: str | bytes, name: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Create c_char Array with a fixed size from dimvar and intial value.</p>
+<div class="desc"><p>Create c_char Array with a fixed size from dimvar and initial value.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>init</code></strong> :&ensp;<code>str</code> or <code>bytes</code></dt>
@@ -4615,7 +4615,7 @@ Each can be a float or 1D array with shape (nzone,).</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_char_array(self, init: str | bytes, name: str):
-    &#34;&#34;&#34;Create c_char Array with a fixed size from dimvar and intial value.
+    &#34;&#34;&#34;Create c_char Array with a fixed size from dimvar and initial value.
 
     Parameters
     ----------
@@ -5865,7 +5865,7 @@ which start at 0 and -1 means no index. Shape is (nobs,).</dd>
 <dt><strong><code>factorfiletype</code></strong> :&ensp;<code>int, str</code> or <code>enum.FactorFileType</code></dt>
 <dd>Factor file type, where 0:binary, 1:text.</dd>
 <dt><strong><code>transtype</code></strong> :&ensp;<code>int, str, enum.TransType</code></dt>
-<dd>Tranformation type, where 0 is none and 1 is log.</dd>
+<dd>Transformation type, where 0 is none and 1 is log.</dd>
 <dt><strong><code>lt_target</code></strong>, <strong><code>gt_target</code></strong> :&ensp;<code>str</code> or <code>bool</code></dt>
 <dd>Whether to undercut or exceed target, use "Y"/"N" or bool.</dd>
 <dt><strong><code>sourceval</code></strong> :&ensp;<code>array_like</code></dt>
@@ -5906,7 +5906,7 @@ which start at 0 and -1 means no index. Shape is (nobs,).</dd>
     factorfiletype : int, str or enum.FactorFileType
         Factor file type, where 0:binary, 1:text.
     transtype : int, str, enum.TransType
-        Tranformation type, where 0 is none and 1 is log.
+        Transformation type, where 0 is none and 1 is log.
     lt_target, gt_target : str or bool
         Whether to undercut or exceed target, use &#34;Y&#34;/&#34;N&#34; or bool.
     sourceval : array_like
@@ -5976,7 +5976,7 @@ which start at 0 and -1 means no index. Shape is (nobs,).</dd>
 <dt><strong><code>znt</code></strong> :&ensp;<code>int</code> or <code>array_like</code></dt>
 <dd>Target point zones, integer or 1D array with shape (mpts,).</dd>
 <dt><strong><code>transtype</code></strong> :&ensp;<code>int, str, enum.TransType</code></dt>
-<dd>Tranformation type, where 0 is none and 1 is log.</dd>
+<dd>Transformation type, where 0 is none and 1 is log.</dd>
 <dt><strong><code>anis</code></strong> :&ensp;<code>float</code> or <code>array_like</code></dt>
 <dd>Local anisotropy, float or 1D array with shape (mpts,).</dd>
 <dt><strong><code>bearing</code></strong> :&ensp;<code>float</code> or <code>array_like</code></dt>
@@ -6024,7 +6024,7 @@ which start at 0 and -1 means no index. Shape is (nobs,).</dd>
     znt : int or array_like
         Target point zones, integer or 1D array with shape (mpts,).
     transtype : int, str, enum.TransType
-        Tranformation type, where 0 is none and 1 is log.
+        Transformation type, where 0 is none and 1 is log.
     anis : float or array_like
         Local anisotropy, float or 1D array with shape (mpts,).
     bearing : float or array_like
@@ -6090,7 +6090,7 @@ which start at 0 and -1 means no index. Shape is (nobs,).</dd>
 <dt><strong><code>znt</code></strong> :&ensp;<code>int</code> or <code>array_like</code></dt>
 <dd>Target point zones, integer or 1D array with shape (mpts,).</dd>
 <dt><strong><code>transtype</code></strong> :&ensp;<code>int, str, enum.TransType</code></dt>
-<dd>Tranformation type, where 0 is none and 1 is log.</dd>
+<dd>Transformation type, where 0 is none and 1 is log.</dd>
 <dt><strong><code>ahmax</code></strong>, <strong><code>ahmin</code></strong>, <strong><code>avert</code></strong> :&ensp;<code>float</code> or <code>array_like</code></dt>
 <dd>Relative correlation lengths, float or 1D array with shape (mpts,).</dd>
 <dt><strong><code>bearing</code></strong>, <strong><code>dip</code></strong>, <strong><code>rake</code></strong> :&ensp;<code>float</code> or <code>array_like</code></dt>
@@ -6144,7 +6144,7 @@ which start at 0 and -1 means no index. Shape is (nobs,).</dd>
     znt : int or array_like
         Target point zones, integer or 1D array with shape (mpts,).
     transtype : int, str, enum.TransType
-        Tranformation type, where 0 is none and 1 is log.
+        Transformation type, where 0 is none and 1 is log.
     ahmax, ahmin, avert : float or array_like
         Relative correlation lengths, float or 1D array with shape (mpts,).
     bearing, dip, rake : float or array_like
@@ -6223,7 +6223,7 @@ which start at 0 and -1 means no index. Shape is (nobs,).</dd>
 <dt><strong><code>krigtype</code></strong> :&ensp;<code>int, str,</code> or <code>enum.KrigType,</code></dt>
 <dd>Kriging type, where 0:simple, 1:ordinary.</dd>
 <dt><strong><code>transtype</code></strong> :&ensp;<code>int, str, enum.TransType</code></dt>
-<dd>Tranformation type, where 0 is none and 1 is log.</dd>
+<dd>Transformation type, where 0 is none and 1 is log.</dd>
 <dt><strong><code>sourceval</code></strong> :&ensp;<code>array_like</code></dt>
 <dd>Values at sources, 1D array with shape (npts,).</dd>
 <dt><strong><code>meanval</code></strong> :&ensp;<code>float, array_like</code>, optional</dt>
@@ -6269,7 +6269,7 @@ or 1D array with shape (mpts,).</dd>
     krigtype : int, str, or enum.KrigType,
         Kriging type, where 0:simple, 1:ordinary.
     transtype : int, str, enum.TransType
-        Tranformation type, where 0 is none and 1 is log.
+        Transformation type, where 0 is none and 1 is log.
     sourceval : array_like
         Values at sources, 1D array with shape (npts,).
     meanval : float, array_like, optional

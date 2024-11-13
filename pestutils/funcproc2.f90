@@ -1841,7 +1841,7 @@ integer (kind=c_int) function build_covar_matrix_3d(        &
        integer(kind=c_int), intent(in)         :: vartype               ! 1:spher,2:exp,3:gauss,4:pow
        real(kind=c_double), intent(in)         :: nugget(npts)          ! nugget
        real(kind=c_double), intent(in)         :: sill(npts)            ! sill
-       real(kind=c_double), intent(in)         :: ahmax(npts),ahmin(npts),avert(npts) ! variogram "a" valies
+       real(kind=c_double), intent(in)         :: ahmax(npts),ahmin(npts),avert(npts) ! variogram "a" values
        real(kind=c_double), intent(in)         :: bearing(npts),dip(npts),rake(npts)  ! variogram angles
        integer(kind=c_int), intent(in)         :: ldcovmat              ! leading dimension of COVMAT
        real(kind=c_double), intent(out)        :: covmat(ldcovmat,npts) ! covariance matrix
@@ -2795,7 +2795,7 @@ integer (kind=c_int) function interpolate_blend_using_file(                    &
        go to 9890
 
 9400   write(amessage,9410) trim(afiletype),trim(facfile)
-9410   format('Out-of-range array index encounted while reading ',a,' factor file ',a,'.')
+9410   format('Out-of-range array index encountered while reading ',a,' factor file ',a,'.')
        go to 9890
 
 9890   interpolate_blend_using_file=1

@@ -53,7 +53,7 @@
 !       filename: the name of the file read from the string
 !       ibeg: character position at which to begin search for filename
 !       iend: on input  - character position at which to end search for filename
-!             on output - character postion at which filename ends
+!             on output - character position at which filename ends
 
 
         integer, intent(out)               :: ifail

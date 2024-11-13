@@ -10481,7 +10481,7 @@ C -- the following gets rid of a weird lf90 bug.
 *     ..
 *     .. Executable Statements ..
 *
-*     Test the input paramters.
+*     Test the input parameters.
 *
       INFO = 0
       DIR = -1
@@ -14608,7 +14608,7 @@ c
 *           ( 1 + ( n - 1 )*abs( INCX ) ).
 *           Before entry, the incremented array X must contain the n
 *           element vector x. On exit, X is overwritten with the
-*           tranformed vector x.
+*           transformed vector x.
 *
 *  INCX   - INTEGER.
 *           On entry, INCX specifies the increment for the elements of
@@ -15432,7 +15432,7 @@ C     ILAENV = 0
 *  =========
 *
 *  ISPEC   (input) INTEGER
-*          Specifies whether to test just for inifinity arithmetic
+*          Specifies whether to test just for infinity arithmetic
 *          or whether to test for infinity and NaN arithmetic.
 *          = 0: Verify infinity arithmetic only.
 *          = 1: Verify infinity and NaN arithmetic.

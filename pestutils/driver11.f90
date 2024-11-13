@@ -191,7 +191,7 @@
 446    format(' Enter inv power of distance: ')
        read(5,*,err=445) inverse_power
 
-! -- The name of the factor file is aquired.
+! -- The name of the factor file is acquired.
 
        write(6,*)
 450    write(6,460,advance='no')

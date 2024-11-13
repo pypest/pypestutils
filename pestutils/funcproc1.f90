@@ -1369,7 +1369,7 @@ integer (kind=c_int) function install_mf6_grid_from_file(gridname,grbfile,      
         mf6header(3)=adjustl(mf6header(3))
         if(mf6header(3)(1:4).ne.'NTXT')then
           write(amessage,130) trim(afile1)
-130       format('Third header line of file ',a,' expeced to begin with "NTXT".')
+130       format('Third header line of file ',a,' expected to begin with "NTXT".')
           go to 9890
         end if
         anum=adjustl(mf6header(3)(5:))
@@ -3130,7 +3130,7 @@ integer (kind=c_int) function extract_flows_from_cbc_file(     &
                      if((jcell.lt.0).or.(jcell.gt.ncell))then
                        call utl_num2char(jcell,atemp20)
                        write(amessage,250) trim(atemp20),trim(afile1)
-250                    format('Out of range cell number ',a,' enountered when reading flow ', &
+250                    format('Out of range cell number ',a,' encountered when reading flow ', &
                        'terms from file ',a,' using IMETH=3 method.')
                        go to 9890
                      end if

@@ -161,7 +161,7 @@ def mod2obs_mf6(gridinfo_fname: str,depvar_fname: str,obscsv_fname: str ,model_t
     return {&#34;all_results&#34;:allresults_df,&#34;interpolated_results&#34;:obsdf}
 
 def get_grid_info_from_gridspec(gridspec_fname: str) -&gt; dict:
-    &#34;&#34;&#34;Read structured grid info from a PEST-style grid specificatin file
+    &#34;&#34;&#34;Read structured grid info from a PEST-style grid specification file
     Parameters
     ----------
     gridspec_fname : str
@@ -728,7 +728,7 @@ def generate_2d_grid_realizations(
         the zone array
     varioaniso: float or numpy.ndarray
         the variogram anisotropy ratio.  Either a scalar or array of shape nnodes.
-    variobearing: flaot or numpy.ndarray
+    variobearing: float or numpy.ndarray
         the variogram anisotropy bearing.  Either a scalar or array of shape nnodes
     random_seed: int
         the random seed.  Default is 12345
@@ -1225,7 +1225,7 @@ Default is "none".</dd>
 <dt><strong><code>varioaniso</code></strong> :&ensp;<code>float</code> or <code>numpy.ndarray</code></dt>
 <dd>the variogram anisotropy ratio.
 Either a scalar or array of shape nnodes.</dd>
-<dt><strong><code>variobearing</code></strong> :&ensp;<code>flaot</code> or <code>numpy.ndarray</code></dt>
+<dt><strong><code>variobearing</code></strong> :&ensp;<code>float</code> or <code>numpy.ndarray</code></dt>
 <dd>the variogram anisotropy bearing.
 Either a scalar or array of shape nnodes</dd>
 <dt><strong><code>random_seed</code></strong> :&ensp;<code>int</code></dt>
@@ -1283,7 +1283,7 @@ will be reshaped to NROW X NCOL)</dd>
         the zone array
     varioaniso: float or numpy.ndarray
         the variogram anisotropy ratio.  Either a scalar or array of shape nnodes.
-    variobearing: flaot or numpy.ndarray
+    variobearing: float or numpy.ndarray
         the variogram anisotropy bearing.  Either a scalar or array of shape nnodes
     random_seed: int
         the random seed.  Default is 12345
@@ -1643,7 +1643,7 @@ sampled at pilot point locations</dd>
 <span>def <span class="ident">get_grid_info_from_gridspec</span></span>(<span>gridspec_fname: str) ‑> dict</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Read structured grid info from a PEST-style grid specificatin file
+<div class="desc"><p>Read structured grid info from a PEST-style grid specification file
 Parameters</p>
 <hr>
 <dl>
@@ -1660,7 +1660,7 @@ Parameters</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_grid_info_from_gridspec(gridspec_fname: str) -&gt; dict:
-    &#34;&#34;&#34;Read structured grid info from a PEST-style grid specificatin file
+    &#34;&#34;&#34;Read structured grid info from a PEST-style grid specification file
     Parameters
     ----------
     gridspec_fname : str

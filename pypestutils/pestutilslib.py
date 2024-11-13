@@ -47,7 +47,7 @@ class PestUtilsLib:
     #            self.logger.warning("cannot call __del__: %s", err)
 
     def create_char_array(self, init: str | bytes, name: str):
-        """Create c_char Array with a fixed size from dimvar and intial value.
+        """Create c_char Array with a fixed size from dimvar and initial value.
 
         Parameters
         ----------
@@ -1092,7 +1092,7 @@ class PestUtilsLib:
         krigtype : int, str, or enum.KrigType,
             Kriging type, where 0:simple, 1:ordinary.
         transtype : int, str, enum.TransType
-            Tranformation type, where 0 is none and 1 is log.
+            Transformation type, where 0 is none and 1 is log.
         sourceval : array_like
             Values at sources, 1D array with shape (npts,).
         meanval : float, array_like, optional
@@ -1405,7 +1405,7 @@ class PestUtilsLib:
         factorfiletype : int, str or enum.FactorFileType
             Factor file type, where 0:binary, 1:text.
         transtype : int, str, enum.TransType
-            Tranformation type, where 0 is none and 1 is log.
+            Transformation type, where 0 is none and 1 is log.
         lt_target, gt_target : str or bool
             Whether to undercut or exceed target, use "Y"/"N" or bool.
         sourceval : array_like
@@ -1487,7 +1487,7 @@ class PestUtilsLib:
         znt : int or array_like
             Target point zones, integer or 1D array with shape (mpts,).
         transtype : int, str, enum.TransType
-            Tranformation type, where 0 is none and 1 is log.
+            Transformation type, where 0 is none and 1 is log.
         anis : float or array_like
             Local anisotropy, float or 1D array with shape (mpts,).
         bearing : float or array_like
@@ -1571,7 +1571,7 @@ class PestUtilsLib:
         znt : int or array_like
             Target point zones, integer or 1D array with shape (mpts,).
         transtype : int, str, enum.TransType
-            Tranformation type, where 0 is none and 1 is log.
+            Transformation type, where 0 is none and 1 is log.
         ahmax, ahmin, avert : float or array_like
             Relative correlation lengths, float or 1D array with shape (mpts,).
         bearing, dip, rake : float or array_like

@@ -724,7 +724,7 @@ Specifications of a structured model grid are also provided in a “grid specifi
 
 Function *interp_from_mf6_depvar_file()* reads a dependent-variable file written by MODFLOW 6. For every output time that is recorded in this file, it undertakes spatial interpolation of model-calculated dependent variables to a set of points. Spatial interpolation is implemented using factors that were previously calculated by function *calc_mf6_interp_factors()*.
 
-Arrays used by *interp_from_mf6_depvar_file()* to store spatial interpolation outcomes are useable by function *interp_to_obstime()*. Hence temporal interpolation to observation times can follow spatial interpolation to observation sites.
+Arrays used by *interp_from_mf6_depvar_file()* to store spatial interpolation outcomes are usable by function *interp_to_obstime()*. Hence temporal interpolation to observation times can follow spatial interpolation to observation sites.
 
 ### Function Call
 
@@ -873,7 +873,7 @@ Similarly, the real-world coordinates of a structured-grid MODFLOW-USG model may
 
 Function *interp_to_obstime()* undertakes time-interpolation of quantities that were previously read from simulator output files, and possibly spatially interpolated to a set of user-supplied points. The times to which time-interpolation takes place are normally the times at which field observations were made.
 
-Arrays that store the outcomes of spatial interpolation or boundary flow extraction are useable by function *interp_to_obstime()*.
+Arrays that store the outcomes of spatial interpolation or boundary flow extraction are usable by function *interp_to_obstime()*.
 
 ### Function Call
 

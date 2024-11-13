@@ -133,7 +133,7 @@ def mod2obs_mf6(gridinfo_fname: str,depvar_fname: str,obscsv_fname: str ,model_t
     return {"all_results":allresults_df,"interpolated_results":obsdf}
 
 def get_grid_info_from_gridspec(gridspec_fname: str) -> dict:
-    """Read structured grid info from a PEST-style grid specificatin file
+    """Read structured grid info from a PEST-style grid specification file
     Parameters
     ----------
     gridspec_fname : str
@@ -703,7 +703,7 @@ def generate_2d_grid_realizations(
         the zone array
     varioaniso: float or numpy.ndarray
         the variogram anisotropy ratio.  Either a scalar or array of shape nnodes.
-    variobearing: flaot or numpy.ndarray
+    variobearing: float or numpy.ndarray
         the variogram anisotropy bearing.  Either a scalar or array of shape nnodes
     random_seed: int
         the random seed.  Default is 12345
