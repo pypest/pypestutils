@@ -68,11 +68,10 @@ jobs:
         shell: msys2 {0}
         env:
           LDFLAGS: -static-libgcc -static-libgfortran -static-libquadmath -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive
-        run: |
-          bash scripts/build_lib.sh
+        run: bash scripts/build_lib.sh
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.19.2
+        uses: pypa/cibuildwheel@v2.21.3
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_ENVIRONMENT_MACOS:

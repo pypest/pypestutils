@@ -13,8 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-12, windows-latest]
-        python-version: ["3.8", "3.11"]  # run lower and upper versions
+        os: [ubuntu-latest, macos-14, windows-latest]
+        python-version: ["3.9", "3.13"]  # run lower and upper versions
 
     steps:
       - uses: actions/checkout@v4
@@ -25,8 +25,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Update pip
-        run: |
-          python -m pip install --upgrade pip
+        run: python -m pip install --upgrade pip
 
       - name: Install MinGW-w64 tools (Windows)
         if: runner.os == 'Windows'
@@ -42,7 +41,7 @@ jobs:
 
       - name: Install GCC Fortran (macOS)
         if: runner.os == 'macOS'
-        uses: awvwgk/setup-fortran@main
+        uses: fortran-lang/setup-fortran@v1
         with:
           compiler: gcc
           version: 11
@@ -70,20 +69,16 @@ jobs:
         shell: msys2 {0}
         env:
           LDFLAGS: -static-libgcc -static-libgfortran -static-libquadmath -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive
-        run: |
-          bash scripts/build_lib.sh
+        run: bash scripts/build_lib.sh
 
       - name: Build pestutils (non-Windows)
         if: runner.os != 'Windows'
-        run: |
-          bash scripts/build_lib.sh
+        run: bash scripts/build_lib.sh
 
       - name: Install package
-        run: |
-          pip install .[test,optional]
+        run: pip install .[test,optional]
 
       - name: Run tests
-        run: |
-          pytest -v
+        run: pytest -v
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

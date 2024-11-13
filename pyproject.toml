@@ -23,14 +23,14 @@ classifiers = [
     "Programming Language :: Fortran",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Hydrology",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "numpy",
     "pandas",
@@ -65,17 +65,9 @@ test-requires = "tox"
 test-command = "tox --conf {project} --installpkg {wheel}"
 test-skip = [
     "*-musllinux*",
+    "*aarch64",  # slow!
 ]
-
-[tool.cibuildwheel.linux]
-before-build = [
-    "pip install meson ninja wheel",
-    "bash {project}/scripts/build_lib.sh",
-]
-test-skip = "*aarch64"  # slow!
-
-[tool.cibuildwheel.macos]
-# see CIBW_ENVIRONMENT_MACOS in release.yml
+# see also CIBW_ENVIRONMENT_MACOS in release.yml
 before-build = [
     "pip install meson ninja wheel",
     "bash {project}/scripts/build_lib.sh",
