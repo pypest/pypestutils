@@ -4,7 +4,7 @@ from subprocess import run
 
 
 def processFile(inFile, outFile):
-    mdFile = open(inFile, "r")
+    mdFile = open(inFile)
     toc = []
     levels = [0, 0, 0, 0, 0]
     newFile = open(outFile, "w")
@@ -111,7 +111,7 @@ def clean(docx_file, inFile, outFile, run_pandoc=True):
         ]
         run(cmds, check=True)
     num_str = [str(i) for i in range(1, 11)]
-    lines = open(inFile, "r").readlines()
+    lines = open(inFile).readlines()
 
     # notoc_lines = []
     i = 0
@@ -147,15 +147,14 @@ def clean(docx_file, inFile, outFile, run_pandoc=True):
             label = lines[i].split()[-1]
             eq_str = lines[i].replace("$$", "$").split("$")[1]
             eq_str = (
-                r"{0}".format(eq_str)
-                .replace("\\\\", "\\")
+                rf"{eq_str}".replace("\\\\", "\\")
                 .replace(" \\ ", " ")
                 .replace("\\_", "_")
             )
-            math_str_pre = r'<img src="https://latex.codecogs.com/svg.latex?\Large&space;{0}'.format(
-                eq_str
+            math_str_pre = (
+                rf'<img src="https://latex.codecogs.com/svg.latex?\Large&space;{eq_str}'
             )
-            math_str_post = r'" title="\Large {0}" />  {1}  <br>'.format(eq_str, label)
+            math_str_post = rf'" title="\Large {eq_str}" />  {label}  <br>'
             lines[i] = math_str_pre + " " + math_str_post
         if lines[i].strip().startswith("<table>"):  # and "pcf" in lines[i].lower():
             lines[i] = '<div style="text-align: left">' + lines[i] + "</div>"

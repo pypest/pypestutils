@@ -22,7 +22,7 @@ def repair_and_prep_quadtree_model():
         if f.startswith("."):
             continue
         try:
-            lines = open(os.path.join(org_d, f), "r").readlines()
+            lines = open(os.path.join(org_d, f)).readlines()
         except OSError:
             print("error for file ", f)
             continue
@@ -64,7 +64,7 @@ def repair_and_prep_quadtree_model():
     rch_files = [f for f in os.listdir(mn_dir) if "rcha" in f and f.endswith(".txt")]
     org_urch_file = os.path.join(new_d, "freyberg6.rcha_recharge_1.txt")
     vals = []
-    with open(org_urch_file, "r") as f:
+    with open(org_urch_file) as f:
         for line in f:
             vals.extend([float(v) for v in line.strip().split()])
     org_urch_arr = np.array(vals)
@@ -102,7 +102,7 @@ def repair_and_prep_quadtree_model():
 
     txt_files.sort()
     for txt_file in txt_files:
-        lines = open(os.path.join(new_d, txt_file), "r").readlines()
+        lines = open(os.path.join(new_d, txt_file)).readlines()
         vals = []
         for line in lines:
             vals.extend(line.strip().split())
@@ -113,7 +113,7 @@ def repair_and_prep_quadtree_model():
     for k, b in enumerate(botm):
         arr = np.zeros_like(org_urch_arr) + b
         np.savetxt(
-            os.path.join(new_d, "freyberg6.disv_botm_layer{0}.txt".format(k + 1)),
+            os.path.join(new_d, f"freyberg6.disv_botm_layer{k + 1}.txt"),
             arr,
             fmt="%15.6E",
         )
@@ -148,16 +148,14 @@ def repair_and_prep_quadtree_model():
     hds.loc[:, "inode"] = hds.pt.apply(lambda x: i.intersect(x)[0][0])
     print(hds.inode)
 
-    hds.loc[:, "site"] = hds.apply(
-        lambda x: "twgw_{0}_{1}".format(x.layer - 1, x.inode), axis=1
-    )
+    hds.loc[:, "site"] = hds.apply(lambda x: f"twgw_{x.layer - 1}_{x.inode}", axis=1)
     hds.loc[:, ["site", "otype", "layer", "inode"]].to_csv(
         os.path.join(new_d, hobs_csv), index=False, header=False
     )
     shutil.copy2(
         os.path.join(mn_dir, "freyberg6.obs"), os.path.join(new_d, "freyberg6.obs")
     )
-    lines = open(os.path.join(new_d, "freyberg6.nam"), "r").readlines()
+    lines = open(os.path.join(new_d, "freyberg6.nam")).readlines()
     with open(os.path.join(new_d, "freyberg6.nam"), "w") as f:
         for line in lines:
             if "end packages" in line.lower():
@@ -204,9 +202,7 @@ def repair_and_prep_quadtree_model():
     )
 
     for k in range(3):
-        id_name = os.path.join(
-            new_d, "freyberg6.disv_idomain_layer{0}.txt".format(k + 1)
-        )
+        id_name = os.path.join(new_d, f"freyberg6.disv_idomain_layer{k + 1}.txt")
         arr = np.loadtxt(id_name)
         arr[arr > 0] = 1
         np.savetxt(id_name, arr, fmt="%2.0f")

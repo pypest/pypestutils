@@ -60,7 +60,7 @@ def mod2obs_mf6(
     """
 
     for fname in [gridinfo_fname, depvar_fname]:
-        assert os.path.exists(fname), "file {0} not found".format(fname)
+        assert os.path.exists(fname), f"file {fname} not found"
     lib = PestUtilsLib()
     is_mf6 = False
     is_structured = True
@@ -80,11 +80,11 @@ def mod2obs_mf6(
         is_mf6 = True
         is_structured = False
     else:
-        raise Exception("unrecognized 'model_type':{0}".format(model_type))
+        raise Exception(f"unrecognized 'model_type':{model_type}")
 
     depvar_ftype = int(depvar_ftype)
     if depvar_ftype not in [1, 2]:
-        raise Exception("unrecognized 'depvar_ftype':{0}".format(depvar_ftype))
+        raise Exception(f"unrecognized 'depvar_ftype':{depvar_ftype}")
 
     if is_mf6:
         grid_info = lib.install_mf6_grid_from_file("grid", gridinfo_fname)
@@ -103,7 +103,7 @@ def mod2obs_mf6(
 
     if isinstance(obscsv_fname, str):
         if not os.path.exists(obscsv_fname):
-            raise Exception("obscsv_fname '{0}' not found".format(obscsv_fname))
+            raise Exception(f"obscsv_fname '{obscsv_fname}' not found")
         # todo: think about supporting a site sample file maybe?
         obsdf = pd.read_csv(os.path.join(obscsv_fname), parse_dates=["datetime"])
     elif isinstance(obscsv_fname, pd.DataFrame):
@@ -117,9 +117,7 @@ def mod2obs_mf6(
     obsdf.columns = [c.lower() for c in obsdf.columns]
     for req_col in ["site", "x", "y", "datetime", "layer"]:
         if req_col not in obsdf.columns:
-            raise Exception(
-                "observation dataframe missing column '{0}'".format(req_col)
-            )
+            raise Exception(f"observation dataframe missing column '{req_col}'")
     usitedf = obsdf.groupby("site").first()
     pth = os.path.split(depvar_fname)[0]
     fac_file = os.path.join(pth, "obs_interp_fac.bin")
@@ -269,9 +267,7 @@ def get_2d_grid_info_from_file(fname: str, layer=None) -> dict:
                 try:
                     grid_info = get_2d_grid_info_from_mf6_grb(fname, layer=layer)
                 except Exception as e2:
-                    raise Exception(
-                        "error getting grid info from file '{0}'".format(fname)
-                    )
+                    raise Exception(f"error getting grid info from file '{fname}'")
 
     if isinstance(fname, pd.DataFrame):
         if "x" not in fname.columns:
@@ -316,9 +312,7 @@ def get_2d_grid_info_from_mf6_grb(grb_fname: str, layer=None) -> dict:
             assert layer != 0, "Value provided for layer should be 1 based, sorry"
             if layer > nlay:
                 raise Exception(
-                    "user-supplied 'layer' {0} greater than nlay {1}".format(
-                        layer, nlay
-                    )
+                    f"user-supplied 'layer' {layer} greater than nlay {nlay}"
                 )
         else:
             layer = 1
@@ -337,9 +331,7 @@ def get_2d_grid_info_from_mf6_grb(grb_fname: str, layer=None) -> dict:
         if layer is not None:
             if layer > nlay:
                 raise Exception(
-                    "user-supplied 'layer' {0} greater than nlay {1}".format(
-                        layer, nlay
-                    )
+                    f"user-supplied 'layer' {layer} greater than nlay {nlay}"
                 )
         else:
             layer = 1
@@ -396,7 +388,7 @@ def get_2d_pp_info_structured_grid(
     y = y.reshape((nlay, nrow, ncol))[0, :, :]
     if nrow is None:
         raise Exception(
-            "unstructured grid loaded from gridinfo_fname '{0}'".format(gridinfo_fname)
+            f"unstructured grid loaded from gridinfo_fname '{gridinfo_fname}'"
         )
     for i in range(int(pp_space / 2), nrow, pp_space):
         for j in range(int(pp_space / 2), ncol, pp_space):
@@ -409,7 +401,7 @@ def get_2d_pp_info_structured_grid(
             # else:
             #    pzone.append(1)
 
-            pname.append(name_prefix + "{0}".format(count))
+            pname.append(name_prefix + f"{count}")
             pi.append(i)
             pj.append(j)
             count += 1
@@ -500,7 +492,7 @@ def interpolate_with_sva_pilotpoints_2d(
             missing.append(req_col)
     if len(missing) > 0:
         raise Exception(
-            "the following required columns are not in pp_info:{0}".format(
+            "the following required columns are not in pp_info:{}".format(
                 ",".join(missing)
             )
         )
@@ -816,22 +808,22 @@ def generate_2d_grid_realizations(
         nnodes = x.shape[0]
 
     if not isinstance(mean, np.ndarray):
-        mean = np.zeros((nnodes)) + mean
+        mean = np.zeros(nnodes) + mean
     if not isinstance(variance, np.ndarray):
-        variance = np.zeros((nnodes)) + variance
+        variance = np.zeros(nnodes) + variance
     if variorange is None:
         delx = x.max() - x.min()
         dely = y.max() - y.min()
 
-        variorange = np.zeros((nnodes)) + max(delx, dely) / 10  # ?
+        variorange = np.zeros(nnodes) + max(delx, dely) / 10  # ?
     elif not isinstance(variorange, np.ndarray):
-        variorange = np.zeros((nnodes)) + variorange
+        variorange = np.zeros(nnodes) + variorange
 
     if not isinstance(variobearing, np.ndarray):
-        variobearing = np.zeros((nnodes)) + variobearing
+        variobearing = np.zeros(nnodes) + variobearing
 
     if not isinstance(varioaniso, np.ndarray):
-        varioaniso = np.zeros((nnodes)) + varioaniso
+        varioaniso = np.zeros(nnodes) + varioaniso
 
     if not isinstance(zone_array, np.ndarray):
         zone_array = np.ones((nnodes), dtype=int)
@@ -866,7 +858,7 @@ def generate_2d_grid_realizations(
         return reals.transpose()
 
 
-class SpatialReference(object):
+class SpatialReference:
     """
     a class to locate a structured model grid in x-y space.
 
@@ -941,7 +933,7 @@ class SpatialReference(object):
         sr: SpatialReference
             sr instance
         """
-        f = open(gridspec_file, "r")
+        f = open(gridspec_file)
         raw = f.readline().strip().split()
         nrow = int(raw[0])
         ncol = int(raw[1])
@@ -1205,19 +1197,13 @@ class SpatialReference(object):
 
         """
         f = open(filename, "w")
-        f.write("{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
-        f.write(
-            "{0:15.6E} {1:15.6E} {2:15.6E}\n".format(
-                self.xul,
-                self.yul,
-                self.rotation,
-            )
-        )
+        f.write(f"{self.delc.shape[0]:10d} {self.delr.shape[0]:10d}\n")
+        f.write(f"{self.xul:15.6E} {self.yul:15.6E} {self.rotation:15.6E}\n")
 
         for r in self.delr:
-            f.write("{0:15.6E} ".format(r))
+            f.write(f"{r:15.6E} ")
         f.write("\n")
         for c in self.delc:
-            f.write("{0:15.6E} ".format(c))
+            f.write(f"{c:15.6E} ")
         f.write("\n")
         return

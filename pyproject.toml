@@ -80,4 +80,5 @@ before-build = "pip install wheel"
 select = [
     "I",    # isort
     "E", "W", # pycodestyle
+    "UP",   # pyupgrade
 ]
