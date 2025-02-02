@@ -76,5 +76,7 @@ before-build = [
 [tool.cibuildwheel.windows]
 before-build = "pip install wheel"
 
-[tool.isort]
-profile = "black"
+[tool.ruff.lint]
+select = [
+    "I",    # isort
+]
