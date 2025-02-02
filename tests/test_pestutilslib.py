@@ -5,7 +5,7 @@ from pathlib import PureWindowsPath
 
 import pytest
 
-from pypestutils.pestutilslib import PestUtilsLib, PestUtilsLibError
+from pypestutils.pestutilslib import PestUtilsLib
 
 
 def test_init_del():

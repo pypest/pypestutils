@@ -82,6 +82,8 @@ def mod2obs_mf6(
     else:
         raise Exception(f"unrecognized 'model_type':{model_type}")
 
+    del is_structured  # TODO: should this var be used anywhere?
+
     depvar_ftype = int(depvar_ftype)
     if depvar_ftype not in [1, 2]:
         raise Exception(f"unrecognized 'depvar_ftype':{depvar_ftype}")
@@ -90,6 +92,8 @@ def mod2obs_mf6(
         grid_info = lib.install_mf6_grid_from_file("grid", gridinfo_fname)
     else:
         raise NotImplementedError()
+
+    del grid_info  # TODO: should this var be used anywhere?
 
     if isinstance(start_datetime, str):
         start_datetime = pd.to_datetime(start_datetime)
@@ -263,10 +267,10 @@ def get_2d_grid_info_from_file(fname: str, layer=None) -> dict:
         else:
             try:
                 grid_info = get_grid_info_from_gridspec(fname)
-            except Exception as e1:
+            except Exception:
                 try:
                     grid_info = get_2d_grid_info_from_mf6_grb(fname, layer=layer)
-                except Exception as e2:
+                except Exception:
                     raise Exception(f"error getting grid info from file '{fname}'")
 
     if isinstance(fname, pd.DataFrame):
@@ -302,7 +306,7 @@ def get_2d_grid_info_from_mf6_grb(grb_fname: str, layer=None) -> dict:
         grid information
     """
     grid_info = get_grid_info_from_mf6_grb(grb_fname)
-    nnodes = grid_info["ncells"]
+    # nnodes = grid_info["ncells"]
     x = grid_info["x"].copy()
     y = grid_info["y"].copy()
     nrow, ncol = None, None
@@ -372,9 +376,9 @@ def get_2d_pp_info_structured_grid(
     """
 
     grid_info = get_2d_grid_info_from_file(gridinfo_fname)
-    pname, px, py, pval = [], [], [], []
+    pname, px, py = [], [], []
     pi, pj = [], []
-    parr_dict = {k: [] for k in array_dict.keys()}
+    # parr_dict = {k: [] for k in array_dict.keys()}
     count = 0
     nrow = grid_info["nrow"]
     ncol = grid_info["ncol"]
@@ -430,7 +434,7 @@ def get_2d_pp_info_structured_grid(
 
 
 def interpolate_with_sva_pilotpoints_2d(
-    pp_info: pandas.DataFrame,
+    pp_info: pd.DataFrame,
     gridinfo_fname: str,
     vartype="exp",
     krigtype="ordinary",
@@ -511,7 +515,7 @@ def interpolate_with_sva_pilotpoints_2d(
     x = grid_info["x"]
     y = grid_info["y"]
     area = grid_info.get("area", None)
-    idis = grid_info.get("idis", None)
+    # idis = grid_info.get("idis", None)
     nnodes = grid_info.get("nnodes", None)
     if area is None:
         area = np.ones_like(x)
@@ -678,7 +682,7 @@ def interpolate_with_sva_pilotpoints_2d(
         for fac_file in fac_files:
             try:
                 os.remove(fac_file)
-            except Exception as e:
+            except Exception:
                 pass
 
     # todo: maybe make these args?
@@ -720,6 +724,7 @@ def interpolate_with_sva_pilotpoints_2d(
             fac_fname,
             fac_ftype,
         )
+    del npts  # TODO: is this var being used anywhere?
 
     result = lib.krige_using_file(
         fac_fname,
@@ -800,7 +805,7 @@ def generate_2d_grid_realizations(
     x = grid_info["x"]
     y = grid_info["y"]
     area = grid_info.get("area", None)
-    idis = grid_info.get("idis", None)
+    # idis = grid_info.get("idis", None)
     nnodes = grid_info.get("nnodes", None)
     if area is None:
         area = np.ones_like(x)

@@ -1,5 +1,3 @@
-import os
-import sys
 from subprocess import run
 
 
@@ -110,7 +108,7 @@ def clean(docx_file, inFile, outFile, run_pandoc=True):
             "--mathjax",
         ]
         run(cmds, check=True)
-    num_str = [str(i) for i in range(1, 11)]
+    # num_str = [str(i) for i in range(1, 11)]
     lines = open(inFile).readlines()
 
     # notoc_lines = []

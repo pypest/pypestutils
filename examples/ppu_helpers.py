@@ -1,7 +1,5 @@
 import os
 
-import pyemu
-
 
 def setup_pps(d):
     cwd = os.getcwd()
