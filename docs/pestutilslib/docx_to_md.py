@@ -1,5 +1,6 @@
 import sys
 import os
+from subprocess import run
 
 
 def processFile(inFile, outFile):
@@ -96,11 +97,19 @@ def removeAnchors(text):
 
 def clean(docx_file, inFile, outFile, run_pandoc=True):
     if run_pandoc:
-        os.system(
-            "pandoc -t gfm --wrap=none --extract-media . -o file.md {0} --mathjax".format(
-                docx_file
-            )
-        )
+        cmds = [
+            "pandoc",
+            "-t",
+            "gfm",
+            "--wrap=none",
+            "--extract-media",
+            ".",
+            "-o",
+            "file.md",
+            docx_file,
+            "--mathjax",
+        ]
+        run(cmds, check=True)
     num_str = [str(i) for i in range(1, 11)]
     lines = open(inFile, "r").readlines()
 

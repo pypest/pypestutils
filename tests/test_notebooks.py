@@ -1,54 +1,45 @@
 """Tests for example notebooks."""
 
-import logging
+from pathlib import Path
+from subprocess import run
+
+import nbformat
 import pytest
-import os
+
+examples_dir = Path(__file__).parent.parent / "examples"
 
 
-# @pytest.mark.parametrize(
-#     "nb_file",
-#     [
-#         pytest.param("exploring_lowlevel_pypestutils_functions.ipynb",id="el"),
-#         pytest.param("exploring_pypestutils_helpers.ipynb",id="eh"),
-#         pytest.param("pypestutils_pstfrom_structured_mf6.ipynb",id="fs"),
-#         pytest.param("pypestutils_pstfrom_quadtree_mf6.ipynb",id="fu"),
-#     ])
-# def test_notebook(nb_file):
-#     nb_dir = os.path.join("examples")
-#     #cwd = os.getcwd()
-#     #os.chdir(nb_dir)
-#     #try:
-#         #os.system("jupyter nbconvert --execute --ExecutePreprocessor.timeout=180000 --inplace {0}".format(nb_file))
-#     pyemu.os_utils.run("jupyter nbconvert --execute --ExecutePreprocessor.timeout=180000 --inplace {0}".format(nb_file),cwd=nb_dir)
-#         #os.system("jupyter nbconvert --ClearOutputPreprocessor.enabled=True --ClearMetadataPreprocessor.enabled=True --allow-errors --inplace {0}".format(nb_file))
-#     pyemu.os_utils.run("jupyter nbconvert --ClearOutputPreprocessor.enabled=True --ClearMetadataPreprocessor.enabled=True --allow-errors --inplace {0}".format(nb_file),cwd=nb_dir)
-#     #except Exception as e:
-#     #    os.chdir(cwd)
-#     #    raise Exception("notebook {0} failed: {1}".format(nb_file,str(e)))
-#     #os.chdir(cwd)
-#     return
+@pytest.mark.parametrize("nb_file", [pth.name for pth in examples_dir.glob("*.ipynb")])
+def test_notebooks(nb_file):
+    with open(examples_dir / nb_file) as f:
+        nb = nbformat.read(f, as_version=4)
+    for cell in nb["cells"]:
+        for line in cell["source"].splitlines():
+            if line.startswith("import "):
+                module = line.split()[1]
+                pytest.importorskip(module)
 
-
-def test_notebooks():
-    pyemu = pytest.importorskip("pyemu")
-
-    nb_dir = os.path.join("examples")
-    nb_files = [f for f in os.listdir(nb_dir) if f.endswith(".ipynb")]
-    for nb_file in nb_files:
-        pyemu.os_utils.run(
-            "jupyter nbconvert --execute --ExecutePreprocessor.timeout=180000 --inplace {0}".format(
-                nb_file
-            ),
-            cwd=nb_dir,
-        )
-        pyemu.os_utils.run(
-            "jupyter nbconvert --ClearOutputPreprocessor.enabled=True --ClearMetadataPreprocessor.enabled=True --allow-errors --inplace {0}".format(
-                nb_file
-            ),
-            cwd=nb_dir,
-        )
-    return
-
-
-# if __name__ == "__main__":
-# test_notebook("pypestutils_pstfrom_structured_mf6.ipynb")
+    run(
+        [
+            "jupyter",
+            "nbconvert",
+            "--execute",
+            "--ExecutePreprocessor.timeout=180000",
+            "--inplace",
+            nb_file,
+        ],
+        cwd=examples_dir,
+        check=True,
+    )
+    run(
+        [
+            "jupyter",
+            "nbconvert",
+            "--ClearOutputPreprocessor.enabled=True",
+            "--ClearMetadataPreprocessor.enabled=True",
+            "--inplace",
+            nb_file,
+        ],
+        cwd=examples_dir,
+        check=True,
+    )
