@@ -411,7 +411,8 @@ def test_driver3(spc, nlay, crd, depvar, ntime, obsdat, time_extrap, fileout):
 
 # driver4 inputs
 @pytest.mark.parametrize(
-    "grbfile, inst_exp, crd, factorfile, blnfile, nointerp_idx, depvar, ntime, interpthresh, interp_exp",
+    "grbfile, inst_exp, crd, factorfile, blnfile, nointerp_idx, depvar, ntime, "
+    "interpthresh, interp_exp",
     [
         pytest.param(
             "hd1h.dis.grb",

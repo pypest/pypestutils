@@ -1397,7 +1397,8 @@ class PestUtilsLib:
         targval: npt.ArrayLike,
     ) -> dict:
         """
-        Apply interpolation factors calculated by :meth:`calc_structural_overlay_factors`.
+        Apply interpolation factors calculated by
+        :meth:`calc_structural_overlay_factors`.
 
         Parameters
         ----------

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+
 import numpy as np
 import pandas as pd
 
@@ -28,7 +29,8 @@ def mod2obs_mf6(
     depvar_fname: str
         MODFLOW-6 output binary file
     obscsv_fname: str | pd.DataFrame
-        observation information.  Must contain columns "site","x","y","datetime",and "layer"
+        observation information.  Must contain columns "site", "x", "y",
+        "datetime", and "layer"
     model_type: int
         type of model.  Must be either 31 (dis mf6) or 32 (disv mf6)
     start_datetime: str | datetime
@@ -36,9 +38,11 @@ def mod2obs_mf6(
     depvar_ftype : int
         the modflow-6 output file type.  1 for states, 2 or cell-by-cell budgets
     depvar_name: str
-        the name of the dependent variable in `depvar_fname` to extract (for example "head")
+        the name of the dependent variable in `depvar_fname` to extract
+        (for example "head")
     interp_thresh: float
-        the upper limit above which extracted values are treated as invalid.  Default is 1.0+30
+        the upper limit above which extracted values are treated as invalid.
+        Default is 1.0+30
     no_interp_val: float
         value used to fill invalid/null extracted/interpolated values
     model_time_unit: str
@@ -51,7 +55,8 @@ def mod2obs_mf6(
     all_results: pd.DataFrame
         all simulated times at observation locations (ie mod2smp)
     interpolated_results: pd.DataFrame
-        temporally interpolated simulated results at observation locations (ie mod2obs)
+        temporally interpolated simulated results at observation locations
+        (ie mod2obs)
     """
 
     for fname in [gridinfo_fname, depvar_fname]:
@@ -105,9 +110,8 @@ def mod2obs_mf6(
         obsdf = obscsv_fname.copy()
     else:
         raise Exception(
-            "obscsv arg type not recognized (looking for str or pd.DataFrame):'{0}'".format(
-                type(obscsv_fname)
-            )
+            "obscsv arg type not recognized "
+            f"(looking for str or pd.DataFrame):'{type(obscsv_fname)}'"
         )
     # check obsdf
     obsdf.columns = [c.lower() for c in obsdf.columns]
@@ -131,7 +135,8 @@ def mod2obs_mf6(
     )
     if 0 in interp_fac_results:
         print(
-            "warning: the following site(s) failed to have interpolation factors calculated:"
+            "warning: "
+            "the following site(s) failed to have interpolation factors calculated:"
         )
         fsites = usitedf.reset_index().site.iloc[interp_fac_results == 0].to_list()
         print(fsites)
@@ -275,7 +280,9 @@ def get_2d_grid_info_from_file(fname: str, layer=None) -> dict:
             raise Exception("required 'y' column not found in grid info dataframe")
         if layer is not None and "layer" not in fname.columns:
             print(
-                "WARNING: 'layer' arg is not None but 'layer' not found in grid info dataframe..."
+                "WARNING:"
+                "'layer' arg is not None but 'layer' not found in"
+                "grid info dataframe..."
             )
         # I think these should just be references to column values (not copies)
         grid_info = {c: fname[c].values for c in fname.columns}
@@ -389,7 +396,7 @@ def get_2d_pp_info_structured_grid(
     y = y.reshape((nlay, nrow, ncol))[0, :, :]
     if nrow is None:
         raise Exception(
-            "unstructured grid loaded from gridinfo_fname '{0}'".format(gridspec_fname)
+            "unstructured grid loaded from gridinfo_fname '{0}'".format(gridinfo_fname)
         )
     for i in range(int(pp_space / 2), nrow, pp_space):
         for j in range(int(pp_space / 2), ncol, pp_space):
@@ -870,9 +877,11 @@ class SpatialReference(object):
     delc: numpy ndarray
         the model discretization delc vector (An array of spacings along a column)
     xul: float
-        The x coordinate of the upper left corner of the grid. Enter either xul and yul or xll and yll.
+        The x coordinate of the upper left corner of the grid.
+        Enter either xul and yul or xll and yll.
     yul: float
-        The y coordinate of the upper left corner of the grid. Enter either xul and yul or xll and yll.
+        The y coordinate of the upper left corner of the grid.
+        Enter either xul and yul or xll and yll.
     rotation: float
         The counter-clockwise rotation (in degrees) of the grid
     """
@@ -1044,7 +1053,7 @@ class SpatialReference(object):
 
         """
         assert self.delr is not None and len(self.delr) > 0, (
-            "delr not passed to " "spatial reference object"
+            "delr not passed to spatial reference object"
         )
         xedge = np.concatenate(([0.0], np.add.accumulate(self.delr)))
         return xedge
@@ -1057,7 +1066,7 @@ class SpatialReference(object):
 
         """
         assert self.delc is not None and len(self.delc) > 0, (
-            "delc not passed to " "spatial reference object"
+            "delc not passed to spatial reference object"
         )
         length_y = np.add.reduce(self.delc)
         yedge = np.concatenate(([length_y], length_y - np.add.accumulate(self.delc)))
@@ -1070,7 +1079,7 @@ class SpatialReference(object):
 
         """
         assert self.delr is not None and len(self.delr) > 0, (
-            "delr not passed to " "spatial reference object"
+            "delr not passed to spatial reference object"
         )
         x = np.add.accumulate(self.delr) - 0.5 * self.delr
         return x
@@ -1082,7 +1091,7 @@ class SpatialReference(object):
 
         """
         assert self.delc is not None and len(self.delc) > 0, (
-            "delc not passed to " "spatial reference object"
+            "delc not passed to spatial reference object"
         )
         Ly = np.add.reduce(self.delc)
         y = Ly - (np.add.accumulate(self.delc) - 0.5 * self.delc)

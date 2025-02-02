@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 from subprocess import run
 
 
@@ -121,9 +121,11 @@ def clean(docx_file, inFile, outFile, run_pandoc=True):
     #         while True:
     #             i += 1
     #             line = lines[i]
-    #             if line.lower().strip().startswith("introduction") or line.lower().strip().startswith("# introduction") :
+    #             if line.lower().strip().startswith(
+    #                 "introduction"
+    #             ) or line.lower().strip().startswith("# introduction"):
     #                 break
-    #             #print(line)
+    #             # print(line)
     #     notoc_lines.append(line)
     #     i += 1
     # lines = notoc_lines
@@ -141,7 +143,7 @@ def clean(docx_file, inFile, outFile, run_pandoc=True):
             )
         if "blockquote" in lines[i]:
             lines[i] = lines[i].replace("<blockquote>", "").replace("</blockquote>", "")
-        if lines[i].strip().startswith("$") and not "bmatrix" in lines[i].lower():
+        if lines[i].strip().startswith("$") and "bmatrix" not in lines[i].lower():
             label = lines[i].split()[-1]
             eq_str = lines[i].replace("$$", "$").split("$")[1]
             eq_str = (
@@ -150,10 +152,10 @@ def clean(docx_file, inFile, outFile, run_pandoc=True):
                 .replace(" \\ ", " ")
                 .replace("\\_", "_")
             )
-            math_str_pre = '<img src="https://latex.codecogs.com/svg.latex?\Large&space;{0}'.format(
+            math_str_pre = r'<img src="https://latex.codecogs.com/svg.latex?\Large&space;{0}'.format(
                 eq_str
             )
-            math_str_post = '" title="\Large {0}" />  {1}  <br>'.format(eq_str, label)
+            math_str_post = r'" title="\Large {0}" />  {1}  <br>'.format(eq_str, label)
             lines[i] = math_str_pre + " " + math_str_post
         if lines[i].strip().startswith("<table>"):  # and "pcf" in lines[i].lower():
             lines[i] = '<div style="text-align: left">' + lines[i] + "</div>"
@@ -174,9 +176,17 @@ def clean(docx_file, inFile, outFile, run_pandoc=True):
         #         lines.pop(i)
         #         if "bmatrix" in lines[i].lower():
         #             break
-        #     eq_str = r"{0}".format(eq_str).replace("\\\\", "\\").replace(" \\ ", " ").replace("\\_", "_")
-        #     math_str_pre = "<img src=\"https://latex.codecogs.com/svg.latex?\Large&space;{0}".format(eq_str)
-        #     math_str_post = "\" title=\"\Large {0}\" />".format(eq_str)
+        #     eq_str = (
+        #         r"{0}".format(eq_str)
+        #         .replace("\\\\", "\\")
+        #         .replace(" \\ ", " ")
+        #         .replace("\\_", "_")
+        #     )
+        #     math_str_pre = '<img src="https://latex.codecogs.com/svg.latex'\
+        #         '?\Large&space;{0}'.format(
+        #         eq_str
+        #     )
+        #     math_str_post = '" title="\Large {0}" />'.format(eq_str)
         #     lines[i] = math_str_pre + " " + math_str_post
 
         i += 1

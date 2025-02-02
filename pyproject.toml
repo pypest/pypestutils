@@ -79,4 +79,5 @@ before-build = "pip install wheel"
 [tool.ruff.lint]
 select = [
     "I",    # isort
+    "E", "W", # pycodestyle
 ]

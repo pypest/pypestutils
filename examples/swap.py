@@ -1,10 +1,11 @@
 import os
 import shutil
+
+import flopy
 import numpy as np
 import pandas as pd
-import shapely
 import pyemu
-import flopy
+import shapely
 
 
 def repair_and_prep_quadtree_model():
@@ -22,7 +23,7 @@ def repair_and_prep_quadtree_model():
             continue
         try:
             lines = open(os.path.join(org_d, f), "r").readlines()
-        except:
+        except OSError:
             print("error for file ", f)
             continue
 

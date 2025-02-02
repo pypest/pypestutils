@@ -1,8 +1,9 @@
-import os
 import logging
-import pytest
+import os
+
 import numpy as np
 import pandas as pd
+import pytest
 
 
 def test_mf6_mod2obs():
