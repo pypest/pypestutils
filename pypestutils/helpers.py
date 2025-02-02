@@ -1,3 +1,5 @@
+"""High-level helper utilities module."""
+
 from __future__ import annotations
 
 import os
@@ -21,7 +23,8 @@ def mod2obs_mf6(
     model_timeunit="d",
     time_extrap=1.0,
 ) -> dict:
-    """python implementation of mod2smp and mod2obs using modflow6 binary grid files
+    """Python implementation of mod2smp and mod2obs using modflow6 binary grid files.
+
     Parameters
     ----------
     gridinfo_fname: str
@@ -58,7 +61,6 @@ def mod2obs_mf6(
         temporally interpolated simulated results at observation locations
         (ie mod2obs)
     """
-
     for fname in [gridinfo_fname, depvar_fname]:
         assert os.path.exists(fname), f"file {fname} not found"
     lib = PestUtilsLib()
@@ -190,7 +192,8 @@ def mod2obs_mf6(
 
 
 def get_grid_info_from_gridspec(gridspec_fname: str) -> dict:
-    """Read structured grid info from a PEST-style grid specification file
+    """Read structured grid info from a PEST-style grid specification file.
+
     Parameters
     ----------
     gridspec_fname : str
@@ -201,7 +204,6 @@ def get_grid_info_from_gridspec(gridspec_fname: str) -> dict:
     grid_info: dict
         grid information
     """
-
     if not os.path.exists(gridspec_fname):
         raise FileNotFoundError(gridspec_fname)
     sr = SpatialReference.from_gridspec(gridspec_fname)
@@ -217,7 +219,8 @@ def get_grid_info_from_gridspec(gridspec_fname: str) -> dict:
 
 
 def get_grid_info_from_mf6_grb(grb_fname: str) -> dict:
-    """Read grid info from a MODFLOW-6 binary grid file
+    """Read grid info from a MODFLOW-6 binary grid file.
+
     Parameters
     ----------
     grb_fname: str
@@ -239,7 +242,8 @@ def get_grid_info_from_mf6_grb(grb_fname: str) -> dict:
 
 
 def get_2d_grid_info_from_file(fname: str, layer=None) -> dict:
-    """Try to read 2-D grid info from a variety of filename sources
+    """Try to read 2-D grid info from a variety of filename sources.
+
     Parameters
     ----------
     fname: str
@@ -254,7 +258,6 @@ def get_2d_grid_info_from_file(fname: str, layer=None) -> dict:
     grid_info: dict
         grid information
     """
-
     grid_info = None
     if isinstance(fname, str):
         if not os.path.exists(fname):
@@ -291,7 +294,8 @@ def get_2d_grid_info_from_file(fname: str, layer=None) -> dict:
 
 
 def get_2d_grid_info_from_mf6_grb(grb_fname: str, layer=None) -> dict:
-    """Read grid info from a MODFLOW-6 binary grid file
+    """Read grid info from a MODFLOW-6 binary grid file.
+
     Parameters
     ----------
     grb_fname: str
@@ -352,7 +356,8 @@ def get_2d_pp_info_structured_grid(
     pp_space: int, gridinfo_fname: str, array_dict={}, name_prefix="pp"
 ) -> pd.DataFrame:
     """Create a grid of pilot point locations for a
-    2-D structured grid
+    2-D structured grid.
+
     Parameters
     ----------
     pp_space: int
@@ -374,7 +379,6 @@ def get_2d_pp_info_structured_grid(
         dataframe of pilot point information
 
     """
-
     grid_info = get_2d_grid_info_from_file(gridinfo_fname)
     pname, px, py = [], [], []
     pi, pj = [], []
@@ -447,7 +451,8 @@ def interpolate_with_sva_pilotpoints_2d(
     layer=None,
 ) -> dict:
     """Perform 2-D pilot point interpolation using
-    spatially varying geostatistical hyper-parameters
+    spatially varying geostatistical hyper-parameters.
+
     Parameters
     ----------
     pp_info: pandas.DataFrame
@@ -759,9 +764,10 @@ def generate_2d_grid_realizations(
     random_seed=12345,
     layer=None,
 ) -> np.NDArray[float]:
-    """draw 2-D realizations using sequential gaussian
+    """Draw 2-D realizations using sequential gaussian
     simulations and optionally using spatially varying
     geostatistical hyper parameters.
+
     Parameters
     ----------
     gridinfo_fname: str
@@ -796,7 +802,6 @@ def generate_2d_grid_realizations(
         realizations (if `grid_info` indicates a structured grid, realizations
         will be reshaped to NROW X NCOL)
     """
-
     nrow, ncol = None, None
     x, y, area = None, None, None
     grid_info = get_2d_grid_info_from_file(gridinfo_fname, layer)
@@ -863,8 +868,7 @@ def generate_2d_grid_realizations(
 
 
 class SpatialReference:
-    """
-    a class to locate a structured model grid in x-y space.
+    """a class to locate a structured model grid in x-y space.
 
     Parameters
     ----------
@@ -904,27 +908,28 @@ class SpatialReference:
 
     @property
     def xll(self) -> float:
-        """lower left x coord"""
+        """Lower left x coord."""
         return self.xul - (np.sin(self.theta) * self.yedge[0])
 
     @property
     def yll(self) -> float:
-        """lower left y coord"""
+        """Lower left y coord."""
         return self.yul - (np.cos(self.theta) * self.yedge[0])
 
     @property
     def nrow(self) -> int:
-        """number of rows"""
+        """Number of rows."""
         return self.delc.shape[0]
 
     @property
     def ncol(self) -> int:
-        """number of cols"""
+        """Number of cols."""
         return self.delr.shape[0]
 
     @classmethod
     def from_gridspec(cls, gridspec_file) -> SpatialReference:
-        """instantiate from a pest-style grid specification file
+        """Instantiate from a pest-style grid specification file.
+
         Parameters
         ----------
         gridspec_file: str
@@ -972,60 +977,60 @@ class SpatialReference:
 
     @property
     def theta(self) -> float:
-        """rotation in radians"""
+        """Rotation in radians."""
         return -self.rotation * np.pi / 180.0
 
     @property
     def xedge(self) -> np.NDArray[float]:
-        """the xedge array of the grid"""
+        """The xedge array of the grid."""
         return self.get_xedge_array()
 
     @property
     def yedge(self) -> np.NDArray[float]:
-        """the yedge array of the grid"""
+        """The yedge array of the grid."""
         return self.get_yedge_array()
 
     @property
     def xgrid(self) -> np.NDArray[float]:
-        """xgrid array"""
+        """Xgrid array."""
         if self._xgrid is None:
             self._set_xygrid()
         return self._xgrid
 
     @property
     def ygrid(self) -> np.NDArray[float]:
-        """ygrid array"""
+        """Ygrid array."""
         if self._ygrid is None:
             self._set_xygrid()
         return self._ygrid
 
     @property
     def xcenter(self) -> np.NDArray[float]:
-        """grid x center array"""
+        """Grid x center array."""
         return self.get_xcenter_array()
 
     @property
     def ycenter(self) -> np.NDArray[float]:
-        """grid y center array"""
+        """Grid y center array."""
         return self.get_ycenter_array()
 
     @property
     def ycentergrid(self) -> np.NDArray[float]:
-        """grid y center array"""
+        """Grid y center array."""
         if self._ycentergrid is None:
             self._set_xycentergrid()
         return self._ycentergrid
 
     @property
     def xcentergrid(self) -> np.NDArray[float]:
-        """grid x center array"""
+        """Grid x center array."""
         if self._xcentergrid is None:
             self._set_xycentergrid()
         return self._xcentergrid
 
     @property
     def areagrid(self) -> np.NDArray[float]:
-        """area of grid nodes"""
+        """Area of grid nodes."""
         dr, dc = np.meshgrid(self.delr, self.delc)
         return dr * dc
 
@@ -1040,10 +1045,9 @@ class SpatialReference:
         self._xgrid, self._ygrid = self.transform(self._xgrid, self._ygrid)
 
     def get_xedge_array(self) -> np.NDArray[float]:
-        """
-        a numpy one-dimensional float array that has the cell edge x
+        """Return a numpy one-dimensional float array that has the cell edge x
         coordinates for every column in the grid in model space - not offset
-        or rotated.  Array is of size (ncol + 1)
+        or rotated.  Array is of size (ncol + 1).
 
         """
         assert self.delr is not None and len(self.delr) > 0, (
@@ -1052,10 +1056,9 @@ class SpatialReference:
         return np.concatenate(([0.0], np.add.accumulate(self.delr)))
 
     def get_yedge_array(self) -> np.NDArray[float]:
-        """
-        a numpy one-dimensional float array that has the cell edge y
+        """Return a numpy one-dimensional float array that has the cell edge y
         coordinates for every row in the grid in model space - not offset or
-        rotated. Array is of size (nrow + 1)
+        rotated. Array is of size (nrow + 1).
 
         """
         assert self.delc is not None and len(self.delc) > 0, (
@@ -1065,8 +1068,7 @@ class SpatialReference:
         return np.concatenate(([length_y], length_y - np.add.accumulate(self.delc)))
 
     def get_xcenter_array(self) -> np.NDArray[float]:
-        """
-        a numpy one-dimensional float array that has the cell center x
+        """Return a numpy one-dimensional float array that has the cell center x
         coordinate for every column in the grid in model space - not offset or rotated.
 
         """
@@ -1076,8 +1078,7 @@ class SpatialReference:
         return np.add.accumulate(self.delr) - 0.5 * self.delr
 
     def get_ycenter_array(self) -> np.NDArray[float]:
-        """
-        a numpy one-dimensional float array that has the cell center x
+        """Return a numpy one-dimensional float array that has the cell center x
         coordinate for every row in the grid in model space - not offset of rotated.
 
         """
@@ -1089,8 +1090,7 @@ class SpatialReference:
 
     @staticmethod
     def rotate(x, y, theta, xorigin=0.0, yorigin=0.0):
-        """
-        Given x and y array-like values calculate the rotation about an
+        """Given x and y array-like values calculate the rotation about an
         arbitrary origin and then return the rotated coordinates.  theta is in
         degrees.
 
@@ -1104,8 +1104,7 @@ class SpatialReference:
         return xrot, yrot
 
     def transform(self, x, y, inverse=False):
-        """
-        Given x and y array-like values, apply rotation, scale and offset,
+        """Given x and y array-like values, apply rotation, scale and offset,
         to convert them from model coordinates to real-world coordinates.
         """
         if isinstance(x, list):
@@ -1127,10 +1126,7 @@ class SpatialReference:
         return x, y
 
     def get_extent(self) -> tuple[float]:
-        """
-        Get the extent of the rotated and offset grid
-
-        """
+        """Get the extent of the rotated and offset grid."""
         x0 = self.xedge[0]
         x1 = self.xedge[-1]
         y0 = self.yedge[0]
@@ -1185,7 +1181,8 @@ class SpatialReference:
         return r, c
 
     def write_gridspec(self, filename):
-        """write a PEST-style grid specification file
+        """Write a PEST-style grid specification file.
+
         Parameters
         ----------
         filename: str

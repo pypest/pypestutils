@@ -590,8 +590,7 @@ class PestUtilsLib:
         nointerpval: float,
         npts: int,
     ) -> dict:
-        """
-        Interpolate points using previously-calculated interpolation factors.
+        """Interpolate points using previously-calculated interpolation factors.
 
         Parameters
         ----------
@@ -671,8 +670,7 @@ class PestUtilsLib:
         nzone: int,
         ntime: int,
     ) -> dict:
-        """
-        Read and accumulates flows from a CBC flow file to a user-specified BC.
+        """Read and accumulates flows from a CBC flow file to a user-specified BC.
 
         Parameters
         ----------
@@ -776,8 +774,7 @@ class PestUtilsLib:
         factorfile: str | PathLike,
         factorfiletype: int | str | enum.FactorFileType,
     ) -> int:
-        """
-        Calculate 2D kriging factors.
+        """Calculate 2D kriging factors.
 
         Parameters
         ----------
@@ -871,8 +868,7 @@ class PestUtilsLib:
         factorfile: str | PathLike,
         factorfiletype: int | str | enum.FactorFileType,
     ) -> int:
-        """
-        Calculate 2D kriging factors, with automatic variogram properties.
+        """Calculate 2D kriging factors, with automatic variogram properties.
 
         Parameters
         ----------
@@ -963,8 +959,7 @@ class PestUtilsLib:
         factorfile: str | PathLike,
         factorfiletype: int | str | enum.FactorFileType,
     ) -> int:
-        """
-        Calculate 3D kriging factors.
+        """Calculate 3D kriging factors.
 
         Parameters
         ----------
@@ -1079,8 +1074,7 @@ class PestUtilsLib:
         meanval: float | npt.ArrayLike | None,
         nointerpval: float,
     ) -> dict:
-        """
-        Apply interpolation factors calculated by other functions.
+        """Apply interpolation factors calculated by other functions.
 
         Parameters
         ----------
@@ -1108,6 +1102,7 @@ class PestUtilsLib:
             Values calculated for targets.
         icount_interp : int
             Number of interpolation pts.
+
         """
         factorfile = Path(factorfile)
         if not factorfile.is_file():
@@ -1163,8 +1158,7 @@ class PestUtilsLib:
         bearing: float | npt.ArrayLike,
         ldcovmat: int,
     ) -> npt.NDArray[np.float64]:
-        """
-        Calculate a covariance matrix for a set of 2D pilot points.
+        """Calculate a covariance matrix for a set of 2D pilot points.
 
         Parameters
         ----------
@@ -1236,8 +1230,7 @@ class PestUtilsLib:
         rake: float | npt.ArrayLike,
         ldcovmat: int,
     ) -> npt.NDArray[np.float64]:
-        """
-        Calculate a covariance matrix for a set of 3D pilot points.
+        """Calculate a covariance matrix for a set of 3D pilot points.
 
         Parameters
         ----------
@@ -1260,6 +1253,7 @@ class PestUtilsLib:
         -------
         npt.NDArray[np.float64]
             2D matrix covmat(ldcovmat, npts).
+
         """
         pta = ManyArrays(
             {"ec": ec, "nc": nc, "zc": zc},
@@ -1319,8 +1313,7 @@ class PestUtilsLib:
         factorfile: str | PathLike,
         factorfiletype: int | str | enum.FactorFileType,
     ) -> int:
-        """
-        Calculate interpolation/blending factors for structural overlay parameters.
+        """Calculate interpolation/blending factors for structural overlay parameters.
 
         Parameters
         ----------
@@ -1396,8 +1389,7 @@ class PestUtilsLib:
         sourceval: npt.ArrayLike,
         targval: npt.ArrayLike,
     ) -> dict:
-        """
-        Apply interpolation factors calculated by
+        """Apply interpolation factors calculated by
         :meth:`calc_structural_overlay_factors`.
 
         Parameters
@@ -1636,8 +1628,7 @@ class PestUtilsLib:
         return targval.copy("A")
 
     def initialize_randgen(self, iseed: int) -> None:
-        """
-        Initialize the random number generator.
+        """Initialize the random number generator.
 
         Parameters
         ----------
@@ -1667,8 +1658,7 @@ class PestUtilsLib:
         # ldrand: int,  # same as nnode
         nreal: int,
     ) -> npt.NDArray[np.float64]:
-        """
-        Generate 2D stochastic fields based on a spatially varying variogram.
+        """Generate 2D stochastic fields based on a spatially varying variogram.
 
         Parameters
         ----------
@@ -1766,8 +1756,7 @@ class PestUtilsLib:
         # ldrand: int,  # same as nnode
         nreal: int,
     ) -> npt.NDArray[np.float64]:
-        """
-        Generate 3D stochastic fields based on a spatially varying variogram.
+        """Generate 3D stochastic fields based on a spatially varying variogram.
 
         Parameters
         ----------

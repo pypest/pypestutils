@@ -17,7 +17,7 @@ class bdist_wheel(_bdist_wheel):
 
 
 class BinaryDistribution(Distribution):
-    """Distribution which always forces a binary package with platform name"""
+    """Distribution which always forces a binary package with platform name."""
 
     def has_ext_modules(foo):
         return True
@@ -25,8 +25,7 @@ class BinaryDistribution(Distribution):
 
 class InstallPlatlib(install):
     def finalize_options(self):
-        """
-        Copy the shared libraries into the wheel. Note that this
+        """Copy the shared libraries into the wheel. Note that this
         will *only* check in `pypestutils/lib` rather than anywhere on
         the system so if you are building a wheel you *must* copy or
         symlink the `.so`/`.dll`/`.dylib` files into `pypestutils/lib`.

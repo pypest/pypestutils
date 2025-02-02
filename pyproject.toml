@@ -78,9 +78,23 @@ before-build = "pip install wheel"
 
 [tool.ruff.lint]
 select = [
-    "I",    # isort
+    "D",    # pydocstyle
     "E", "W", # pycodestyle
     "F",    # Pyflakes
+    "I",    # isort
     "RET",  # flake8-return
     "UP",   # pyupgrade
 ]
+ignore = [
+    "D205",  # 1 blank line required between summary line and description
+]
+
+[tool.ruff.lint.per-file-ignores]
+"setup.py" = ["D"]
+"docs/*.py" = ["D"]
+"examples/*" = ["D"]
+"scripts/*.py" = ["D"]
+"tests/*.py" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
