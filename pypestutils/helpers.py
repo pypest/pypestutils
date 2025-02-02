@@ -859,8 +859,7 @@ def generate_2d_grid_realizations(
     lib.free_all_memory()
     if nrow is not None:
         return reals.transpose().reshape((num_reals, nrow, ncol))
-    else:
-        return reals.transpose()
+    return reals.transpose()
 
 
 class SpatialReference:
@@ -906,14 +905,12 @@ class SpatialReference:
     @property
     def xll(self) -> float:
         """lower left x coord"""
-        xll = self.xul - (np.sin(self.theta) * self.yedge[0])
-        return xll
+        return self.xul - (np.sin(self.theta) * self.yedge[0])
 
     @property
     def yll(self) -> float:
         """lower left y coord"""
-        yll = self.yul - (np.cos(self.theta) * self.yedge[0])
-        return yll
+        return self.yul - (np.cos(self.theta) * self.yedge[0])
 
     @property
     def nrow(self) -> int:
@@ -1052,8 +1049,7 @@ class SpatialReference:
         assert self.delr is not None and len(self.delr) > 0, (
             "delr not passed to spatial reference object"
         )
-        xedge = np.concatenate(([0.0], np.add.accumulate(self.delr)))
-        return xedge
+        return np.concatenate(([0.0], np.add.accumulate(self.delr)))
 
     def get_yedge_array(self) -> np.NDArray[float]:
         """
@@ -1066,8 +1062,7 @@ class SpatialReference:
             "delc not passed to spatial reference object"
         )
         length_y = np.add.reduce(self.delc)
-        yedge = np.concatenate(([length_y], length_y - np.add.accumulate(self.delc)))
-        return yedge
+        return np.concatenate(([length_y], length_y - np.add.accumulate(self.delc)))
 
     def get_xcenter_array(self) -> np.NDArray[float]:
         """
@@ -1078,8 +1073,7 @@ class SpatialReference:
         assert self.delr is not None and len(self.delr) > 0, (
             "delr not passed to spatial reference object"
         )
-        x = np.add.accumulate(self.delr) - 0.5 * self.delr
-        return x
+        return np.add.accumulate(self.delr) - 0.5 * self.delr
 
     def get_ycenter_array(self) -> np.NDArray[float]:
         """
@@ -1091,8 +1085,7 @@ class SpatialReference:
             "delc not passed to spatial reference object"
         )
         Ly = np.add.reduce(self.delc)
-        y = Ly - (np.add.accumulate(self.delc) - 0.5 * self.delc)
-        return y
+        return Ly - (np.add.accumulate(self.delc) - 0.5 * self.delc)
 
     @staticmethod
     def rotate(x, y, theta, xorigin=0.0, yorigin=0.0):
@@ -1173,9 +1166,8 @@ class SpatialReference:
         pts.append([xgrid[i, j], ygrid[i, j]])
         if np.isscalar(i):
             return pts
-        else:
-            vrts = np.array(pts).transpose([2, 0, 1])
-            return [v.tolist() for v in vrts]
+        vrts = np.array(pts).transpose([2, 0, 1])
+        return [v.tolist() for v in vrts]
 
     def get_ij(self, x, y) -> tuple(int):
         """Return the row and column of a point or sequence of points

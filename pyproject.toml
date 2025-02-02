@@ -81,5 +81,6 @@ select = [
     "I",    # isort
     "E", "W", # pycodestyle
     "F",    # Pyflakes
+    "RET",  # flake8-return
     "UP",   # pyupgrade
 ]

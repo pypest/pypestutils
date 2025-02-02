@@ -37,7 +37,7 @@ def get_dimvar_int(lib: CDLL, name: str) -> int:
     """
     if name in _dimvar_cache:
         return _dimvar_cache[name]
-    elif name in _misc_lengths:
+    if name in _misc_lengths:
         # Special consideration for constants not specified by dimvar
         return _misc_lengths[name]
     c_var = c_int.in_dll(lib, name)

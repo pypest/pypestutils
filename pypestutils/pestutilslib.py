@@ -393,13 +393,13 @@ class PestUtilsLib:
         obstime = np.asarray(obstime, dtype=np.float64, order="F")
         if simtime.ndim != 1:
             raise ValueError("expected 'simtime' to have ndim=1")
-        elif simval.ndim != 2:
+        if simval.ndim != 2:
             raise ValueError("expected 'simval' to have ndim=2")
-        elif obspoint.ndim != 1:
+        if obspoint.ndim != 1:
             raise ValueError("expected 'obspoint' to have ndim=1")
-        elif obstime.ndim != 1:
+        if obstime.ndim != 1:
             raise ValueError("expected 'obstime' to have ndim=1")
-        elif not np.issubdtype(obspoint.dtype, np.integer):
+        if not np.issubdtype(obspoint.dtype, np.integer):
             raise ValueError(
                 f"expected 'obspoint' to be integer type; found {obspoint.dtype}"
             )

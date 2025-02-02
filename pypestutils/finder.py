@@ -59,7 +59,7 @@ def load() -> ctypes.CDLL:
                 os.environ["PATH"] = oldenv
         raise OSError(f"could not find or load {lib_name}")
 
-    elif os.name == "posix":
+    if os.name == "posix":
         # posix includes both mac and linux
         # use the extension for the specific platform
         if platform.system() == "Darwin":
@@ -74,7 +74,7 @@ def load() -> ctypes.CDLL:
         for cand in _candidates:
             if cand is None:
                 continue
-            elif os.path.isdir(cand):
+            if os.path.isdir(cand):
                 # if our candidate is a directory use best guess
                 path = cand
                 target = os.path.join(cand, lib_name)

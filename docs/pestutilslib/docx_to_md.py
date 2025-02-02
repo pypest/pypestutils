@@ -13,8 +13,7 @@ def processFile(inFile, outFile):
     for line in mdFile:
         if partOfToc and line != "\n":
             continue
-        else:
-            partOfToc = False
+        partOfToc = False
         if "Table of Contents" in line:
             tocLoc = len(tempFile) + 1
             partOfToc = True
@@ -38,8 +37,7 @@ def processFile(inFile, outFile):
 
 def addSectionTag(line, secId):
     startIndex = line.find(" ")
-    line = line[: startIndex + 1] + "<a id='" + secId + "' />" + line[startIndex + 1 :]
-    return line
+    return line[: startIndex + 1] + "<a id='" + secId + "' />" + line[startIndex + 1 :]
 
 
 def buildToc(line, toc, levels):
@@ -77,8 +75,7 @@ def buildToc(line, toc, levels):
 
 def cleanLine(text):
     text = stripNewline(text)
-    text = removeAnchors(text)
-    return text
+    return removeAnchors(text)
 
 
 def stripNewline(text):
