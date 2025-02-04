@@ -3,8 +3,12 @@
 from pathlib import Path
 from subprocess import run
 
-import nbformat
 import pytest
+
+try:
+    import nbformat
+except ImportError:
+    pytest.skip("requires nbformat", allow_module_level=True)
 
 examples_dir = Path(__file__).parent.parent / "examples"
 
@@ -15,7 +19,7 @@ def test_notebooks(nb_file):
         nb = nbformat.read(f, as_version=4)
     for cell in nb["cells"]:
         for line in cell["source"].splitlines():
-            if line.startswith("import "):
+            if line.startswith("import ") and "ppu_helpers" not in line:
                 module = line.split()[1]
                 pytest.importorskip(module)
 

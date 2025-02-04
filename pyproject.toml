@@ -39,6 +39,7 @@ dependencies = [
 [project.optional-dependencies]
 optional = [
     "flopy",
+    "jupyter",
     "pyemu",
 ]
 test = [
