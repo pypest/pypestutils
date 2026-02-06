@@ -26,6 +26,7 @@ Or manually with these steps:
 ```bash
 meson setup builddir  # options
 meson compile -C builddir
+meson install -C builddir
 ```
 
 After it is compiled, install to the Python module using:
