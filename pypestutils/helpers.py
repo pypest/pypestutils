@@ -167,7 +167,7 @@ def mod2obs_mf6(
         print("WARNING: replacing existing 'totim' column in observation dataframe")
     obsdf.loc[:, "totim"] = obsdf.datetime.apply(lambda x: x - start_datetime).dt.days
 
-    usite = obsdf.site.unique()
+    usite = obsdf.site.unique().tolist()
     usite.sort()
     usite_dict = {s: c for s, c in zip(usite, np.arange(usite.shape[0], dtype=int))}
     obsdf.loc[:, "isite"] = obsdf.site.apply(lambda x: usite_dict[x])
