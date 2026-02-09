@@ -170,7 +170,7 @@ def mod2obs_mf6(
 
     usite = obsdf.site.unique().tolist()
     usite.sort()
-    usite_dict = {s: c for s, c in zip(usite, np.arange(usite.shape[0], dtype=int))}
+    usite_dict = {s: c for s, c in zip(usite, np.arange(len(usite), dtype=int))}
     obsdf.loc[:, "isite"] = obsdf.site.apply(lambda x: usite_dict[x])
     obsdf.sort_values(by=["isite", "totim"], inplace=True)
 
