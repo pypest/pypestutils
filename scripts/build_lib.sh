@@ -4,11 +4,14 @@ set -e
 # always run from top of repo
 cd $(dirname $0)/..
 
+
+echo "Running $0 for \$OSTYPE=$OSTYPE ..."
+
 # this needs bash
 case "$OSTYPE" in
-  darwin*)  libname=lib/libpestutils.dylib ;;
+  darwin*)  libname=lib/libpestutils.dylib && export LDFLAGS="$LDFLAGS -Wl,-ld_classic";;
   linux*)   libname=lib/libpestutils.so ;;
-  msys* )   libname=bin/pestutils.dll ;;
+  msys*|cygwin ) libname=bin/pestutils.dll ;;
   *) echo "unknown \$OSTYPE: $OSTYPE" && exit 1 ;;
 esac
 
