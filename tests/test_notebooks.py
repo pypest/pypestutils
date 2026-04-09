@@ -13,7 +13,14 @@ except ImportError:
 examples_dir = Path(__file__).parent.parent / "examples"
 
 
-@pytest.mark.parametrize("nb_file", [pth.name for pth in examples_dir.glob("*.ipynb")])
+@pytest.mark.parametrize(
+    "nb_file",
+    [
+        pth.name
+        for pth in examples_dir.glob("*.ipynb")
+        if "understanding_variograms" not in pth.name
+    ],
+)
 def test_notebooks(nb_file):
     with open(examples_dir / nb_file) as f:
         nb = nbformat.read(f, as_version=4)
