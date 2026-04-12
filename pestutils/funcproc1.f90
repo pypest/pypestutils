@@ -1707,12 +1707,18 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
        integer                        :: i1,i2,i3
        integer                        :: ncon1,ncon2,ncon3,icon1,icon2,icon3,numcon,ncon
        integer                        :: icell_keep,ic1_keep,ic2_keep,ic3_keep
+       integer                        :: ic5,ic6,ic7
+       integer                        :: ncon4,ncon5,ncon6,icon4,icon5,icon6
+       integer                        :: ic4_keep,ic5_keep,ic6_keep
+       integer                        :: iic(MAXINTERPVERT+1)
 
        double precision               :: xxmin,xxmax,yymin,yymax
        double precision               :: eee,nnn
        double precision               :: x,y,xorigin,yorigin,cosang,sinang
        double precision               :: ee,nn,xx,yy
        double precision               :: dx,dy,ddx,ddy,den
+       double precision               :: dist,denn
+       double precision               :: fac(MAXINTERPVERT+1)
        double precision               :: fac1,fac2,fac3,fac4,dtemp,eps
        double precision               :: y23,x13,x32,y13
        double precision               :: b1,b2,b3
@@ -2045,17 +2051,17 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
             ncon=ia(icell+1)-ia(icell)-1
             do icon=1,ncon
               ic1=ja(ia(icell)+icon)
-              if((ic1.eq.icell-ncpl).or.(ic1.eq.icell+ncpl))cycle
+              if((ic1.le.icell-ncpl).or.(ic1.ge.icell+ncpl))cycle
               ncon1=ia(ic1+1)-ia(ic1)-1
               do icon1=1,ncon1
                 ic2=ja(ia(ic1)+icon1)
                 if(ic2.eq.ic1)cycle
-                if((ic2.eq.ic1-ncpl).or.(ic2.eq.ic1+ncpl))cycle
+                if((ic2.le.ic1-ncpl).or.(ic2.ge.ic1+ncpl))cycle
                 ncon2=ia(ic2+1)-ia(ic2)-1
                 do icon2=1,ncon2
                   ic3=ja(ia(ic2)+icon2)
                   if(ic3.eq.ic2)cycle
-                  if((ic3.eq.ic2-ncpl).or.(ic3.eq.ic2+ncpl))cycle
+                  if((ic3.le.ic2-ncpl).or.(ic3.ge.ic2+ncpl))cycle
                   if(ic3.eq.icell)then
                     numcon=3
                     xpoly(1)=cellx(icell-jlayoffset)
@@ -2076,7 +2082,7 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
                   do icon3=1,ncon3
                     ic4=ja(ia(ic3)+icon3)
                     if(ic4.eq.ic3)cycle
-                    if((ic4.eq.ic3-ncpl).or.(ic4.eq.ic3+ncpl))cycle
+                    if((ic4.le.ic3-ncpl).or.(ic4.ge.ic3+ncpl))cycle
                     if(ic4.eq.icell)then
                       numcon=4
                       xpoly(1)=cellx(icell-jlayoffset)
@@ -2109,6 +2115,156 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
                           ic3_keep=ic3
                         end if
                       end if
+                    else
+                      ncon4=ia(ic4+1)-ia(ic4)-1
+                      do icon4=1,ncon4
+                        ic5=ja(ia(ic4)+icon4)
+                        if(ic5.eq.ic4)cycle
+                        if((ic5.le.ic4-ncpl).or.(ic5.ge.ic4+ncpl))cycle
+                        if(ic5.eq.icell)then
+                          numcon=5
+                          xpoly(1)=cellx(icell-jlayoffset)
+                          ypoly(1)=celly(icell-jlayoffset)
+                          xpoly(2)=cellx(ic1-jlayoffset)
+                          ypoly(2)=celly(ic1-jlayoffset)
+                          xpoly(3)=cellx(ic2-jlayoffset)
+                          ypoly(3)=celly(ic2-jlayoffset)
+                          xpoly(4)=cellx(ic3-jlayoffset)
+                          ypoly(4)=celly(ic3-jlayoffset)
+                          xpoly(5)=cellx(ic4-jlayoffset)
+                          ypoly(5)=celly(ic4-jlayoffset)
+                          xpoly(6)=cellx(icell-jlayoffset)
+                          ypoly(6)=celly(icell-jlayoffset)
+                          call utl_locpt(xx,yy,xpoly,ypoly,6,l,m)
+                          if(l.ge.0) then
+                            if(numcon.lt.mincon)then
+                              mincon=numcon
+                              xpoly_keep(1)=xpoly(1)
+                              ypoly_keep(1)=ypoly(1)
+                              xpoly_keep(2)=xpoly(2)
+                              ypoly_keep(2)=ypoly(2)
+                              xpoly_keep(3)=xpoly(3)
+                              ypoly_keep(3)=ypoly(3)
+                              xpoly_keep(4)=xpoly(4)
+                              ypoly_keep(4)=ypoly(4)
+                              xpoly_keep(5)=xpoly(5)
+                              ypoly_keep(5)=ypoly(5)
+                              xpoly_keep(6)=xpoly(6)
+                              ypoly_keep(6)=ypoly(6)
+                              icell_keep=icell
+                              ic1_keep=ic1
+                              ic2_keep=ic2
+                              ic3_keep=ic3
+                              ic4_keep=ic4
+                            end if
+                          end if
+                        else
+                          ncon5=ia(ic5+1)-ia(ic5)-1
+                          do icon5=1,ncon5
+                            ic6=ja(ia(ic5)+icon5)
+                            if(ic6.eq.ic5)cycle
+                            if((ic6.le.ic5-ncpl).or.(ic6.ge.ic5+ncpl))cycle
+                            if(ic6.eq.icell)then
+                              numcon=6
+                              xpoly(1)=cellx(icell-jlayoffset)
+                              ypoly(1)=celly(icell-jlayoffset)
+                              xpoly(2)=cellx(ic1-jlayoffset)
+                              ypoly(2)=celly(ic1-jlayoffset)
+                              xpoly(3)=cellx(ic2-jlayoffset)
+                              ypoly(3)=celly(ic2-jlayoffset)
+                              xpoly(4)=cellx(ic3-jlayoffset)
+                              ypoly(4)=celly(ic3-jlayoffset)
+                              xpoly(5)=cellx(ic4-jlayoffset)
+                              ypoly(5)=celly(ic4-jlayoffset)
+                              xpoly(6)=cellx(ic5-jlayoffset)
+                              ypoly(6)=celly(ic5-jlayoffset)
+                              xpoly(7)=cellx(icell-jlayoffset)
+                              ypoly(7)=celly(icell-jlayoffset)
+                              call utl_locpt(xx,yy,xpoly,ypoly,7,l,m)
+                              if(l.ge.0) then
+                                if(numcon.lt.mincon)then
+                                  mincon=numcon
+                                  xpoly_keep(1)=xpoly(1)
+                                  ypoly_keep(1)=ypoly(1)
+                                  xpoly_keep(2)=xpoly(2)
+                                  ypoly_keep(2)=ypoly(2)
+                                  xpoly_keep(3)=xpoly(3)
+                                  ypoly_keep(3)=ypoly(3)
+                                  xpoly_keep(4)=xpoly(4)
+                                  ypoly_keep(4)=ypoly(4)
+                                  xpoly_keep(5)=xpoly(5)
+                                  ypoly_keep(5)=ypoly(5)
+                                  xpoly_keep(6)=xpoly(6)
+                                  ypoly_keep(6)=ypoly(6)
+                                  xpoly_keep(7)=xpoly(7)
+                                  ypoly_keep(7)=ypoly(7)
+                                  icell_keep=icell
+                                  ic1_keep=ic1
+                                  ic2_keep=ic2
+                                  ic3_keep=ic3
+                                  ic4_keep=ic4
+                                  ic5_keep=ic5
+                                end if
+                              end if
+                            else
+                              ncon6=ia(ic6+1)-ia(ic6)-1
+                              do icon6=1,ncon6
+                                ic7=ja(ia(ic6)+icon6)
+                                if(ic7.eq.ic6)cycle
+                                if((ic7.le.ic6-ncpl).or.(ic7.ge.ic6+ncpl))cycle
+                                if(ic7.eq.icell)then
+                                  numcon=7
+                                  xpoly(1)=cellx(icell-jlayoffset)
+                                  ypoly(1)=celly(icell-jlayoffset)
+                                  xpoly(2)=cellx(ic1-jlayoffset)
+                                  ypoly(2)=celly(ic1-jlayoffset)
+                                  xpoly(3)=cellx(ic2-jlayoffset)
+                                  ypoly(3)=celly(ic2-jlayoffset)
+                                  xpoly(4)=cellx(ic3-jlayoffset)
+                                  ypoly(4)=celly(ic3-jlayoffset)
+                                  xpoly(5)=cellx(ic4-jlayoffset)
+                                  ypoly(5)=celly(ic4-jlayoffset)
+                                  xpoly(6)=cellx(ic5-jlayoffset)
+                                  ypoly(6)=celly(ic5-jlayoffset)
+                                  xpoly(7)=cellx(ic6-jlayoffset)
+                                  ypoly(7)=celly(ic6-jlayoffset)
+                                  xpoly(8)=cellx(icell-jlayoffset)
+                                  ypoly(8)=celly(icell-jlayoffset)
+                                  call utl_locpt(xx,yy,xpoly,ypoly,8,l,m)
+                                  if(l.ge.0) then
+                                    if(numcon.lt.mincon)then
+                                      mincon=numcon
+                                      xpoly_keep(1)=xpoly(1)
+                                      ypoly_keep(1)=ypoly(1)
+                                      xpoly_keep(2)=xpoly(2)
+                                      ypoly_keep(2)=ypoly(2)
+                                      xpoly_keep(3)=xpoly(3)
+                                      ypoly_keep(3)=ypoly(3)
+                                      xpoly_keep(4)=xpoly(4)
+                                      ypoly_keep(4)=ypoly(4)
+                                      xpoly_keep(5)=xpoly(5)
+                                      ypoly_keep(5)=ypoly(5)
+                                      xpoly_keep(6)=xpoly(6)
+                                      ypoly_keep(6)=ypoly(6)
+                                      xpoly_keep(7)=xpoly(7)
+                                      ypoly_keep(7)=ypoly(7)
+                                      xpoly_keep(8)=xpoly(8)
+                                      ypoly_keep(8)=ypoly(8)
+                                      icell_keep=icell
+                                      ic1_keep=ic1
+                                      ic2_keep=ic2
+                                      ic3_keep=ic3
+                                      ic4_keep=ic4
+                                      ic5_keep=ic5
+                                      ic6_keep=ic6
+                                    end if
+                                  end if
+                                end if
+                              end do
+                            end if
+                          end do
+                        end if
+                      end do
                     end if
                   end do
                 end do
@@ -2127,10 +2283,25 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
               icell=icell_keep
               ic1=ic1_keep
               ic2=ic2_keep
-              if(numcon.eq.4)then
+              if(numcon.ge.4)then
                 xpoly(5)=xpoly_keep(5)
                 ypoly(5)=ypoly_keep(5)
                 ic3=ic3_keep
+                if(numcon.ge.5)then
+                  xpoly(6)=xpoly_keep(6)
+                  ypoly(6)=ypoly_keep(6)
+                  ic4=ic4_keep
+                  if(numcon.ge.6)then
+                    xpoly(7)=xpoly_keep(7)
+                    ypoly(7)=ypoly_keep(7)
+                    ic5=ic5_keep
+                    if(numcon.ge.7)then
+                      xpoly(8)=xpoly_keep(8)
+                      ypoly(8)=ypoly_keep(8)
+                      ic6=ic6_keep
+                    end if
+                  end if
+                end if
               end if
             else
               go to 459
@@ -2229,6 +2400,33 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
                 write(outunit1,err=9300) 4,icell,bb1,ic1,bb2,ic2,bb3,ic3,bb4
               else
                 write(outunit1,360,err=9300) 4,icell,bb1,ic1,bb2,ic2,bb3,ic3,bb4
+              end if
+            else if(numcon.le.7)then   ! We do inverse power of squared distance.
+              denn=0.0d0
+              do i=1,numcon
+                dist=(xpoly(i)-xx)*(xpoly(i)-xx)+(ypoly(i)-yy)*(ypoly(i)-yy)
+                if(dist.lt.1.0d-30) dist=1.0d-30
+                fac(i)=1/dist
+                denn=denn+fac(i)
+              end do
+              do i=1,numcon
+                fac(i)=fac(i)/denn
+              end do
+              iic(1)=icell
+              iic(2)=ic1
+              iic(3)=ic2
+              iic(4)=ic3
+              iic(5)=ic4
+              if(numcon.gt.5)then
+                iic(6)=ic5
+                if(numcon.gt.6)then
+                  iic(7)=ic6
+                end if
+              end if
+              if(factorfiletype.eq.0)then
+                write(outunit1,err=9300) numcon,(iic(i),fac(i),i=1,numcon)
+              else
+                write(outunit1,360,err=9300) numcon,(iic(i),fac(i),i=1,numcon)
               end if
             end if
 ! -- Record the subtending polygon.
