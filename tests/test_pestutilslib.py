@@ -99,7 +99,7 @@ def test_get_mf6_grid_crs():
 
 
 def test_v2_grid_cell_centres():
-    """Cell centres from a v2 DIS GRB are spatially correct (CRS field doesn't corrupt reads)."""
+    """v2 DIS GRB: cell centres are correct, CRS field doesn't corrupt reads."""
     import numpy as np
 
     lib = PestUtilsLib()
@@ -133,7 +133,7 @@ def test_install_mf6_grid_from_file_disv_v2():
 
 
 def test_v2_disv_grid_cell_centres():
-    """Cell centres from a v2 DISV GRB are spatially correct (CRS field doesn't corrupt reads)."""
+    """v2 DISV GRB: cell centres are correct, CRS field doesn't corrupt reads."""
     import numpy as np
 
     lib = PestUtilsLib()
