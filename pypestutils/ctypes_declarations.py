@@ -197,6 +197,14 @@ def prototype(lib) -> None:
     lib.uninstall_mf6_grid.argtypes = (POINTER(gridname_t),)  # gridname, in
     lib.uninstall_mf6_grid.restype = c_int
 
+    # get_mf6_grid_crs(gridname, crs)
+    crs_t = get_char_array(lib, "MAXLENCRS")
+    lib.get_mf6_grid_crs.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(crs_t),  # crs, out
+    )
+    lib.get_mf6_grid_crs.restype = c_int
+
     # calc_mf6_interp_factors(
     #   gridname,npts,ecoord,ncoord,layer,factorfile,
     #   factorfiletype,blnfile,interp_success)
