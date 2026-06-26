@@ -553,9 +553,9 @@ class PestUtilsLib:
             if crs:
                 proj_crs = pyproj.CRS.from_user_input(crs)
         """
-        from .ctypes_declarations import get_char_array
+        from ctypes import c_char
 
-        crs_buf = get_char_array(self.pestutils, "MAXLENCRS")()
+        crs_buf = (c_char * 5000)()
         res = self.pestutils.get_mf6_grid_crs(
             byref(self.create_char_array(gridname, "LENGRIDNAME")),
             byref(crs_buf),

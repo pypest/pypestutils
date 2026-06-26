@@ -198,7 +198,8 @@ def prototype(lib) -> None:
     lib.uninstall_mf6_grid.restype = c_int
 
     # get_mf6_grid_crs(gridname, crs)
-    crs_t = get_char_array(lib, "MAXLENCRS")
+    # MAXLENCRS=5000 is a compile-time constant matching the MF6 spec
+    crs_t = c_char * 5000
     lib.get_mf6_grid_crs.argtypes = (
         POINTER(gridname_t),  # gridname, in
         POINTER(crs_t),  # crs, out
