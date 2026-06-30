@@ -15,6 +15,7 @@ pestutils_function_names = {
     "install_mf6_grid_from_file": 7,
     "get_cell_centres_mf6": 5,
     "uninstall_mf6_grid": 1,
+    "get_mf6_grid_crs": 2,
     "calc_mf6_interp_factors": 9,
     "interp_from_mf6_depvar_file": 12,
     "extract_flows_from_cbc_file": 15,

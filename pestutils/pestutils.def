@@ -29,3 +29,4 @@ EXPORTS
    fieldgen3d_sva
    get_cell_centres_structured
    get_cell_centres_mf6
+   get_mf6_grid_crs

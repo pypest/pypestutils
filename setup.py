@@ -2,9 +2,9 @@
 import os
 
 from setuptools import setup
+from setuptools.command.bdist_wheel import bdist_wheel as _bdist_wheel
 from setuptools.command.install import install
 from setuptools.dist import Distribution
-from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 
 # current working directory of this setup.py file
 _cwd = os.path.abspath(os.path.split(__file__)[0])

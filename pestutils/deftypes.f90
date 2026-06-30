@@ -8,28 +8,33 @@ MODULE DEFTYPES
 
        integer, parameter           :: MF6HEADERLEN=50
        integer, parameter           :: MAXLENTXT=120
+       integer, parameter           :: MAXLENCRS=5000
        integer, parameter           :: NTXT_DIS=16
+       integer, parameter           :: NTXT_DIS_V2=17
        integer, parameter           :: NTXT_DISV=20
-       integer                      :: expect_dis_type(NTXT_DIS),expect_disv_type(NTXT_DISV)
-       character (len=10)           :: expectdefn_dis(NTXT_DIS),expectdefn_disv(NTXT_DISV)
+       integer, parameter           :: NTXT_DISV_V2=21
+       integer                      :: expect_dis_type(NTXT_DIS_V2),expect_disv_type(NTXT_DISV_V2)
+       character (len=10)           :: expectdefn_dis(NTXT_DIS_V2),expectdefn_disv(NTXT_DISV_V2)
        character (len=MF6HEADERLEN) :: mf6header(4)
-       character (len=MAXLENTXT)    :: definition(max(NTXT_DIS,NTXT_DISV))
+       character (len=MAXLENTXT)    :: definition(max(NTXT_DIS_V2,NTXT_DISV_V2))
 
        data expectdefn_dis  /'NCELLS    ','NLAY      ','NROW      ','NCOL      ',              &
                              'NJA       ','XORIGIN   ','YORIGIN   ','ANGROT    ',              &
                              'DELR      ','DELC      ','TOP       ','BOTM      ',              &
-                             'IA        ','JA        ','IDOMAIN   ','ICELLTYPE ' /
+                             'IA        ','JA        ','IDOMAIN   ','ICELLTYPE ',              &
+                             'CRS       ' /
 
-       data expect_dis_type /1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1/
+       data expect_dis_type /1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,3/
 
 
        data expectdefn_disv /'NCELLS    ','NLAY      ','NCPL      ','NVERT     ',              &
                              'NJAVERT   ','NJA       ','XORIGIN   ','YORIGIN   ',              &
                              'ANGROT    ','TOP       ','BOTM      ','VERTICES  ',              &
                              'CELLX     ','CELLY     ','IAVERT    ','JAVERT    ',              &
-                             'IA        ','JA        ','IDOMAIN   ','ICELLTYPE ' /
+                             'IA        ','JA        ','IDOMAIN   ','ICELLTYPE ',              &
+                             'CRS       ' /
 
-       data expect_disv_type /1,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,1/
+       data expect_disv_type /1,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,1,3/
 
 ! -- Structured grid type
 
@@ -59,6 +64,7 @@ MODULE DEFTYPES
          integer                     :: nja=0
          double precision            :: xorigin,yorigin,angrot
          character (len=LENGRIDNAME) :: name=' '
+         character (len=MAXLENCRS)   :: crs=' '
 
          integer, pointer                   :: idomain(:,:,:),icelltype(:,:,:)
          integer, pointer                   :: iavert(:),javert(:)

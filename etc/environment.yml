@@ -3,7 +3,7 @@ name: pypestutils
 
 channels:
   - conda-forge
-  - defaults
+  - nodefaults
 
 dependencies:
   - appdirs
