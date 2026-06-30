@@ -12,7 +12,7 @@ The following sections describe how to build a shared library of `pestutils`, wh
 
 Then to install a development version of pypestutils use:
 ```bash
-pip install -e .
+pip install -e . --group dev
 ```
 
 ## Build pestutils on Linux / macOS / Windows (MSYS2)
