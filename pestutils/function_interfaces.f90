@@ -131,6 +131,13 @@ module function_interfaces
        character (kind=c_char,len=1), intent(in)  :: gridname(*)
     end function uninstall_mf6_grid
 
+    integer (kind=c_int) function get_mf6_grid_crs(gridname,crs)      &
+                     bind(c,name="get_mf6_grid_crs")
+       use iso_c_binding, only: c_int,c_char
+       character (kind=c_char,len=1), intent(in)  :: gridname(*)
+       character (kind=c_char,len=1), intent(out) :: crs(*)
+    end function get_mf6_grid_crs
+
     integer (kind=c_int) function calc_mf6_interp_factors(             &
                               gridname,                                &
                               npts,ecoord,ncoord,layer,                &

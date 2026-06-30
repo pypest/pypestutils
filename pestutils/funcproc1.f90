@@ -1251,7 +1251,7 @@ integer (kind=c_int) function install_mf6_grid_from_file(gridname,grbfile,      
        integer                        :: i,ierr,itype
        integer                        :: igrid,gridunit,jgrid,itemp
        integer                        :: nlay,nrow,ncol,ncpl,nvert
-       integer                        :: ntxt,lentxt
+       integer                        :: ntxt,lentxt,iv2,ncrslen
        integer                        :: ndimgridname,ndimgrbfile
        integer                        :: icol,irow,ilay,icpl,nja,njavert
 
@@ -1399,10 +1399,19 @@ integer (kind=c_int) function install_mf6_grid_from_file(gridname,grbfile,      
         end if
 
         idis=mf6modgrid(igrid)%distype
+        iv2=0
         if(idis.eq.1)then
-          if(ntxt.ne.NTXT_DIS) go to 9070
+          if(ntxt.eq.NTXT_DIS_V2)then
+            iv2=1
+          else if(ntxt.ne.NTXT_DIS)then
+            go to 9070
+          end if
         else if(idis.eq.2)then
-          if(ntxt.ne.NTXT_DISV) go to 9070
+          if(ntxt.eq.NTXT_DISV_V2)then
+            iv2=1
+          else if(ntxt.ne.NTXT_DISV)then
+            go to 9070
+          end if
         end if
 
 ! -- Next we read the definition lines.
@@ -1482,6 +1491,18 @@ integer (kind=c_int) function install_mf6_grid_from_file(gridname,grbfile,      
                                               icol=1,ncol),irow=1,nrow),ilay=1,nlay)
           read(gridunit,err=9220,end=9240) (((mf6modgrid(igrid)%icelltype(icol,irow,ilay),  &
                                               icol=1,ncol),irow=1,nrow),ilay=1,nlay)
+          mf6modgrid(igrid)%crs=' '
+          if(iv2.eq.1)then
+            cline=definition(ntxt)
+            if(utl_wordsplit(5,lw,rw,cline).eq.0)then
+              anum=cline(lw(5):rw(5))
+              if(utl_char2num(anum,ncrslen).eq.0)then
+                if(ncrslen.ge.1.and.ncrslen.le.MAXLENCRS)then
+                  read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%crs(1:ncrslen)
+                end if
+              end if
+            end if
+          end if
           mf6modgrid(igrid)%delr(0)=mf6modgrid(igrid)%delr(1)
           mf6modgrid(igrid)%delr(ncol+1)=mf6modgrid(igrid)%delr(ncol)
           mf6modgrid(igrid)%delc(0)=mf6modgrid(igrid)%delc(1)
@@ -1545,6 +1566,18 @@ integer (kind=c_int) function install_mf6_grid_from_file(gridname,grbfile,      
           read(gridunit,err=9220,end=9240) (mf6modgrid(igrid)%ja(i),i=1,nja)
           read(gridunit,err=9220,end=9240) ((mf6modgrid(igrid)%idomainv(icpl,ilay),icpl=1,ncpl),ilay=1,nlay)
           read(gridunit,err=9220,end=9240) ((mf6modgrid(igrid)%icelltypev(icpl,ilay),icpl=1,ncpl),ilay=1,nlay)
+          mf6modgrid(igrid)%crs=' '
+          if(iv2.eq.1)then
+            cline=definition(ntxt)
+            if(utl_wordsplit(5,lw,rw,cline).eq.0)then
+              anum=cline(lw(5):rw(5))
+              if(utl_char2num(anum,ncrslen).eq.0)then
+                if(ncrslen.ge.1.and.ncrslen.le.MAXLENCRS)then
+                  read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%crs(1:ncrslen)
+                end if
+              end if
+            end if
+          end if
 
         end if
         nummf6modgrid=nummf6modgrid+1
@@ -1665,6 +1698,78 @@ integer (kind=c_int) function uninstall_mf6_grid(gridname)            &
        return
 
 end function uninstall_mf6_grid
+
+
+
+integer (kind=c_int) function get_mf6_grid_crs(gridname,crs)           &
+                 bind(c,name="get_mf6_grid_crs")
+
+! -- Returns the CRS string for an installed MF6 grid. Empty for v1 files.
+
+       use iso_c_binding, only: c_int,c_char,c_null_char
+       use dimvar
+       use deftypes
+       use utilities
+       use high_level_utilities
+       implicit none
+
+       character (kind=c_char,len=1), intent(in)  :: gridname(LENGRIDNAME)
+       character (kind=c_char,len=1), intent(out) :: crs(MAXLENCRS)
+
+       integer                        :: igrid,i,ncrslen
+       character (len=LENGRIDNAME)    :: aname
+       character (len=MAXLENCRS)      :: acrs
+
+! -- Initialisation
+
+       get_mf6_grid_crs=0
+       do i=1,MAXLENCRS
+         crs(i)=c_null_char
+       end do
+
+! -- Convert gridname.
+
+       call utl_string2char(LENGRIDNAME,gridname,aname)
+       aname=adjustl(aname)
+       call utl_casetrans(aname,'lo')
+       if(aname.eq.' ')then
+         write(amessage,100)
+100      format('GRIDNAME argument is supplied as blank.')
+         go to 9890
+       end if
+
+! -- Find the grid.
+
+       if(nummf6modgrid.eq.0) go to 9000
+       do igrid=1,MAXMF6MODGRID
+         if(mf6modgrid(igrid)%distype.ne.0)then
+           if(mf6modgrid(igrid)%name.eq.aname) go to 200
+         end if
+       end do
+       go to 9000
+200    continue
+
+! -- Copy crs to output, null-terminated.
+
+       acrs=mf6modgrid(igrid)%crs
+       ncrslen=len_trim(acrs)
+       do i=1,ncrslen
+         crs(i)=acrs(i:i)
+       end do
+
+       go to 9990
+
+9000   write(amessage,9010) trim(aname)
+9010   format('The name "',a,'" does not correspond to an installed MODFLOW 6 grid.')
+       go to 9890
+
+9890   continue
+       get_mf6_grid_crs=1
+
+9990   continue
+       return
+
+end function get_mf6_grid_crs
 
 
 

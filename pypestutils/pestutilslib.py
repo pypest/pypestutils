@@ -522,6 +522,50 @@ class PestUtilsLib:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("uninstalled mf6 grid %r", gridname)
 
+    def get_mf6_grid_crs(self, gridname: str) -> str:
+        """Get the CRS string for an installed MF6 grid.
+
+        Parameters
+        ----------
+        gridname : str
+            Unique non-blank grid name, previously installed via
+            :meth:`install_mf6_grid_from_file`.
+
+        Returns
+        -------
+        crs : str
+            CRS user input string from a version 2 GRB file. Returns an
+            empty string for version 1 GRB files. The string is whatever
+            the modeller supplied in the MODFLOW 6 discretization input,
+            which may be an EPSG code (e.g. ``"EPSG:26916"``), an
+            authority string, or an OGC Well-Known Text specification
+            (up to 5000 characters).
+
+        Notes
+        -----
+        The CRS string is metadata only — it does not affect the grid
+        geometry stored by pypestutils. To work with the CRS as a
+        projection object, pass the string to ``pyproj.CRS.from_user_input``,
+        which accepts all formats MODFLOW 6 supports::
+
+            import pyproj
+            crs = lib.get_mf6_grid_crs(gridname)
+            if crs:
+                proj_crs = pyproj.CRS.from_user_input(crs)
+        """
+        from ctypes import c_char
+
+        crs_buf = (c_char * 5000)()
+        res = self.pestutils.get_mf6_grid_crs(
+            byref(self.create_char_array(gridname, "LENGRIDNAME")),
+            byref(crs_buf),
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        crs = crs_buf.value.rstrip(b"\x00 ").decode()
+        self.logger.info("got crs %r for mf6 grid %r", crs, gridname)
+        return crs
+
     def calc_mf6_interp_factors(
         self,
         gridname: str,
