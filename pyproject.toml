@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -41,13 +41,26 @@ optional = [
     "jupyter",
     "pyemu",
 ]
-test = [
+
+[dependency-groups]
+dev = [
+    "pre-commit",
+    "ruff",
+    "tox>=4.22",
+    "wheel",
+    {include-group = "tests"},
+]
+tests = [
     "pytest",
     "pytest-timeout",
 ]
 
 [project.urls]
 Repository = "https://github.com/pypest/pypestutils"
+
+[tool.pytest.ini_options]
+addopts = "--import-mode=importlib"
+testpaths = ["tests"]
 
 [tool.setuptools]
 include-package-data = false
