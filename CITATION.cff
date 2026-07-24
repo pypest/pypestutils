@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use PyPestUtils in your work, please cite it as follows."
+title: "PyPestUtils: Suite of Python tools based on PEST utilities to support parameterization with pilot points, drawing stochastic realizations, and MODFLOW post-processing"
+authors:
+  - family-names: White
+    given-names: Jeremy
+  - family-names: Doherty
+    given-names: John
+  - family-names: Taves
+    given-names: Mike
+url: "https://github.com/pypest/pypestutils"
+repository-code: "https://github.com/pypest/pypestutils"
+year: 2026
+type: software
