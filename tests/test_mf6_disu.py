@@ -6,7 +6,7 @@ The grids are layered models built with vorflow and run with MODFLOW 6.7:
 - vorflow_sublayers: one layer split into three sublayers inside the pit, so five
   layers, two of which have cells only inside the pit.
 
-Each ``.layers`` file gives the (one-based) layer of each node.
+Nodes are numbered layer by layer, so the nodes per layer give each node's layer.
 """
 
 from pathlib import Path
@@ -17,11 +17,17 @@ import pytest
 from pypestutils.pestutilslib import PestUtilsLib, PestUtilsLibError
 
 data_dir = Path(__file__).parent / "data"
-GRIDS = ["vorflow_refill", "vorflow_sublayers"]
+NODES_PER_LAYER = {
+    "vorflow_refill": [166, 166, 217],
+    "vorflow_sublayers": [166, 166, 30, 30, 166],
+}
+GRIDS = list(NODES_PER_LAYER)
 
 
 def node_layers(name):
-    return np.loadtxt(data_dir / f"{name}.layers", dtype=np.int32)
+    """One-based layer of each node."""
+    counts = NODES_PER_LAYER[name]
+    return np.repeat(np.arange(1, len(counts) + 1), counts).astype(np.int32)
 
 
 def read_factors(path):
