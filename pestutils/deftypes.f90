@@ -13,8 +13,13 @@ MODULE DEFTYPES
        integer, parameter           :: NTXT_DIS_V2=17
        integer, parameter           :: NTXT_DISV=20
        integer, parameter           :: NTXT_DISV_V2=21
+       integer, parameter           :: NTXT_DISU_NOVERT=11   ! DISU without vertices
+       integer, parameter           :: NTXT_DISU=16          ! DISU with vertices
+       integer, parameter           :: NTXT_DISU_V2=17
        integer                      :: expect_dis_type(NTXT_DIS_V2),expect_disv_type(NTXT_DISV_V2)
+       integer                      :: expect_disu_type(NTXT_DISU_V2)
        character (len=10)           :: expectdefn_dis(NTXT_DIS_V2),expectdefn_disv(NTXT_DISV_V2)
+       character (len=10)           :: expectdefn_disu(NTXT_DISU_V2)
        character (len=MF6HEADERLEN) :: mf6header(4)
        character (len=MAXLENTXT)    :: definition(max(NTXT_DIS_V2,NTXT_DISV_V2))
 
@@ -35,6 +40,17 @@ MODULE DEFTYPES
                              'CRS       ' /
 
        data expect_disv_type /1,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,1,3/
+
+! -- DISU: the last five records (and NVERT, NJAVERT) only if the DISU input has vertices.
+!    CRS follows the last record in a version 2 file.
+
+       data expectdefn_disu /'NODES     ','NJA       ','XORIGIN   ','YORIGIN   ',              &
+                             'ANGROT    ','TOP       ','BOT       ','IA        ',              &
+                             'JA        ','IDOMAIN   ','ICELLTYPE ','VERTICES  ',              &
+                             'CELLX     ','CELLY     ','IAVERT    ','JAVERT    ',              &
+                             'CRS       ' /
+
+       data expect_disu_type /1,1,2,2,2,2,2,1,1,1,1,2,2,2,1,1,3/
 
 ! -- Structured grid type
 
@@ -78,6 +94,12 @@ MODULE DEFTYPES
          double precision, pointer          :: botmv(:,:)
          double precision, pointer          :: vertices(:,:),cellx(:),celly(:)
          double precision, pointer          :: bottom(:,:)
+
+! -- DISU only: per-node arrays, and the layer of each node (all 1 until install_mf6_disu_layers).
+
+         integer, pointer                   :: idomainu(:)=>null(),icelltypeu(:)=>null()
+         integer, pointer                   :: nodelay(:)=>null()
+         double precision, pointer          :: topu(:)=>null(),botu(:)=>null()
        end type mf6grid
 
 ! -- Incidences of grids.

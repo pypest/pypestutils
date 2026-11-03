@@ -206,6 +206,14 @@ def prototype(lib) -> None:
     )
     lib.get_mf6_grid_crs.restype = c_int
 
+    # install_mf6_disu_layers(gridname, ncells, layer)
+    lib.install_mf6_disu_layers.argtypes = (
+        POINTER(gridname_t),  # gridname, in
+        POINTER(c_int),  # ncells, in
+        ndpointer(c_int, ndim=1, flags="F"),  # layer(ncells), in
+    )
+    lib.install_mf6_disu_layers.restype = c_int
+
     # calc_mf6_interp_factors(
     #   gridname,npts,ecoord,ncoord,layer,factorfile,
     #   factorfiletype,blnfile,interp_success)

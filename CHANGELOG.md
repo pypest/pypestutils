@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- MODFLOW 6 DISU grids: `install_mf6_grid_from_file` reads DISU GRB files, the
+  new `install_mf6_disu_layers` gives each node a layer, and
+  `calc_mf6_interp_factors` then interpolates layer by layer as for DISV;
+  `get_cell_centres_mf6` returns DISU node centres
 ### Changed
 ### Fixed
 

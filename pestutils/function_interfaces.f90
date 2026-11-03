@@ -138,6 +138,14 @@ module function_interfaces
        character (kind=c_char,len=1), intent(out) :: crs(*)
     end function get_mf6_grid_crs
 
+    integer (kind=c_int) function install_mf6_disu_layers(gridname,ncells,layer) &
+                     bind(c,name="install_mf6_disu_layers")
+       use iso_c_binding, only: c_int,c_char
+       character (kind=c_char,len=1), intent(in)  :: gridname(*)
+       integer(kind=c_int), intent(in)            :: ncells
+       integer(kind=c_int), intent(in)            :: layer(ncells)
+    end function install_mf6_disu_layers
+
     integer (kind=c_int) function calc_mf6_interp_factors(             &
                               gridname,                                &
                               npts,ecoord,ncoord,layer,                &

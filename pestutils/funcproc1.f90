@@ -1254,6 +1254,7 @@ integer (kind=c_int) function install_mf6_grid_from_file(gridname,grbfile,      
        integer                        :: ntxt,lentxt,iv2,ncrslen
        integer                        :: ndimgridname,ndimgrbfile
        integer                        :: icol,irow,ilay,icpl,nja,njavert
+       integer                        :: hasvert,idef
 
        character (len=10)             :: atemp10
        character (len=20)             :: atype,anum,avar,aword
@@ -1361,11 +1362,6 @@ integer (kind=c_int) function install_mf6_grid_from_file(gridname,grbfile,      
 120       format('Unknown grid type: "',a,'" cited in file ',a,'.')
           go to 9890
         end if
-        if(mf6modgrid(igrid)%distype.eq.3)then
-          write(amessage,121)
-121       format('As presently programmed, a DISU GRB file cannot be read.')
-          go to 9890
-        end if
         mf6header(3)=adjustl(mf6header(3))
         if(mf6header(3)(1:4).ne.'NTXT')then
           write(amessage,130) trim(afile1)
@@ -1412,6 +1408,14 @@ integer (kind=c_int) function install_mf6_grid_from_file(gridname,grbfile,      
           else if(ntxt.ne.NTXT_DISV)then
             go to 9070
           end if
+        else if(idis.eq.3)then
+          if((ntxt.eq.NTXT_DISU_NOVERT+1).or.(ntxt.eq.NTXT_DISU_V2))then
+            iv2=1
+          else if((ntxt.ne.NTXT_DISU_NOVERT).and.(ntxt.ne.NTXT_DISU))then
+            go to 9070
+          end if
+          hasvert=0
+          if(ntxt-iv2.eq.NTXT_DISU) hasvert=1
         end if
 
 ! -- Next we read the definition lines.
@@ -1443,6 +1447,19 @@ integer (kind=c_int) function install_mf6_grid_from_file(gridname,grbfile,      
           else if (idis.eq.2)then
             if(cline(lw(1):rw(1)).ne.expectdefn_disv(i)) go to 9150
             if(itype.ne.expect_disv_type(i)) go to 9150
+          else if (idis.eq.3)then
+            idef=i
+            if((iv2.eq.1).and.(i.eq.ntxt)) idef=NTXT_DISU_V2     ! CRS
+            if(cline(lw(1):rw(1)).ne.expectdefn_disu(idef)) go to 9150
+            if(itype.ne.expect_disu_type(idef)) go to 9150
+! -- DISU has no NVERT or NJAVERT records; they are the sizes of VERTICES and JAVERT.
+            if(idef.eq.12)then
+              if(utl_wordsplit(6,lw,rw,cline).ne.0) go to 9150
+              if(utl_char2num(cline(lw(6):rw(6)),nvert).ne.0) go to 9150
+            else if(idef.eq.16)then
+              if(utl_wordsplit(5,lw,rw,cline).ne.0) go to 9150
+              if(utl_char2num(cline(lw(5):rw(5)),njavert).ne.0) go to 9150
+            end if
           end if
         end do
 
@@ -1579,6 +1596,68 @@ integer (kind=c_int) function install_mf6_grid_from_file(gridname,grbfile,      
             end if
           end if
 
+        else if (idis.eq.3)then
+
+! -- A DISU grid has no layers; every node is in layer 1 until install_mf6_disu_layers() is called.
+
+          read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%ncells
+          read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%nja
+          read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%xorigin
+          read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%yorigin
+          read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%angrot
+          ncells=mf6modgrid(igrid)%ncells
+          nja=mf6modgrid(igrid)%nja
+          nlay=1
+          mf6modgrid(igrid)%nlay=1
+          mf6modgrid(igrid)%ncpl=ncells
+          if(hasvert.eq.0)then
+            nvert=0
+            njavert=0
+          end if
+          mf6modgrid(igrid)%nvert=nvert
+          mf6modgrid(igrid)%njavert=njavert
+
+          allocate(mf6modgrid(igrid)%topu(ncells),mf6modgrid(igrid)%botu(ncells),stat=ierr)
+          if(ierr.ne.0) go to 9200
+          allocate(mf6modgrid(igrid)%ia(ncells+1),mf6modgrid(igrid)%ja(nja),stat=ierr)
+          if(ierr.ne.0) go to 9200
+          allocate(mf6modgrid(igrid)%idomainu(ncells),mf6modgrid(igrid)%icelltypeu(ncells),   &
+          mf6modgrid(igrid)%nodelay(ncells),stat=ierr)
+          if(ierr.ne.0) go to 9200
+          mf6modgrid(igrid)%nodelay=1         ! an array
+
+          read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%topu
+          read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%botu
+          read(gridunit,err=9220,end=9240) (mf6modgrid(igrid)%ia(i),i=1,ncells+1)
+          read(gridunit,err=9220,end=9240) (mf6modgrid(igrid)%ja(i),i=1,nja)
+          read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%idomainu
+          read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%icelltypeu
+          if(hasvert.eq.1)then
+            allocate(mf6modgrid(igrid)%vertices(2,nvert),stat=ierr)
+            if(ierr.ne.0) go to 9200
+            allocate(mf6modgrid(igrid)%cellx(ncells),mf6modgrid(igrid)%celly(ncells),stat=ierr)
+            if(ierr.ne.0) go to 9200
+            allocate(mf6modgrid(igrid)%iavert(ncells+1),mf6modgrid(igrid)%javert(njavert),stat=ierr)
+            if(ierr.ne.0) go to 9200
+            read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%vertices
+            read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%cellx
+            read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%celly
+            read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%iavert
+            read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%javert
+          end if
+          mf6modgrid(igrid)%crs=' '
+          if(iv2.eq.1)then
+            cline=definition(ntxt)
+            if(utl_wordsplit(5,lw,rw,cline).eq.0)then
+              anum=cline(lw(5):rw(5))
+              if(utl_char2num(anum,ncrslen).eq.0)then
+                if(ncrslen.ge.1.and.ncrslen.le.MAXLENCRS)then
+                  read(gridunit,err=9220,end=9240) mf6modgrid(igrid)%crs(1:ncrslen)
+                end if
+              end if
+            end if
+          end if
+
         end if
         nummf6modgrid=nummf6modgrid+1
         idis=mf6modgrid(igrid)%distype
@@ -1591,6 +1670,10 @@ integer (kind=c_int) function install_mf6_grid_from_file(gridname,grbfile,      
           ndim1=ncpl
           ndim2=1
           ndim3=nlay
+        else if(idis.eq.3)then
+          ndim1=ncells
+          ndim2=1
+          ndim3=1
         end if
 
         go to 9900
@@ -1773,6 +1856,86 @@ end function get_mf6_grid_crs
 
 
 
+integer (kind=c_int) function install_mf6_disu_layers(gridname,ncells,layer)    &
+                 bind(c,name="install_mf6_disu_layers")
+
+! -- Assigns a layer to each node of an installed DISU grid. A DISU GRB file has no
+!    layers, but a layered model built as DISU (e.g. with a different plan grid in some
+!    layers, or sublayers in some columns) still has one; each layer is then treated as
+!    a two-dimensional grid of its own by calc_mf6_interp_factors().
+
+       use iso_c_binding, only: c_int,c_char
+       use dimvar
+       use deftypes
+       use utilities
+       implicit none
+
+       character (kind=c_char,len=1), intent(in)  :: gridname(LENGRIDNAME)   ! Name of installed grid
+       integer(kind=c_int), intent(in)            :: ncells                  ! Number of nodes in the grid
+       integer(kind=c_int), intent(in)            :: layer(ncells)           ! Layer of each node (1-based)
+
+       integer                        :: igrid
+       character (len=LENGRIDNAME)    :: aname
+
+! -- Initialisation
+
+       function_name='install_mf6_disu_layers()'
+       install_mf6_disu_layers=0
+
+       call utl_string2char(LENGRIDNAME,gridname,aname)
+       aname=adjustl(aname)
+       call utl_casetrans(aname,'lo')
+       if(aname.eq.' ')then
+         write(amessage,100) 'GRIDNAME',trim(function_name)
+100      format('The ',a,' argument of function ',a,' is supplied as blank.')
+         go to 9890
+       end if
+
+! -- Find the grid and check it.
+
+       if(nummf6modgrid.eq.0) go to 9000
+       do igrid=1,MAXMF6MODGRID
+         if(mf6modgrid(igrid)%distype.ne.0)then
+           if(mf6modgrid(igrid)%name.eq.aname) go to 200
+         end if
+       end do
+       go to 9000
+200    continue
+       if(mf6modgrid(igrid)%distype.ne.3)then
+         write(amessage,210) trim(aname)
+210      format('MODFLOW 6 grid "',a,'" is not a DISU grid; only DISU nodes need layers.')
+         go to 9890
+       end if
+       if(ncells.ne.mf6modgrid(igrid)%ncells)then
+         write(amessage,220) trim(function_name),trim(aname)
+220      format('The NCELLS argument of function ',a,' does not equal the number of ', &
+         'nodes in MODFLOW 6 grid "',a,'".')
+         go to 9890
+       end if
+       if(any(layer.le.0))then
+         write(amessage,230)
+230      format('At least one element of the LAYER array argument is zero or less.')
+         go to 9890
+       end if
+
+       mf6modgrid(igrid)%nodelay=layer           ! an array
+       mf6modgrid(igrid)%nlay=maxval(layer)
+       go to 9990
+
+9000   write(amessage,9010) trim(aname)
+9010   format('The name "',a,'" does not correspond to an installed MODFLOW 6 grid.')
+       go to 9890
+
+9890   continue
+       install_mf6_disu_layers=1
+
+9990   continue
+       return
+
+end function install_mf6_disu_layers
+
+
+
 integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
                               npts,ecoord,ncoord,layer,                &
                               factorfile, factorfiletype,              &
@@ -1846,6 +2009,7 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
 
        double precision, allocatable  :: xcell(:),ycell(:)
        double precision, allocatable  :: cellxmax(:),cellxmin(:),cellymax(:),cellymin(:)
+       integer, allocatable           :: nodelayer(:)
 
 ! -- Initialisation
 
@@ -1936,12 +2100,32 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
           do irow=nrow-1,1,-1
             ycell(irow)=ycell(irow+1)+(delc(irow+1)+delc(irow))*0.5
           end do
-        else if(distype.eq.2)then    ! The following assumes that there are no "stray vertices".
+        else if((distype.eq.2).or.(distype.eq.3))then    ! The following assumes that there are no "stray vertices".
+! -- A DISU grid is treated as DISV with one "cell per layer" per node; ncpl is the number of nodes.
+          if(distype.eq.3)then
+            if(mf6modgrid(igrid)%nvert.le.0)then
+              write(amessage,186) trim(chargridname)
+186           format('DISU grid "',a,'" has no cell vertices; give VERTICES and CELL2D ',  &
+              'in the DISU input so that MODFLOW 6 writes them to the GRB file.')
+              go to 9890
+            end if
+          end if
           xxmin=1.0d300
           xxmax=-1.0d300
           yymin=1.0d300
           yymax=-1.0d300
           ncpl=mf6modgrid(igrid)%ncpl
+! -- The layer of each cell, so that interpolation only uses cells of a point's layer.
+!    In a DISV grid the only neighbours in another layer are the cells above and below.
+          allocate(nodelayer(mf6modgrid(igrid)%ncells),stat=ierr)
+          if(ierr.ne.0) go to 9200
+          if(distype.eq.3)then
+            nodelayer=mf6modgrid(igrid)%nodelay     ! an array
+          else
+            do icell=1,mf6modgrid(igrid)%ncells
+              nodelayer(icell)=(icell-1)/ncpl+1
+            end do
+          end if
           nvert=mf6modgrid(igrid)%nvert
           vertices=>mf6modgrid(igrid)%vertices
           iavert=>mf6modgrid(igrid)%iavert
@@ -2009,6 +2193,12 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
           ndim2=1
         end if
         ndim3=nlay
+! -- MF6 writes a DISU array as one record of all nodes, so the header is (nodes,1,1).
+        if(distype.eq.3)then
+          ndim1=ncpl
+          ndim2=1
+          ndim3=1
+        end if
         if(factorfiletype.eq.0)then
           write(outunit1,err=9300) npts,distype,ndim1,ndim2,ndim3
           do ipts=1,npts
@@ -2058,8 +2248,11 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
             end do
             go to 459
 310         continue
-          else if(distype.eq.2)then
+          else if((distype.eq.2).or.(distype.eq.3))then
             do icpl=1,ncpl
+              if(distype.eq.3)then
+                if(nodelayer(icpl).ne.ilay) cycle      ! a DISU node of another layer
+              end if
               if((xx.le.cellxmax(icpl)).and.(xx.ge.cellxmin(icpl)))then
                 if((yy.le.cellymax(icpl)).and.(yy.ge.cellymin(icpl)))then
                   nvcell = iavert(icpl+1) - iavert(icpl)
@@ -2146,27 +2339,31 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
               nnn=xcell(iicol)*sinang+ycell(iirow)*cosang+yorigin
               write(outunit2,450) eee,nnn
             end if
-          else if(distype.eq.2)then
+          else if((distype.eq.2).or.(distype.eq.3))then
             iilay=layer(ipts)
             jlayoffset=(iilay-1)*ncpl
             mincon=99999999
 ! -- We look for a three or four connection path back to the cell.
 ! -- Make sure that this works for layers other than the first.
             icell=(iilay-1)*ncpl+iicpl
+            if(distype.eq.3)then       ! DISU: the node itself; cellx and celly are per node
+              jlayoffset=0
+              icell=iicpl
+            end if
             ncon=ia(icell+1)-ia(icell)-1
             do icon=1,ncon
               ic1=ja(ia(icell)+icon)
-              if((ic1.le.icell-ncpl).or.(ic1.ge.icell+ncpl))cycle
+              if(nodelayer(ic1).ne.nodelayer(icell))cycle
               ncon1=ia(ic1+1)-ia(ic1)-1
               do icon1=1,ncon1
                 ic2=ja(ia(ic1)+icon1)
                 if(ic2.eq.ic1)cycle
-                if((ic2.le.ic1-ncpl).or.(ic2.ge.ic1+ncpl))cycle
+                if(nodelayer(ic2).ne.nodelayer(ic1))cycle
                 ncon2=ia(ic2+1)-ia(ic2)-1
                 do icon2=1,ncon2
                   ic3=ja(ia(ic2)+icon2)
                   if(ic3.eq.ic2)cycle
-                  if((ic3.le.ic2-ncpl).or.(ic3.ge.ic2+ncpl))cycle
+                  if(nodelayer(ic3).ne.nodelayer(ic2))cycle
                   if(ic3.eq.icell)then
                     numcon=3
                     xpoly(1)=cellx(icell-jlayoffset)
@@ -2187,7 +2384,7 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
                   do icon3=1,ncon3
                     ic4=ja(ia(ic3)+icon3)
                     if(ic4.eq.ic3)cycle
-                    if((ic4.le.ic3-ncpl).or.(ic4.ge.ic3+ncpl))cycle
+                    if(nodelayer(ic4).ne.nodelayer(ic3))cycle
                     if(ic4.eq.icell)then
                       numcon=4
                       xpoly(1)=cellx(icell-jlayoffset)
@@ -2225,7 +2422,7 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
                       do icon4=1,ncon4
                         ic5=ja(ia(ic4)+icon4)
                         if(ic5.eq.ic4)cycle
-                        if((ic5.le.ic4-ncpl).or.(ic5.ge.ic4+ncpl))cycle
+                        if(nodelayer(ic5).ne.nodelayer(ic4))cycle
                         if(ic5.eq.icell)then
                           numcon=5
                           xpoly(1)=cellx(icell-jlayoffset)
@@ -2268,7 +2465,7 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
                           do icon5=1,ncon5
                             ic6=ja(ia(ic5)+icon5)
                             if(ic6.eq.ic5)cycle
-                            if((ic6.le.ic5-ncpl).or.(ic6.ge.ic5+ncpl))cycle
+                            if(nodelayer(ic6).ne.nodelayer(ic5))cycle
                             if(ic6.eq.icell)then
                               numcon=6
                               xpoly(1)=cellx(icell-jlayoffset)
@@ -2316,7 +2513,7 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
                               do icon6=1,ncon6
                                 ic7=ja(ia(ic6)+icon6)
                                 if(ic7.eq.ic6)cycle
-                                if((ic7.le.ic6-ncpl).or.(ic7.ge.ic6+ncpl))cycle
+                                if(nodelayer(ic7).ne.nodelayer(ic6))cycle
                                 if(ic7.eq.icell)then
                                   numcon=7
                                   xpoly(1)=cellx(icell-jlayoffset)
@@ -2606,7 +2803,8 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
         if(allocated(cellxmax)) deallocate(cellxmax,stat=ierr)
         if(allocated(cellxmin)) deallocate(cellxmin,stat=ierr)
         if(allocated(cellymax)) deallocate(cellymax,stat=ierr)
-        if(allocated(cellymin)) deallocate(cellymax,stat=ierr)
+        if(allocated(cellymin)) deallocate(cellymin,stat=ierr)
+        if(allocated(nodelayer)) deallocate(nodelayer,stat=ierr)
 
         if(associated(iavert)) nullify(iavert)
         if(associated(javert)) nullify(javert)
@@ -3829,6 +4027,16 @@ integer (kind=c_int) function get_cell_centres_mf6(gridname,                &
          ncpl=mf6modgrid(igrid)%ncpl
        end if
        nlay=mf6modgrid(igrid)%nlay
+       if(distype.eq.3)then          ! DISU: one centre per node, whatever its layer
+         if(mf6modgrid(igrid)%nvert.le.0)then
+           write(amessage,170) trim(aname)
+170        format('DISU grid "',a,'" has no cell centres; give VERTICES and CELL2D ',  &
+           'in the DISU input so that MODFLOW 6 writes them to the GRB file.')
+           go to 9890
+         end if
+         ncpl=mf6modgrid(igrid)%ncells
+         nlay=1
+       end if
 
 ! -- We calculate horizontal coordinates.
 
@@ -3926,6 +4134,8 @@ integer (kind=c_int) function get_cell_centres_mf6(gridname,                &
              cellz(icell)=(botmv(icpl,ilay)+botmv(icpl,ilay-1))*0.5
            end do
          end do
+       else if(distype.eq.3)then
+         cellz=(mf6modgrid(igrid)%topu+mf6modgrid(igrid)%botu)*0.5     ! an array
        end if
 
        go to 9900

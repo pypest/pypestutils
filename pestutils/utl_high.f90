@@ -79,6 +79,13 @@ integer function uth_mf6modgrid_deallocate(igrid)
            if(associated(mf6modgrid(igrid)%cellx))deallocate(mf6modgrid(igrid)%cellx,stat=ierr)
            if(associated(mf6modgrid(igrid)%celly))deallocate(mf6modgrid(igrid)%celly,stat=ierr)
            if(associated(mf6modgrid(igrid)%bottom))deallocate(mf6modgrid(igrid)%bottom,stat=ierr)
+           if(associated(mf6modgrid(igrid)%idomainu))deallocate(mf6modgrid(igrid)%idomainu,stat=ierr)
+           if(associated(mf6modgrid(igrid)%icelltypeu))deallocate(mf6modgrid(igrid)%icelltypeu,stat=ierr)
+           if(associated(mf6modgrid(igrid)%nodelay))deallocate(mf6modgrid(igrid)%nodelay,stat=ierr)
+           if(associated(mf6modgrid(igrid)%topu))deallocate(mf6modgrid(igrid)%topu,stat=ierr)
+           if(associated(mf6modgrid(igrid)%botu))deallocate(mf6modgrid(igrid)%botu,stat=ierr)
+           nullify(mf6modgrid(igrid)%idomainu,mf6modgrid(igrid)%icelltypeu,mf6modgrid(igrid)%nodelay)
+           nullify(mf6modgrid(igrid)%topu,mf6modgrid(igrid)%botu)
          end if
        end if
 9990   continue

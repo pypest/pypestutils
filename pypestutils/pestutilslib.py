@@ -441,7 +441,9 @@ class PestUtilsLib:
         Returns
         -------
         idis : int
-            Where 1 is for DIS and 2 is for DISV.
+            Where 1 is for DIS, 2 is for DISV and 3 is for DISU. A DISU grid
+            has ndim1=ncells and ndim2=ndim3=1; its nodes are all in layer 1
+            until :meth:`install_mf6_disu_layers` is called.
         ncells : int
             Number of cells in the grid.
         ndim1, ndim2, ndim3 : int
@@ -566,6 +568,40 @@ class PestUtilsLib:
         self.logger.info("got crs %r for mf6 grid %r", crs, gridname)
         return crs
 
+    def install_mf6_disu_layers(self, gridname: str, layer: npt.ArrayLike) -> None:
+        """Assign a layer to each node of an installed DISU grid.
+
+        A DISU GRB file has no layers, so every node starts in layer 1. A
+        layered model built as DISU (for example with a different plan grid
+        in some layers, or sublayers in some columns) still has one per node;
+        once set, :meth:`calc_mf6_interp_factors` treats each layer as a 2D
+        grid of its own, as for DISV.
+
+        Parameters
+        ----------
+        gridname : str
+            Name of an installed DISU grid.
+        layer : array_like
+            One-based layer of each node, with shape (ncells,).
+        """
+        layer = np.asarray(layer)
+        if layer.ndim != 1 or not np.issubdtype(layer.dtype, np.integer):
+            raise ValueError("layer must be a 1D array of integers")
+        layer = np.asarray(layer, np.int32, order="F")
+        res = self.pestutils.install_mf6_disu_layers(
+            byref(self.create_char_array(gridname, "LENGRIDNAME")),
+            byref(c_int(layer.size)),
+            layer,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info(
+            "set %d layers for %d nodes of mf6 grid %r",
+            layer.max(),
+            layer.size,
+            gridname,
+        )
+
     def calc_mf6_interp_factors(
         self,
         gridname: str,
@@ -577,7 +613,7 @@ class PestUtilsLib:
         factorfiletype: int | str | enum.FactorFileType,
         blnfile: str | PathLike,
     ) -> npt.NDArray[np.int32]:
-        """Calculate interpolation factors from a MODFLOW 6 DIS or DISV.
+        """Calculate interpolation factors from a MODFLOW 6 DIS, DISV or DISU.
 
         Parameters
         ----------
@@ -586,7 +622,9 @@ class PestUtilsLib:
         ecoord, ncoord : array_like
             X/Y or Easting/Northing coordinates for points with shape (npts,).
         layer : int or array_like
-            Layers of points with shape (npts,).
+            Layers of points with shape (npts,). For DISU, the layers set with
+            :meth:`install_mf6_disu_layers`; a point is interpolated from the
+            nodes of its layer only, and its DISU input must give vertices.
         factorfile : str or PathLike
             File for kriging factors to write.
         factorfiletype : int, str or enum.FactorFileType
