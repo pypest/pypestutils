@@ -32,6 +32,8 @@ pestutils_function_names = {
     "initialize_randgen": 1,
     "fieldgen2d_sva": 16,
     "fieldgen3d_sva": 21,
+    "fieldgen2d_sva_z": 18,
+    "fieldgen3d_sva_z": 23,
 }
 
 data_dir = Path(__file__).parent / "data"

@@ -13,6 +13,8 @@ except ImportError:
 examples_dir = Path(__file__).parent.parent / "examples"
 
 
+# the pestpp-ies notebooks take longer than the default --timeout used in CI
+@pytest.mark.timeout(1200)
 @pytest.mark.parametrize(
     "nb_file",
     [

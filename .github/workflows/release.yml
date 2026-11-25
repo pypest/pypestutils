@@ -12,6 +12,10 @@ on:
   push:
     branches:
       - main
+      # feature branches: wheels are also published to a "branch-<name>"
+      # pre-release, so the branch can be installed with pip (see BUILD.md)
+      - "feat*"
+      - "feat*/**"
     tags:
       - "*"
   release:
@@ -33,13 +37,22 @@ jobs:
           arch: aarch64
         - os: windows-2022
           arch: AMD64
-        - os: macos-14
+        - os: macos-15
           arch: arm64
-          macosx_deployment_target: "14.0"
+          macosx_deployment_target: "15.0"
           cmake_osx_architectures: arm64
 
     steps:
       - uses: actions/checkout@v5
+
+      - name: Stamp branch version
+        if: >-
+          github.ref_type == 'branch' && github.ref_name != 'main' &&
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        shell: bash
+        run: |
+          py=$(command -v python3 || command -v python)
+          "$py" scripts/stamp_branch_version.py "${{ github.ref_name }}" "${{ github.run_number }}"
 
       - name: Set up QEMU
         if: runner.os == 'Linux' && matrix.arch == 'aarch64'
@@ -65,6 +78,13 @@ jobs:
         env:
           LDFLAGS: -static-libgcc -static-libgfortran -static-libquadmath -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive
         run: bash scripts/build_lib.sh
+
+      - name: Install GCC Fortran (macOS)
+        if: runner.os == 'macOS'
+        uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: gcc
+          version: 13
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.1
@@ -93,6 +113,43 @@ jobs:
         with:
           name: cibw-sdist
           path: dist/*.tar.gz
+
+  publish_branch_wheels:
+    name: Publish branch wheels to a GitHub pre-release
+    needs: [build_wheels]
+    runs-on: ubuntu-latest
+    if: >-
+      github.ref_type == 'branch' && github.ref_name != 'main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          pattern: cibw-wheels-*
+          path: dist
+          merge-multiple: true
+
+      - name: Replace the branch pre-release
+        run: |
+          tag="branch-${GITHUB_REF_NAME//\//-}"
+          version=$(ls dist/*.whl | head -n 1 | xargs basename | cut -d- -f2)
+          url="https://github.com/${GH_REPO}/releases/expanded_assets/${tag}"
+          cat > notes.md <<EOF
+          Wheels built from branch \`${GITHUB_REF_NAME}\` at ${GITHUB_SHA}, version \`${version}\`.
+          These include the pestutils shared library. Install with:
+
+          \`\`\`
+          pip install -U pypestutils --find-links ${url}
+          \`\`\`
+          EOF
+          # one rolling pre-release per branch, holding only the latest wheels
+          gh release delete "${tag}" --cleanup-tag --yes || true
+          gh release create "${tag}" dist/*.whl --prerelease --latest=false \
+            --target "${GITHUB_SHA}" --title "Branch ${GITHUB_REF_NAME}" --notes-file notes.md
 
   upload_pypi:
     needs: [build_wheels, build_sdist]

@@ -2606,7 +2606,7 @@ integer (kind=c_int) function calc_mf6_interp_factors(gridname,        &
         if(allocated(cellxmax)) deallocate(cellxmax,stat=ierr)
         if(allocated(cellxmin)) deallocate(cellxmin,stat=ierr)
         if(allocated(cellymax)) deallocate(cellymax,stat=ierr)
-        if(allocated(cellymin)) deallocate(cellymax,stat=ierr)
+        if(allocated(cellymin)) deallocate(cellymin,stat=ierr)
 
         if(associated(iavert)) nullify(iavert)
         if(associated(javert)) nullify(javert)

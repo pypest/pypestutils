@@ -26,6 +26,28 @@ import pypestutils.helpers as helpers
 grid_info = helpers.get_grid_info_from_file("freyberg6.disv.grb")
 ```
 
+If a shared library routine reports an error, the low-level python function raises a `PestUtilsLibError` containing the library's error message. `PestUtilsLibError` is a subclass of `Exception`, so it can be caught with `except Exception` or explicitly:
+
+```
+from pypestutils.pestutilslib import PestUtilsLib, PestUtilsLibError
+lib = PestUtilsLib()
+try:
+    grid_info = lib.install_mf6_grid_from_file("grid","freyberg6.disv.grb")
+except PestUtilsLibError as err:
+    print(f"pestutils error: {err}")
+```
+
+Messages go to stdout through a logger named "PestUtilsLib". Its default level is "WARNING", so routine messages are not echoed; set it to "INFO" to echo each library call. The level ("DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL") can be set for the session, for a block of code, for a low-level library instance, or for a single helper call:
+
+```
+from pypestutils.logger import set_logger_level, temporary_logger_level
+set_logger_level("INFO")                         # for the rest of the session
+with temporary_logger_level("INFO"):             # within this block only
+    grid_info = helpers.get_grid_info_from_mf6_grb("freyberg6.disv.grb")
+lib = PestUtilsLib(logger_level="INFO")          # when creating a library instance
+grid_info = helpers.get_grid_info_from_mf6_grb("freyberg6.disv.grb", logger_level="INFO")  # one helper call
+```
+
 ## Documentation
 
 The documentation for pypestutils can be found [here](https://pypest.github.io/pypestutils/)
@@ -48,18 +70,16 @@ to also include optional requirements use:
 
     pip install pypestutils[optional]
 
+### From a development branch
+
+Pushing to a branch named `feat*` builds wheels (including the shared library) and publishes them to a GitHub pre-release named `branch-<branch name>`. To install (or update to) the latest build of a branch, for example `feat_iid2`:
+
+    pip install -U pypestutils --find-links https://github.com/pypest/pypestutils/releases/expanded_assets/branch-feat_iid2
+
+Note that `pip install git+https://...@branch` installs without the shared library.
+
 ### From source
 
 Installation from source requires a Fortran compiler and build tools. See [BUILD.md](BUILD.md) for details.
 
-## Disclaimer
 
-
-This software is preliminary or provisional and is subject to revision. It is
-being provided to meet the need for timely best science. This software is
-provided "as is" and "as-available", and makes no representations or warranties
-of any kind concerning the software, whether express, implied, statutory, or
-other. This includes, without limitation, warranties of title,
-merchantability, fitness for a particular purpose, non-infringement, absence
-of latent or other defects, accuracy, or the presence or absence of errors,
-whether or not known or discoverable.

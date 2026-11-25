@@ -39,7 +39,7 @@ dependencies = [
 optional = [
     "flopy",
     "jupyter",
-    "pyemu",
+    "pyemu>=1.7.0",
 ]
 
 [dependency-groups]

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from ctypes import byref, c_char, c_double, c_int, create_string_buffer
 from os import PathLike
 from pathlib import Path
@@ -14,7 +13,7 @@ from . import enum
 from .data import ManyArrays, validate_scalar
 
 
-class PestUtilsLibError(BaseException):
+class PestUtilsLibError(Exception):
     """Exception from PestUtilsLib."""
 
     pass
@@ -25,15 +24,22 @@ class PestUtilsLib:
 
     Parameters
     ----------
-    logger_level : int, str, default 20 (INFO)
+    logger_level : int, str or None, optional
+        Level of the pypestutils logger, which echoes library calls to stdout:
+        "DEBUG" (10), "INFO" (20), "WARNING" (30), "ERROR" (40) or
+        "CRITICAL" (50).  The logger is shared by all instances and the helper
+        functions, so this sets the level for all of them.  Default None
+        leaves the level unchanged ("WARNING", which does not echo routine
+        messages, unless it has been changed, for example with
+        :func:`pypestutils.logger.set_logger_level`).
     """
 
-    def __init__(self, *, logger_level=logging.INFO) -> None:
+    def __init__(self, *, logger_level: int | str | None = None) -> None:
         from .ctypes_declarations import prototype
         from .finder import load
-        from .logger import get_logger
+        from .logger import LOGGER_NAME, get_logger
 
-        self.logger = get_logger(self.__class__.__name__, logger_level)
+        self.logger = get_logger(LOGGER_NAME, logger_level)
         self.pestutils = load()
         self.logger.debug("loaded %s", self.pestutils)
         prototype(self.pestutils)
@@ -1884,4 +1890,279 @@ class PestUtilsLib:
         if res != 0:
             raise PestUtilsLibError(self.retrieve_error_message())
         self.logger.info("generated 3D stochastic fields for %d realisations", nreal)
+        return randfield.copy("A")
+
+    @staticmethod
+    def _prepare_z(z: npt.ArrayLike, nnode: int) -> npt.NDArray[np.float64]:
+        """Return z as a Fortran-ordered float64 array with shape (nnode, nreal)."""
+        z = np.asarray(z, np.float64)
+        if z.ndim == 1:
+            z = z[:, np.newaxis]
+        if z.ndim != 2:
+            raise ValueError(f"expected 'z' ndim to be 1 or 2; found {z.ndim}")
+        if z.shape[0] != nnode:
+            raise ValueError(
+                f"expected 'z' first dimension to be nnode ({nnode}); "
+                f"found shape {z.shape}"
+            )
+        if z.shape[1] == 0:
+            raise ValueError("'z' must have at least one realisation (column)")
+        if not np.all(np.isfinite(z)):
+            raise ValueError("'z' must contain only finite values")
+        return np.asfortranarray(z)
+
+    def fieldgen2d_sva_z(
+        self,
+        # nnode: int,  # determined from ec.shape[0]
+        ec: npt.ArrayLike,
+        nc: npt.ArrayLike,
+        area: float | npt.ArrayLike,
+        active: int | npt.ArrayLike,
+        mean: float | npt.ArrayLike,
+        var: float | npt.ArrayLike,
+        aa: float | npt.ArrayLike,
+        anis: float | npt.ArrayLike,
+        bearing: float | npt.ArrayLike,
+        transtype: int | str | enum.TransType,
+        avetype: int | str | enum.VarioType,
+        power: float,
+        z: npt.ArrayLike,
+        # ldz: int,  # same as nnode
+        # ldrand: int,  # same as nnode
+        # nreal: int,  # determined from z.shape[1]
+    ) -> npt.NDArray[np.float64]:
+        """Map 2D z values to a property field via a spatially varying variogram.
+
+        The property field is a deterministic function of ``z``: each z value
+        is associated with a model node, and the field at each active node is
+        a spatial average of the z values at active nodes, weighted by the
+        (spatially varying) averaging function and scaled to honour ``var``,
+        then added to (or, for log properties, multiplied with) ``mean``.
+
+        This allows z values to be treated as adjustable parameters, for
+        example in history matching. Because z values are independent with
+        zero mean and unit variance a priori, their prior covariance matrix is
+        the identity matrix; spatial correlation is imposed by this function
+        rather than by the prior. The same mapping is used internally by
+        :meth:`fieldgen2d_sva`, which draws z from the random number
+        generator; this function does not require the generator to be seeded.
+
+        Parameters
+        ----------
+        ec, nc : array_like
+            Model grid coordinates, each 1D array with shape (nnode,).
+        area : float or array_like
+            Areas of grid cells.
+        active : int or array_like
+            Inactive grid cells are equal to zero.
+        mean : float or array_like
+            Mean value of the property field (the field obtained when all z are
+            zero).
+        var : float or array_like
+            Variance of the property field when z values are independent with
+            zero mean and unit variance.
+        aa : float or array_like
+            Averaging function spatial dimension.
+        anis : float or array_like
+            Anisotropy ratio.
+        bearing : float or array_like
+            Bearing of principal anisotropy axis.
+        transtype : int, str or enum.TransType
+            Property field pertains to natural(0) or log(1) properties. For 0,
+            the field is linear in z; for 1, log10(field / mean) is linear in z.
+        avetype : int, str or enum.VarioType
+            Averaging function type, where 1:spher, 2:exp, 3:gauss, 4:pow.
+        power : float
+            Power used if avetype is 4 (pow).
+        z : array_like
+            z values (one per model node), with shape (nnode,) for a single
+            set or (nnode, nset) for several sets. Values for inactive nodes
+            are ignored, but must be present.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Property fields with shape (nnode, nset); inactive nodes are zero.
+        """
+        node = ManyArrays(
+            {"ec": ec, "nc": nc},
+            {
+                "area": area,
+                "mean": mean,
+                "var": var,
+                "aa": aa,
+                "anis": anis,
+                "bearing": bearing,
+            },
+            {"active": active},
+        )
+        if isinstance(transtype, str):
+            transtype = enum.TransType.get_value(transtype)
+        if isinstance(avetype, str):
+            avetype = enum.VarioType.get_value(avetype)
+        ldz = ldrand = nnode = len(node)
+        z = self._prepare_z(z, nnode)
+        nreal = z.shape[1]
+        randfield = np.zeros((ldrand, nreal), np.float64, order="F")
+        res = self.pestutils.fieldgen2d_sva_z(
+            byref(c_int(nnode)),
+            node.ec,
+            node.nc,
+            node.area,
+            node.active,
+            node.mean,
+            node.var,
+            node.aa,
+            node.anis,
+            node.bearing,
+            byref(c_int(transtype)),
+            byref(c_int(avetype)),
+            byref(c_double(power)),
+            byref(c_int(ldz)),
+            z,
+            byref(c_int(ldrand)),
+            byref(c_int(nreal)),
+            randfield,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info(
+            "generated 2D stochastic fields from supplied z for %d realisations", nreal
+        )
+        return randfield.copy("A")
+
+    def fieldgen3d_sva_z(
+        self,
+        # nnode: int,  # determined from ec.shape[0]
+        ec: npt.ArrayLike,
+        nc: npt.ArrayLike,
+        zc: npt.ArrayLike,
+        area: float | npt.ArrayLike,
+        height: float | npt.ArrayLike,
+        active: int | npt.ArrayLike,
+        mean: float | npt.ArrayLike,
+        var: float | npt.ArrayLike,
+        ahmax: float | npt.ArrayLike,
+        ahmin: float | npt.ArrayLike,
+        avert: float | npt.ArrayLike,
+        bearing: float | npt.ArrayLike,
+        dip: float | npt.ArrayLike,
+        rake: float | npt.ArrayLike,
+        transtype: int | str | enum.TransType,
+        avetype: int | str | enum.VarioType,
+        power: float,
+        z: npt.ArrayLike,
+        # ldz: int,  # same as nnode
+        # ldrand: int,  # same as nnode
+        # nreal: int,  # determined from z.shape[1]
+    ) -> npt.NDArray[np.float64]:
+        """Map 3D z values to a property field via a spatially varying variogram.
+
+        The property field is a deterministic function of ``z``: each z value
+        is associated with a model node, and the field at each active node is
+        a spatial average of the z values at active nodes, weighted by the
+        (spatially varying) averaging function and scaled to honour ``var``,
+        then added to (or, for log properties, multiplied with) ``mean``.
+
+        This allows z values to be treated as adjustable parameters, for
+        example in history matching. Because z values are independent with
+        zero mean and unit variance a priori, their prior covariance matrix is
+        the identity matrix; spatial correlation is imposed by this function
+        rather than by the prior. The same mapping is used internally by
+        :meth:`fieldgen3d_sva`, which draws z from the random number
+        generator; this function does not require the generator to be seeded.
+
+        Parameters
+        ----------
+        ec, nc, zc : array_like
+            Model grid coordinates, each 1D array with shape (nnode,).
+        area, height : float or array_like
+            Areas and height of grid cells.
+        active : int or array_like
+            Inactive grid cells are equal to zero.
+        mean : float or array_like
+            Mean value of the property field (the field obtained when all z are
+            zero).
+        var : float or array_like
+            Variance of the property field when z values are independent with
+            zero mean and unit variance.
+        ahmax, ahmin, avert : float or array_like
+            Averaging function correlation lengths.
+        bearing : float or array_like
+            Bearing of ahmax direction.
+        dip : float or array_like
+            Dip of ahmax direction.
+        rake : float or array_like
+            Rotation of ahmin direction.
+        transtype : int, str or enum.TransType
+            Property field pertains to natural(0) or log(1) properties. For 0,
+            the field is linear in z; for 1, log10(field / mean) is linear in z.
+        avetype : int, str or enum.VarioType
+            Averaging function type, where 1:spher, 2:exp, 3:gauss, 4:pow.
+        power : float
+            Power used if avetype is 4 (pow).
+        z : array_like
+            z values (one per model node), with shape (nnode,) for a single
+            set or (nnode, nset) for several sets. Values for inactive nodes
+            are ignored, but must be present.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Property fields with shape (nnode, nset); inactive nodes are zero.
+        """
+        node = ManyArrays(
+            {"ec": ec, "nc": nc, "zc": zc},
+            {
+                "area": area,
+                "height": height,
+                "mean": mean,
+                "var": var,
+                "ahmax": ahmax,
+                "ahmin": ahmin,
+                "avert": avert,
+                "bearing": bearing,
+                "dip": dip,
+                "rake": rake,
+            },
+            {"active": active},
+        )
+        if isinstance(transtype, str):
+            transtype = enum.TransType.get_value(transtype)
+        if isinstance(avetype, str):
+            avetype = enum.VarioType.get_value(avetype)
+        ldz = ldrand = nnode = len(node)
+        z = self._prepare_z(z, nnode)
+        nreal = z.shape[1]
+        randfield = np.zeros((ldrand, nreal), np.float64, order="F")
+        res = self.pestutils.fieldgen3d_sva_z(
+            byref(c_int(nnode)),
+            node.ec,
+            node.nc,
+            node.zc,
+            node.area,
+            node.height,
+            node.active,
+            node.mean,
+            node.var,
+            node.ahmax,
+            node.ahmin,
+            node.avert,
+            node.bearing,
+            node.dip,
+            node.rake,
+            byref(c_int(transtype)),
+            byref(c_int(avetype)),
+            byref(c_double(power)),
+            byref(c_int(ldz)),
+            z,
+            byref(c_int(ldrand)),
+            byref(c_int(nreal)),
+            randfield,
+        )
+        if res != 0:
+            raise PestUtilsLibError(self.retrieve_error_message())
+        self.logger.info(
+            "generated 3D stochastic fields from supplied z for %d realisations", nreal
+        )
         return randfield.copy("A")

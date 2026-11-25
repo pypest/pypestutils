@@ -2,14 +2,31 @@
 
 from __future__ import annotations
 
+import functools
+import inspect
 import os
 
 import numpy as np
 import pandas as pd
 
+from .logger import temporary_logger_level
 from .pestutilslib import PestUtilsLib
 
 
+def _logger_level_arg(func):
+    """Apply a helper's "logger_level" argument for the duration of the call."""
+    signature = inspect.signature(func)
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        level = signature.bind(*args, **kwargs).arguments.get("logger_level")
+        with temporary_logger_level(level):
+            return func(*args, **kwargs)
+
+    return wrapper
+
+
+@_logger_level_arg
 def mod2obs_mf6(
     gridinfo_fname: str,
     depvar_fname: str,
@@ -22,6 +39,7 @@ def mod2obs_mf6(
     no_interp_val=1.0e30,
     model_timeunit="d",
     time_extrap=1.0,
+    logger_level=None,
 ) -> dict:
     """Python implementation of mod2smp and mod2obs using modflow6 binary grid files.
 
@@ -52,6 +70,11 @@ def mod2obs_mf6(
         pandas style time unit.  Default is "d"ay
     time_extrap: float
         length of time units to extrapolate.  Default is 1.0 time unit
+
+    logger_level: str, int or None
+        level of the pypestutils logger (which echoes library calls to stdout)
+        during this call, for example "INFO" to echo each library call.
+        Default is None, which uses the current level
 
     Returns
     -------
@@ -97,98 +120,103 @@ def mod2obs_mf6(
 
     del grid_info  # TODO: should this var be used anywhere?
 
-    if isinstance(start_datetime, str):
-        start_datetime = pd.to_datetime(start_datetime)
+    try:
+        if isinstance(start_datetime, str):
+            start_datetime = pd.to_datetime(start_datetime)
 
-    depvar_info = lib.inquire_modflow_binary_file_specs(
-        depvar_fname, depvar_fname + ".out.csv", model_type, depvar_ftype
-    )
-    depvar_df = pd.read_csv(depvar_fname + ".out.csv")
-    depvar_df.columns = [c.lower() for c in depvar_df.columns]
-    # print(depvar_df)
-
-    if isinstance(obscsv_fname, str):
-        if not os.path.exists(obscsv_fname):
-            raise Exception(f"obscsv_fname '{obscsv_fname}' not found")
-        # todo: think about supporting a site sample file maybe?
-        obsdf = pd.read_csv(os.path.join(obscsv_fname), parse_dates=["datetime"])
-    elif isinstance(obscsv_fname, pd.DataFrame):
-        obsdf = obscsv_fname.copy()
-    else:
-        raise Exception(
-            "obscsv arg type not recognized "
-            f"(looking for str or pd.DataFrame):'{type(obscsv_fname)}'"
+        depvar_info = lib.inquire_modflow_binary_file_specs(
+            depvar_fname, depvar_fname + ".out.csv", model_type, depvar_ftype
         )
-    # check obsdf
-    obsdf.columns = [c.lower() for c in obsdf.columns]
-    for req_col in ["site", "x", "y", "datetime", "layer"]:
-        if req_col not in obsdf.columns:
-            raise Exception(f"observation dataframe missing column '{req_col}'")
-    usitedf = obsdf.groupby("site").first()
-    pth = os.path.split(depvar_fname)[0]
-    fac_file = os.path.join(pth, "obs_interp_fac.bin")
-    bln_file = fac_file.replace(".bin", ".bln")
-    interp_fac_results = lib.calc_mf6_interp_factors(
-        "grid",
-        usitedf.x.values,
-        usitedf.y.values,
-        usitedf.layer.values,
-        fac_file,
-        "binary",
-        bln_file,
-    )
-    if 0 in interp_fac_results:
-        print(
-            "warning: "
-            "the following site(s) failed to have interpolation factors calculated:"
+        depvar_df = pd.read_csv(depvar_fname + ".out.csv")
+        depvar_df.columns = [c.lower() for c in depvar_df.columns]
+        # print(depvar_df)
+
+        if isinstance(obscsv_fname, str):
+            if not os.path.exists(obscsv_fname):
+                raise Exception(f"obscsv_fname '{obscsv_fname}' not found")
+            # todo: think about supporting a site sample file maybe?
+            obsdf = pd.read_csv(os.path.join(obscsv_fname), parse_dates=["datetime"])
+        elif isinstance(obscsv_fname, pd.DataFrame):
+            obsdf = obscsv_fname.copy()
+        else:
+            raise Exception(
+                "obscsv arg type not recognized "
+                f"(looking for str or pd.DataFrame):'{type(obscsv_fname)}'"
+            )
+        # check obsdf
+        obsdf.columns = [c.lower() for c in obsdf.columns]
+        for req_col in ["site", "x", "y", "datetime", "layer"]:
+            if req_col not in obsdf.columns:
+                raise Exception(f"observation dataframe missing column '{req_col}'")
+        usitedf = obsdf.groupby("site").first()
+        pth = os.path.split(depvar_fname)[0]
+        fac_file = os.path.join(pth, "obs_interp_fac.bin")
+        bln_file = fac_file.replace(".bin", ".bln")
+        interp_fac_results = lib.calc_mf6_interp_factors(
+            "grid",
+            usitedf.x.values,
+            usitedf.y.values,
+            usitedf.layer.values,
+            fac_file,
+            "binary",
+            bln_file,
         )
-        fsites = usitedf.reset_index().site.iloc[interp_fac_results == 0].to_list()
-        print(fsites)
-    all_results = lib.interp_from_mf6_depvar_file(
-        depvar_fname,
-        fac_file,
-        "binary",
-        depvar_info["ntime"],
-        depvar_name,
-        interp_thresh,
-        True,
-        no_interp_val,
-        usitedf.shape[0],
-    )
-    datetimes = start_datetime + pd.to_timedelta(
-        all_results["simtime"], unit=model_timeunit
-    )
-    allresults_df = pd.DataFrame(
-        all_results["simstate"], index=datetimes, columns=usitedf.index
-    )
-    allresults_df.to_csv(depvar_fname + ".all.csv")
+        if 0 in interp_fac_results:
+            print(
+                "warning: "
+                "the following site(s) failed to have interpolation factors calculated:"
+            )
+            fsites = usitedf.reset_index().site.iloc[interp_fac_results == 0].to_list()
+            print(fsites)
+        all_results = lib.interp_from_mf6_depvar_file(
+            depvar_fname,
+            fac_file,
+            "binary",
+            depvar_info["ntime"],
+            depvar_name,
+            interp_thresh,
+            True,
+            no_interp_val,
+            usitedf.shape[0],
+        )
+        datetimes = start_datetime + pd.to_timedelta(
+            all_results["simtime"], unit=model_timeunit
+        )
+        allresults_df = pd.DataFrame(
+            all_results["simstate"], index=datetimes, columns=usitedf.index
+        )
+        allresults_df.to_csv(depvar_fname + ".all.csv")
 
-    if "totim" in obsdf:
-        print("WARNING: replacing existing 'totim' column in observation dataframe")
-    obsdf.loc[:, "totim"] = obsdf.datetime.apply(lambda x: x - start_datetime).dt.days
+        if "totim" in obsdf:
+            print("WARNING: replacing existing 'totim' column in observation dataframe")
+        obsdf.loc[:, "totim"] = obsdf.datetime.apply(
+            lambda x: x - start_datetime
+        ).dt.days
 
-    usite = obsdf.site.unique().tolist()
-    usite.sort()
-    usite_dict = {s: c for s, c in zip(usite, np.arange(len(usite), dtype=int))}
-    obsdf.loc[:, "isite"] = obsdf.site.apply(lambda x: usite_dict[x])
-    obsdf.sort_values(by=["isite", "totim"], inplace=True)
+        usite = obsdf.site.unique().tolist()
+        usite.sort()
+        usite_dict = {s: c for s, c in zip(usite, np.arange(len(usite), dtype=int))}
+        obsdf.loc[:, "isite"] = obsdf.site.apply(lambda x: usite_dict[x])
+        obsdf.sort_values(by=["isite", "totim"], inplace=True)
 
-    interp_results = lib.interp_to_obstime(
-        all_results["nproctime"],
-        all_results["simtime"],
-        all_results["simstate"],
-        interp_thresh,
-        "L",
-        time_extrap,
-        no_interp_val,
-        obsdf.isite.values,
-        obsdf.totim.values,
-    )
+        interp_results = lib.interp_to_obstime(
+            all_results["nproctime"],
+            all_results["simtime"],
+            all_results["simstate"],
+            interp_thresh,
+            "L",
+            time_extrap,
+            no_interp_val,
+            obsdf.isite.values,
+            obsdf.totim.values,
+        )
 
-    obsdf.loc[:, "simulated"] = interp_results
-    lib.uninstall_mf6_grid("grid")
-    lib.free_all_memory()
-    return {"all_results": allresults_df, "interpolated_results": obsdf}
+        obsdf.loc[:, "simulated"] = interp_results
+        return {"all_results": allresults_df, "interpolated_results": obsdf}
+    finally:
+        # always release the grid, so a failed call does not block later calls
+        lib.uninstall_mf6_grid("grid")
+        lib.free_all_memory()
 
 
 def get_grid_info_from_gridspec(gridspec_fname: str) -> dict:
@@ -218,13 +246,19 @@ def get_grid_info_from_gridspec(gridspec_fname: str) -> dict:
     }
 
 
-def get_grid_info_from_mf6_grb(grb_fname: str) -> dict:
+@_logger_level_arg
+def get_grid_info_from_mf6_grb(grb_fname: str, logger_level=None) -> dict:
     """Read grid info from a MODFLOW-6 binary grid file.
 
     Parameters
     ----------
     grb_fname: str
         MODFLOW-6 binary grid file
+
+    logger_level: str, int or None
+        level of the pypestutils logger (which echoes library calls to stdout)
+        during this call, for example "INFO" to echo each library call.
+        Default is None, which uses the current level
 
     Returns
     -------
@@ -235,13 +269,18 @@ def get_grid_info_from_mf6_grb(grb_fname: str) -> dict:
         raise FileNotFoundError(grb_fname)
     lib = PestUtilsLib()
     data = lib.install_mf6_grid_from_file("grid", grb_fname)
-    data["x"], data["y"], data["z"] = lib.get_cell_centres_mf6("grid", data["ncells"])
-    lib.uninstall_mf6_grid("grid")
-    lib.free_all_memory()
+    try:
+        data["x"], data["y"], data["z"] = lib.get_cell_centres_mf6(
+            "grid", data["ncells"]
+        )
+    finally:
+        lib.uninstall_mf6_grid("grid")
+        lib.free_all_memory()
     return data
 
 
-def get_2d_grid_info_from_file(fname: str, layer=None) -> dict:
+@_logger_level_arg
+def get_2d_grid_info_from_file(fname: str, layer=None, logger_level=None) -> dict:
     """Try to read 2-D grid info from a variety of filename sources.
 
     Parameters
@@ -252,6 +291,11 @@ def get_2d_grid_info_from_file(fname: str, layer=None) -> dict:
     layer: int (optional)
         the (one-based) layer number to use for 2-D.  If None and
         grid info is 3-D, a value of 1 is used
+
+    logger_level: str, int or None
+        level of the pypestutils logger (which echoes library calls to stdout)
+        during this call, for example "INFO" to echo each library call.
+        Default is None, which uses the current level
 
     Returns
     -------
@@ -293,7 +337,10 @@ def get_2d_grid_info_from_file(fname: str, layer=None) -> dict:
     return grid_info
 
 
-def get_2d_grid_info_from_mf6_grb(grb_fname: str, layer=None) -> dict:
+@_logger_level_arg
+def get_2d_grid_info_from_mf6_grb(
+    grb_fname: str, layer=None, logger_level=None
+) -> dict:
     """Read grid info from a MODFLOW-6 binary grid file.
 
     Parameters
@@ -303,6 +350,11 @@ def get_2d_grid_info_from_mf6_grb(grb_fname: str, layer=None) -> dict:
     layer: int (optional)
         the layer number to use for 2-D.  If None,
         a value of 1 is used
+
+    logger_level: str, int or None
+        level of the pypestutils logger (which echoes library calls to stdout)
+        during this call, for example "INFO" to echo each library call.
+        Default is None, which uses the current level
 
     Returns
     -------
@@ -352,8 +404,13 @@ def get_2d_grid_info_from_mf6_grb(grb_fname: str, layer=None) -> dict:
     return grid_info
 
 
+@_logger_level_arg
 def get_2d_pp_info_structured_grid(
-    pp_space: int, gridinfo_fname: str, array_dict={}, name_prefix="pp"
+    pp_space: int,
+    gridinfo_fname: str,
+    array_dict={},
+    name_prefix="pp",
+    logger_level=None,
 ) -> pd.DataFrame:
     """Create a grid of pilot point locations for a
     2-D structured grid.
@@ -372,6 +429,11 @@ def get_2d_pp_info_structured_grid(
         sampled at pilot point locations
     name_prefix: str
         pilot point name prefix. Default is "pp"
+
+    logger_level: str, int or None
+        level of the pypestutils logger (which echoes library calls to stdout)
+        during this call, for example "INFO" to echo each library call.
+        Default is None, which uses the current level
 
     Returns
     -------
@@ -437,6 +499,7 @@ def get_2d_pp_info_structured_grid(
     return df
 
 
+@_logger_level_arg
 def interpolate_with_sva_pilotpoints_2d(
     pp_info: pd.DataFrame,
     gridinfo_fname: str,
@@ -449,6 +512,7 @@ def interpolate_with_sva_pilotpoints_2d(
     zone_array=1,
     verbose=True,
     layer=None,
+    logger_level=None,
 ) -> dict:
     """Perform 2-D pilot point interpolation using
     spatially varying geostatistical hyper-parameters.
@@ -486,6 +550,11 @@ def interpolate_with_sva_pilotpoints_2d(
         the (one-based) layer number to use if gridinfo_fname points
         to 3-D grid info. Default is None, which results in
         layer 1 being used
+
+    logger_level: str, int or None
+        level of the pypestutils logger (which echoes library calls to stdout)
+        during this call, for example "INFO" to echo each library call.
+        Default is None, which uses the current level
 
     Returns
     -------
@@ -750,6 +819,7 @@ def interpolate_with_sva_pilotpoints_2d(
     return results
 
 
+@_logger_level_arg
 def generate_2d_grid_realizations(
     gridinfo_fname: str,
     num_reals=100,
@@ -763,6 +833,7 @@ def generate_2d_grid_realizations(
     variobearing=0.0,
     random_seed=12345,
     layer=None,
+    logger_level=None,
 ) -> np.NDArray[float]:
     """Draw 2-D realizations using sequential gaussian
     simulations and optionally using spatially varying
@@ -795,6 +866,11 @@ def generate_2d_grid_realizations(
     layer : int or None
         the (one-based) layer to use of gridinfo_fname contains 3-D info.  Default
         is None, which results in layer 1 being used
+
+    logger_level: str, int or None
+        level of the pypestutils logger (which echoes library calls to stdout)
+        during this call, for example "INFO" to echo each library call.
+        Default is None, which uses the current level
 
     Returns
     -------
@@ -865,6 +941,358 @@ def generate_2d_grid_realizations(
     if nrow is not None:
         return reals.transpose().reshape((num_reals, nrow, ncol))
     return reals.transpose()
+
+
+def _to_node_array(value, nnodes: int, name: str, dtype=float) -> np.ndarray:
+    """Broadcast a scalar, or flatten an array, to one value per node."""
+    arr = np.asarray(value, dtype=dtype)
+    if arr.ndim == 0:
+        return np.full(nnodes, arr.item(), dtype=dtype)
+    arr = arr.flatten()
+    if arr.shape[0] != nnodes:
+        raise ValueError(f"'{name}' has {arr.shape[0]} values, expected {nnodes}")
+    return arr
+
+
+def _z_to_node_array(z, nnodes: int) -> np.ndarray:
+    """Convert z values supplied as an array, Series or DataFrame to one value
+    per node.
+    """
+    if isinstance(z, pd.DataFrame):
+        if "z" not in z.columns:
+            raise ValueError("required 'z' column not found in z dataframe")
+        if "node" in z.columns:
+            node = z["node"].values.astype(int)
+            if node.min() < 0 or node.max() >= nnodes:
+                raise ValueError(
+                    "'node' values in z dataframe must be in the range "
+                    f"0 to {nnodes - 1}"
+                )
+            if len(np.unique(node)) != len(node):
+                raise ValueError("duplicate 'node' values in z dataframe")
+            zvals = np.zeros(nnodes)
+            zvals[node] = z["z"].values.astype(float)
+            return zvals
+        z = z["z"].values
+    elif isinstance(z, pd.Series):
+        z = z.values
+    if np.ndim(z) == 0:
+        raise ValueError(f"'z' must have one value per node ({nnodes} values)")
+    return _to_node_array(z, nnodes, "z")
+
+
+@_logger_level_arg
+def generate_2d_grid_field_from_z(
+    z,
+    gridinfo_fname: str,
+    variotype="exp",
+    mean=1.0,
+    variance=1.0,
+    variorange=None,
+    variotransform="none",
+    zone_array=None,
+    varioaniso=1.0,
+    variobearing=0.0,
+    layer=None,
+    logger_level=None,
+) -> np.NDArray[float]:
+    """Map z values to a 2-D property field using spatially varying
+    geostatistical hyper parameters.
+
+    This is intended for use in a model forward run script, where the z
+    values are adjustable parameters (e.g. written by PEST to a file that the
+    forward run script reads into a dataframe or array).  Each call maps the
+    current z values to a property field, which can then be written to
+    MODFLOW-6 input files.  The mapping is deterministic: the same z values
+    always give the same field.  The z values have a prior mean of zero and a
+    prior variance of one, and are independent of each other a priori; spatial
+    correlation is imposed by this function.
+
+    Parameters
+    ----------
+    z: numpy.ndarray, pandas.Series or pandas.DataFrame
+        z values, one per grid node.  If an array or Series, values must be in
+        node order (an array of shape NROW X NCOL is accepted for structured
+        grids).  If a DataFrame, it must have a "z" column; if it also has a
+        "node" column of (zero-based) node numbers, z values are assigned to
+        those nodes and any nodes not listed are given a z value of zero.
+        Otherwise rows must be in node order.
+    gridinfo_fname: str
+        file containing grid information
+    variotype: str
+        variogram type.  Default is "exp"onential
+    mean: float or numpy.ndarray
+        field mean (the field obtained when all z values are zero).  Either a
+        scalar or array of shape nnodes.  Default is 1.0
+    variance: float or numpy.ndarray
+        field variance. Either a scalar or array of shape nnodes.  Default is 1.0
+    variorange: float or numpy.ndarray
+        range of the variogram. Either a scalar or array of shape nnodes.
+        Default is None, which results in one tenth of the grid extent
+    variotransform: str
+        variogram transform.  Default is "none".  If "log", the log10 of
+        the field divided by `mean` is linear in z
+    zone_array: int or numpy.ndarray
+        the zone array.  Nodes with a zone value of zero are inactive and are
+        given a value of zero in the returned field
+    varioaniso: float or numpy.ndarray
+        the variogram anisotropy ratio.  Either a scalar or array of shape nnodes.
+    variobearing: float or numpy.ndarray
+        the variogram anisotropy bearing.  Either a scalar or array of shape nnodes
+    layer : int or None
+        the (one-based) layer to use of gridinfo_fname contains 3-D info.  Default
+        is None, which results in layer 1 being used
+
+    logger_level: str, int or None
+        level of the pypestutils logger (which echoes library calls to stdout)
+        during this call, for example "INFO" to echo each library call.
+        Default is None, which uses the current level
+
+    Returns
+    -------
+    result: numpy.ndarray(float)
+        property field (if `grid_info` indicates a structured grid, the field
+        will be reshaped to NROW X NCOL)
+    """
+    nrow, ncol = None, None
+    x, y, area = None, None, None
+    grid_info = get_2d_grid_info_from_file(gridinfo_fname, layer)
+    nrow = grid_info.get("nrow", None)
+    ncol = grid_info.get("ncol", None)
+    x = grid_info["x"]
+    y = grid_info["y"]
+    area = grid_info.get("area", None)
+    nnodes = grid_info.get("nnodes", None)
+    if area is None:
+        area = np.ones_like(x)
+    if nnodes is None:
+        nnodes = x.size
+
+    z = _z_to_node_array(z, nnodes)
+    mean = _to_node_array(mean, nnodes, "mean")
+    variance = _to_node_array(variance, nnodes, "variance")
+    if variorange is None:
+        delx = x.max() - x.min()
+        dely = y.max() - y.min()
+        variorange = max(delx, dely) / 10
+    variorange = _to_node_array(variorange, nnodes, "variorange")
+    varioaniso = _to_node_array(varioaniso, nnodes, "varioaniso")
+    variobearing = _to_node_array(variobearing, nnodes, "variobearing")
+    if zone_array is None:
+        zone_array = 1
+    zone_array = _to_node_array(zone_array, nnodes, "zone_array", dtype=int)
+
+    power = 1.0
+
+    lib = PestUtilsLib()
+    result = lib.fieldgen2d_sva_z(
+        x.flatten(),
+        y.flatten(),
+        _to_node_array(area, nnodes, "area"),
+        zone_array,
+        mean,
+        variance,
+        variorange,
+        varioaniso,
+        variobearing,
+        variotransform,
+        variotype,
+        power,
+        z,
+    )[:, 0]
+    lib.free_all_memory()
+    if nrow is not None:
+        return result.reshape((nrow, ncol))
+    return result
+
+
+def _get_3d_grid_info(gridinfo_fname) -> dict:
+    """Read 3-D grid info from a MODFLOW-6 binary grid file, a csv file or a
+    pandas DataFrame with columns "x", "y" and "z" (and optionally "area" and
+    "height").
+    """
+    if isinstance(gridinfo_fname, str):
+        if not os.path.exists(gridinfo_fname):
+            raise FileNotFoundError(gridinfo_fname)
+        if gridinfo_fname.lower().endswith(".csv"):
+            gridinfo_fname = pd.read_csv(gridinfo_fname)
+            gridinfo_fname.columns = [c.lower() for c in gridinfo_fname.columns]
+        else:
+            grid_info = get_grid_info_from_mf6_grb(gridinfo_fname)
+            nlay = grid_info["ndim3"]
+            if grid_info["idis"] == 1:
+                grid_info["shape"] = (nlay, grid_info["ndim2"], grid_info["ndim1"])
+            elif grid_info["idis"] == 2:
+                grid_info["shape"] = (nlay, grid_info["ndim1"])
+            grid_info["nnodes"] = grid_info["ncells"]
+            return grid_info
+    if isinstance(gridinfo_fname, pd.DataFrame):
+        for col in ["x", "y", "z"]:
+            if col not in gridinfo_fname.columns:
+                raise Exception(
+                    f"required '{col}' column not found in grid info dataframe"
+                )
+        grid_info = {c: gridinfo_fname[c].values for c in gridinfo_fname.columns}
+        grid_info["nnodes"] = gridinfo_fname.shape[0]
+        return grid_info
+    raise Exception(f"unrecognized gridinfo_fname type: {type(gridinfo_fname)}")
+
+
+@_logger_level_arg
+def generate_3d_grid_field_from_z(
+    z,
+    gridinfo_fname: str,
+    variotype="exp",
+    mean=1.0,
+    variance=1.0,
+    variorange_hmax=None,
+    variorange_hmin=None,
+    variorange_vert=None,
+    variotransform="none",
+    zone_array=None,
+    variobearing=0.0,
+    variodip=0.0,
+    variorake=0.0,
+    area=None,
+    height=None,
+    logger_level=None,
+) -> np.NDArray[float]:
+    """Map z values to a 3-D property field using spatially varying
+    geostatistical hyper parameters.
+
+    This is intended for use in a model forward run script, where the z
+    values are adjustable parameters (e.g. written by PEST to a file that the
+    forward run script reads into a dataframe or array).  Each call maps the
+    current z values to a property field, which can then be written to
+    MODFLOW-6 input files.  The mapping is deterministic: the same z values
+    always give the same field.  The z values have a prior mean of zero and a
+    prior variance of one, and are independent of each other a priori; spatial
+    correlation is imposed by this function.
+
+    Parameters
+    ----------
+    z: numpy.ndarray, pandas.Series or pandas.DataFrame
+        z values, one per grid node.  If an array or Series, values must be in
+        node order (an array of shape NLAY X NROW X NCOL or NLAY X NCPL is
+        accepted).  If a DataFrame, it must have a "z" column; if it also has a
+        "node" column of (zero-based) node numbers, z values are assigned to
+        those nodes and any nodes not listed are given a z value of zero.
+        Otherwise rows must be in node order.
+    gridinfo_fname: str or pandas.DataFrame
+        MODFLOW-6 binary grid file, or a csv file or DataFrame with columns
+        "x", "y" and "z" (cell centres), and optionally "area" and "height"
+    variotype: str
+        variogram type.  Default is "exp"onential
+    mean: float or numpy.ndarray
+        field mean (the field obtained when all z values are zero).  Either a
+        scalar or array of shape nnodes.  Default is 1.0
+    variance: float or numpy.ndarray
+        field variance. Either a scalar or array of shape nnodes.  Default is 1.0
+    variorange_hmax: float or numpy.ndarray
+        range of the variogram in the horizontal direction of maximum
+        continuity. Either a scalar or array of shape nnodes. Default is None,
+        which results in one tenth of the horizontal grid extent
+    variorange_hmin: float or numpy.ndarray
+        range of the variogram in the horizontal direction of minimum
+        continuity. Either a scalar or array of shape nnodes. Default is None,
+        which results in `variorange_hmax`
+    variorange_vert: float or numpy.ndarray
+        range of the variogram in the vertical direction. Either a scalar or
+        array of shape nnodes. Default is None, which results in one tenth of
+        the vertical grid extent (or `variorange_hmax` if the cell centres
+        all have the same elevation)
+    variotransform: str
+        variogram transform.  Default is "none".  If "log", the log10 of
+        the field divided by `mean` is linear in z
+    zone_array: int or numpy.ndarray
+        the zone array (for example, MODFLOW-6 IDOMAIN).  Nodes with a zone
+        value of zero are inactive and are given a value of zero in the
+        returned field
+    variobearing: float or numpy.ndarray
+        the bearing of the `variorange_hmax` direction.  Either a scalar or
+        array of shape nnodes.  Default is 0.0
+    variodip: float or numpy.ndarray
+        the dip of the `variorange_hmax` direction.  Either a scalar or
+        array of shape nnodes.  Default is 0.0
+    variorake: float or numpy.ndarray
+        the rotation of the `variorange_hmin` direction.  Either a scalar or
+        array of shape nnodes.  Default is 0.0
+    area: float or numpy.ndarray
+        cell areas.  Default is None, which results in the "area" grid info
+        column if present, otherwise 1.0
+    height: float or numpy.ndarray
+        cell heights (thicknesses).  Default is None, which results in the
+        "height" grid info column if present, otherwise 1.0
+
+    logger_level: str, int or None
+        level of the pypestutils logger (which echoes library calls to stdout)
+        during this call, for example "INFO" to echo each library call.
+        Default is None, which uses the current level
+
+    Returns
+    -------
+    result: numpy.ndarray(float)
+        property field (if `gridinfo_fname` is a MODFLOW-6 binary grid file for
+        a DIS or DISV grid, the field will be reshaped to NLAY X NROW X NCOL or
+        NLAY X NCPL, respectively)
+    """
+    grid_info = _get_3d_grid_info(gridinfo_fname)
+    nnodes = grid_info["nnodes"]
+    shape = grid_info.get("shape", None)
+    x = _to_node_array(grid_info["x"], nnodes, "x")
+    y = _to_node_array(grid_info["y"], nnodes, "y")
+    zc = _to_node_array(grid_info["z"], nnodes, "z")
+    if area is None:
+        area = grid_info.get("area", 1.0)
+    if height is None:
+        height = grid_info.get("height", 1.0)
+
+    z = _z_to_node_array(z, nnodes)
+    mean = _to_node_array(mean, nnodes, "mean")
+    variance = _to_node_array(variance, nnodes, "variance")
+    if variorange_hmax is None:
+        delx = x.max() - x.min()
+        dely = y.max() - y.min()
+        variorange_hmax = max(delx, dely) / 10
+    variorange_hmax = _to_node_array(variorange_hmax, nnodes, "variorange_hmax")
+    if variorange_hmin is None:
+        variorange_hmin = variorange_hmax
+    variorange_hmin = _to_node_array(variorange_hmin, nnodes, "variorange_hmin")
+    if variorange_vert is None:
+        delz = zc.max() - zc.min()
+        variorange_vert = delz / 10 if delz > 0 else variorange_hmax
+    variorange_vert = _to_node_array(variorange_vert, nnodes, "variorange_vert")
+    if zone_array is None:
+        zone_array = 1
+    zone_array = _to_node_array(zone_array, nnodes, "zone_array", dtype=int)
+
+    power = 1.0
+
+    lib = PestUtilsLib()
+    result = lib.fieldgen3d_sva_z(
+        x,
+        y,
+        zc,
+        _to_node_array(area, nnodes, "area"),
+        _to_node_array(height, nnodes, "height"),
+        zone_array,
+        mean,
+        variance,
+        variorange_hmax,
+        variorange_hmin,
+        variorange_vert,
+        _to_node_array(variobearing, nnodes, "variobearing"),
+        _to_node_array(variodip, nnodes, "variodip"),
+        _to_node_array(variorake, nnodes, "variorake"),
+        variotransform,
+        variotype,
+        power,
+        z,
+    )[:, 0]
+    lib.free_all_memory()
+    if shape is not None:
+        return result.reshape(shape)
+    return result
 
 
 class SpatialReference:

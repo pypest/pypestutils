@@ -5,7 +5,7 @@ from pathlib import Path, PureWindowsPath
 
 import pytest
 
-from pypestutils.pestutilslib import PestUtilsLib
+from pypestutils.pestutilslib import PestUtilsLib, PestUtilsLibError
 
 data_dir = Path(__file__).parent / "data"
 
@@ -13,6 +13,19 @@ data_dir = Path(__file__).parent / "data"
 def test_init_del():
     lib = PestUtilsLib()
     del lib
+
+
+def test_error_is_exception():
+    lib = PestUtilsLib()
+    lib.free_all_memory()
+    assert issubclass(PestUtilsLibError, Exception)
+    # library errors can be caught with a plain "except Exception"
+    try:
+        lib.uninstall_mf6_grid("not_installed")
+    except Exception as err:
+        assert isinstance(err, PestUtilsLibError)
+    else:
+        pytest.fail("expected PestUtilsLibError")
 
 
 def test_init_logger(caplog):

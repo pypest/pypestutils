@@ -6,8 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- `fieldgen2d_sva_z()` and `fieldgen3d_sva_z()`: generate stochastic fields from user-supplied standard normal deviates instead of internally drawn random numbers; new example notebook `fieldgen_with_supplied_z.ipynb`
+- Helpers `generate_2d_grid_field_from_z()` and `generate_3d_grid_field_from_z()`: map z values (array, Series or DataFrame) to a property field, for use in forward run scripts where z values are adjustable parameters
+- Example notebook `pestpp_ies_with_z_parameters.ipynb`: history matching per-cell z parameters and hyper parameter pilot points with `pestpp-ies` on the PEST++ synth2d model
+- Logging control: `pypestutils.logger.set_logger_level()` and `temporary_logger_level()`, and a `logger_level` argument on the helper functions that applies for the duration of the call
 ### Changed
+- The "PestUtilsLib" logger now defaults to the WARNING level, so library calls are no longer echoed to stdout; use `set_logger_level("INFO")` (or a `logger_level` argument) to echo them
+- `PestUtilsLib(logger_level=...)` now defaults to None, which leaves the shared "PestUtilsLib" logger level unchanged; previously every new instance (including those created inside helpers) reset it to INFO
+- `fieldgen2d_sva()` and `fieldgen3d_sva()` now draw deviates and delegate to the `_z` variants (output is unchanged for a given seed)
 ### Fixed
+- `PestUtilsLibError` now subclasses `Exception` instead of `BaseException`, so `except Exception` catches library errors
+- `calc_mf6_interp_factors()` freed `cellymax` twice and never freed `cellymin` on exit
+- `mod2obs_mf6()` and `get_grid_info_from_mf6_grb()` now always uninstall the MODFLOW 6 grid and free library memory, so a failed call no longer makes later calls fail with 'already-installed MODFLOW 6 grid'
 
 ## [0.3.0] - 2025-02-12
 ### Changed

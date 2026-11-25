@@ -510,6 +510,66 @@ module function_interfaces
        real(kind=c_double), intent(out)  :: randfield(ldrand,nreal)
    end function fieldgen3d_sva
 
+
+   integer (kind=c_int) function fieldgen2d_sva_z(             &
+                              nnode,                         &
+                              ec,nc,area,active,             &
+                              mean,var,aa,anis,bearing,      &
+                              transtype,avetype,power,       &
+                              ldz,z,ldrand,nreal,randfield)        &
+                    bind(c,name="fieldgen2d_sva_z")
+       use iso_c_binding, only: c_int,c_double
+       integer(kind=c_int), intent(in)   :: nnode
+       real(kind=c_double), intent(in)   :: ec(nnode),nc(nnode)
+       real(kind=c_double), intent(in)   :: area(nnode)
+       integer(kind=c_int), intent(in)   :: active(nnode)
+       real(kind=c_double), intent(in)   :: mean(nnode)
+       real(kind=c_double), intent(in)   :: var(nnode)
+       real(kind=c_double), intent(in)   :: aa(nnode)
+       real(kind=c_double), intent(in)   :: anis(nnode)
+       real(kind=c_double), intent(in)   :: bearing(nnode)
+       integer(kind=c_int), intent(in)   :: transtype
+       integer(kind=c_int), intent(in)   :: avetype
+       real(kind=c_double), intent(in)   :: power
+       integer(kind=c_int), intent(in)   :: ldz
+       real(kind=c_double), intent(in)   :: z(ldz,nreal)
+       integer(kind=c_int), intent(in)   :: ldrand
+       integer(kind=c_int), intent(in)   :: nreal
+       real(kind=c_double), intent(out)  :: randfield(ldrand,nreal)
+   end function fieldgen2d_sva_z
+
+   integer (kind=c_int) function fieldgen3d_sva_z(             &
+                              nnode,                         &
+                              ec,nc,zc,                      &
+                              area,height,active,            &
+                              mean,var,                      &
+                              ahmax,ahmin,avert,             &
+                              bearing,dip,rake,              &
+                              transtype,avetype,power,       &
+                              ldz,z,ldrand,nreal,randfield)        &
+                    bind(c,name="fieldgen3d_sva_z")
+       use iso_c_binding, only: c_int,c_double
+       integer(kind=c_int), intent(in)   :: nnode
+       real(kind=c_double), intent(in)   :: ec(nnode),nc(nnode),zc(nnode)
+       real(kind=c_double), intent(in)   :: area(nnode)
+       real(kind=c_double), intent(in)   :: height(nnode)
+       integer(kind=c_int), intent(in)   :: active(nnode)
+       real(kind=c_double), intent(in)   :: mean(nnode)
+       real(kind=c_double), intent(in)   :: var(nnode)
+       real(kind=c_double), intent(in)   :: ahmax(nnode),ahmin(nnode),avert(nnode)
+       real(kind=c_double), intent(in)   :: bearing(nnode)
+       real(kind=c_double), intent(in)   :: dip(nnode)
+       real(kind=c_double), intent(in)   :: rake(nnode)
+       integer(kind=c_int), intent(in)   :: transtype
+       integer(kind=c_int), intent(in)   :: avetype
+       real(kind=c_double), intent(in)   :: power
+       integer(kind=c_int), intent(in)   :: ldz
+       real(kind=c_double), intent(in)   :: z(ldz,nreal)
+       integer(kind=c_int), intent(in)   :: ldrand
+       integer(kind=c_int), intent(in)   :: nreal
+       real(kind=c_double), intent(out)  :: randfield(ldrand,nreal)
+   end function fieldgen3d_sva_z
+
 end interface
 
 end module function_interfaces

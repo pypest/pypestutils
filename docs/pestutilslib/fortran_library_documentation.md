@@ -338,6 +338,8 @@ John Doherty, 2023
 
 [Notes](#notes-23)
 
+[fieldgen2d_sva_z and fieldgen3d_sva_z](#fieldgen2d_sva_z-and-fieldgen3d_sva_z)
+
 [Driver Programs](#driver-programs)
 
 [Introduction](#introduction-1)
@@ -1843,6 +1845,58 @@ If *transtype* is set to 1, then hydraulic property fields, and the user-supplie
 #### Active and Inactive Cells
 
 Random hydraulic properties are assigned only to cells that are designated as active. Additionally, random number averaging is performed only over active cells. *randfield* values that are ascribed to inactive cells on entry to function *fieldgen3d_sva()* are left unaltered by this function.
+
+## fieldgen2d_sva_z and fieldgen3d_sva_z
+
+### Description
+
+Functions *fieldgen2d_sva_z()* and *fieldgen3d_sva_z()* are identical to *fieldgen2d_sva()* and *fieldgen3d_sva()*, except that the field of independent standard normal deviates that is spatially averaged is supplied by the calling program through the *z* array, rather than being drawn from the library's random number generator. It is therefore not necessary to call *initialize_randgen()* before calling these functions.
+
+Supplying the deviates allows a calling program to reproduce fields exactly, to hold the deviates fixed while varying the averaging function (i.e. to use common random numbers), to obtain deviates from an external source, and to treat the deviates as adjustable parameters (for example in gradual deformation or other latent-variable parameterisation schemes). For *transtype* = 0, generated fields are a linear function of *z*; for *transtype* = 1, the log (to base 10) of the ratio of a generated field to *mean* is a linear function of *z*.
+
+*fieldgen2d_sva()* and *fieldgen3d_sva()* are implemented by drawing deviates and then calling *fieldgen2d_sva_z()* and *fieldgen3d_sva_z()* respectively.
+
+### Function Call
+
+```fortran
+integer (kind=c_int) function fieldgen2d_sva_z(          &
+                              nnode,                     &
+                              ec,nc,area,active,         &
+                              mean,var,aa,anis,bearing,  &
+                              transtype,avetype,power,   &
+                              ldz,z,ldrand,nreal,randfield)
+
+integer (kind=c_int) function fieldgen3d_sva_z(          &
+                              nnode,                     &
+                              ec,nc,zc,                  &
+                              area,height,active,        &
+                              mean,var,                  &
+                              ahmax,ahmin,avert,         &
+                              bearing,dip,rake,          &
+                              transtype,avetype,power,   &
+                              ldz,z,ldrand,nreal,randfield)
+
+! In addition to the arguments of fieldgen2d_sva() / fieldgen3d_sva():
+integer(kind=c_int), intent(in)   :: ldz
+real(kind=c_double), intent(in)   :: z(ldz,nreal)
+```
+
+### Return Value
+
+These functions return a value of zero unless an error condition is encountered, in which case they return a value of 1. In the latter case, an error message can be retrieved using function *retrieve_error_message()*.
+
+### Function Arguments
+
+All arguments are as for *fieldgen2d_sva()* and *fieldgen3d_sva()*, with the following additions.
+
+| **Argument** | **Role**                                                                                                                                                                  |
+|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ldz          | The leading dimension of the *z* array. This must equal or exceed *nnode*. (Note that the FORTRAN array indicial convention is used.)                                    |
+| z            | Independent standard normal deviates; column *ireal* is spatially averaged to produce realisation *ireal*. One value must be supplied for every node, active or inactive. |
+
+### Notes
+
+Values of *z* that are ascribed to inactive nodes are ignored. Each generated value is a weighted average of the deviates at all active nodes that lie within the footprint of the averaging function, so *z* must be indexed in the same way as *ec*, *nc* (and *zc*). The variance of the generated field equals *var* only if the supplied deviates are independent with zero mean and unit variance; this is not checked.
 
 # Driver Programs
 

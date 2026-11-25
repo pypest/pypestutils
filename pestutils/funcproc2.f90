@@ -3315,7 +3315,140 @@ integer (kind=c_int) function fieldgen2d_sva(                &
                               ldrand,nreal,randfield)        &
                  bind(C,name="fieldgen2d_sva")
 
+! -- This function generates 2D stochastic fields based on a spatially varying variogram.
+! -- It draws standard normal deviates using the (previously seeded) random number
+! -- generator, and then calls fieldgen2d_sva_z() to undertake the spatial convolution.
+
+       use iso_c_binding, only: c_int,c_double
+       use dimvar
+       use utilities
+       implicit none
+
+       interface
+       integer (kind=c_int) function fieldgen2d_sva_z(             &
+                                  nnode,                         &
+                                  ec,nc,area,active,             &
+                                  mean,var,aa,anis,bearing,      &
+                                  transtype,avetype,power,       &
+                                  ldz,z,ldrand,nreal,randfield)        &
+                        bind(c,name="fieldgen2d_sva_z")
+           use iso_c_binding, only: c_int,c_double
+           integer(kind=c_int), intent(in)   :: nnode
+           real(kind=c_double), intent(in)   :: ec(nnode),nc(nnode)
+           real(kind=c_double), intent(in)   :: area(nnode)
+           integer(kind=c_int), intent(in)   :: active(nnode)
+           real(kind=c_double), intent(in)   :: mean(nnode)
+           real(kind=c_double), intent(in)   :: var(nnode)
+           real(kind=c_double), intent(in)   :: aa(nnode)
+           real(kind=c_double), intent(in)   :: anis(nnode)
+           real(kind=c_double), intent(in)   :: bearing(nnode)
+           integer(kind=c_int), intent(in)   :: transtype
+           integer(kind=c_int), intent(in)   :: avetype
+           real(kind=c_double), intent(in)   :: power
+           integer(kind=c_int), intent(in)   :: ldz
+           real(kind=c_double), intent(in)   :: z(ldz,nreal)
+           integer(kind=c_int), intent(in)   :: ldrand
+           integer(kind=c_int), intent(in)   :: nreal
+           real(kind=c_double), intent(out)  :: randfield(ldrand,nreal)
+       end function fieldgen2d_sva_z
+       end interface
+
+       integer(kind=c_int), intent(in)   :: nnode                  ! Nodes in model grid
+       real(kind=c_double), intent(in)   :: ec(nnode),nc(nnode)    ! x and y coordinates of nodes
+       real(kind=c_double), intent(in)   :: area(nnode)            ! Areas of grid cells
+       integer(kind=c_int), intent(in)   :: active(nnode)          ! 0=inactive cell
+       real(kind=c_double), intent(in)   :: mean(nnode)            ! Mean value of stochastic field
+       real(kind=c_double), intent(in)   :: var(nnode)             ! Variance of stochastic field
+       real(kind=c_double), intent(in)   :: aa(nnode)              ! Averaging function spatial dimension
+       real(kind=c_double), intent(in)   :: anis(nnode)            ! Anisotropy ratio
+       real(kind=c_double), intent(in)   :: bearing(nnode)         ! Bearing of principal anisotropy axis
+       integer(kind=c_int), intent(in)   :: transtype              ! Stochastic field pertains to natural(0) or log(1) props
+       integer(kind=c_int), intent(in)   :: avetype                ! 1:spher,2:exp,3:gauss,4:pow
+       real(kind=c_double), intent(in)   :: power                  ! Power used in power AVETYPE
+       integer(kind=c_int), intent(in)   :: ldrand                 ! Leading dimension of RANDFIELD
+       integer(kind=c_int), intent(in)   :: nreal                  ! Number of realisations to generate
+       real(kind=c_double), intent(out)  :: randfield(ldrand,nreal)! Realisations
+
+       integer                 :: jnode,ireal,ierr
+       character(len=25)       :: varname
+       double precision, allocatable :: diid(:,:)
+
+! -- Initialisation
+
+       fieldgen2d_sva=0
+       function_name='fieldgen2d_sva()'
+
+! -- Check that the random number generator has been seeded.
+
+       if(.not.allocated(seed))then
+         write(amessage,90) trim(function_name)
+90       format(' The random number generator must be seeded before calling function ',a,'.')
+         go to 9890
+       end if
+
+! -- Check array dimensions (all other checking is done by fieldgen2d_sva_z()).
+
+       if(nnode.le.0)then
+         varname='NNODE'
+         go to 9000
+       end if
+       if(nreal.le.0)then
+         varname='NREAL'
+         go to 9000
+       end if
+
+! -- Allocate and fill the array that stores random numbers.
+
+       allocate(diid(nnode,nreal),stat=ierr)
+       if(ierr.ne.0) go to 9200
+       do ireal=1,nreal
+         do jnode=1,nnode
+           diid(jnode,ireal)=utl_random_normal()
+         end do
+       end do
+
+! -- Generate the fields.
+
+       if(fieldgen2d_sva_z(                                    &
+                 nnode,ec,nc,area,active,mean,var,aa,anis,bearing,    &
+                 transtype,avetype,power,                           &
+                 nnode,diid,ldrand,nreal,randfield).ne.0)then
+         function_name='fieldgen2d_sva()'
+         go to 9890
+       end if
+       function_name='fieldgen2d_sva()'
+       go to 9900
+
+9000   write(amessage,9010) trim(varname),trim(function_name)
+9010   format('The ',a,' argument of function ',a,' must be greater than zero.')
+       go to 9890
+
+9200   write(amessage,9210) trim(function_name)
+9210   format('Memory management error encountered in function ',a,'.')
+       go to 9890
+
+9890   fieldgen2d_sva=1
+
+9900   continue
+       if(allocated(diid)) deallocate(diid,stat=ierr)
+
+       return
+
+end function fieldgen2d_sva
+
+
+
+integer (kind=c_int) function fieldgen2d_sva_z(                &
+                              nnode,                         &
+                              ec,nc,area,active,             &
+                              mean,var,aa,anis,bearing,      &
+                              transtype,avetype,power,       &
+                              ldz,z,ldrand,nreal,randfield)        &
+                 bind(C,name="fieldgen2d_sva_z")
+
 ! -- This function generates stochastic fields based on a spatially varying variogram.
+! -- The standard normal deviates that drive the fields are supplied by the caller
+! -- in the Z array rather than being drawn internally.
 ! -- It does this by 2D spatial convolution of an averaging function.
 
        use iso_c_binding, only: c_int,c_double
@@ -3335,6 +3468,8 @@ integer (kind=c_int) function fieldgen2d_sva(                &
        integer(kind=c_int), intent(in)   :: transtype              ! Stochastic field pertains to natural(0) or log(1) props
        integer(kind=c_int), intent(in)   :: avetype                ! 1:spher,2:exp,3:gauss,4:pow
        real(kind=c_double), intent(in)   :: power                  ! Power used in power AVETYPE
+       integer(kind=c_int), intent(in)   :: ldz                    ! Leading dimension of Z
+       real(kind=c_double), intent(in)   :: z(ldz,nreal)           ! Standard normal deviates
        integer(kind=c_int), intent(in)   :: ldrand                 ! Leading dimension of RANDFIELD
        integer(kind=c_int), intent(in)   :: nreal                  ! Number of realisations to generate
        real(kind=c_double), intent(out)  :: randfield(ldrand,nreal)! Realisations
@@ -3349,22 +3484,12 @@ integer (kind=c_int) function fieldgen2d_sva(                &
        double precision        :: dlim,pidiv180
        character(len=25)       :: varname
 
-       double precision, allocatable :: diid(:,:)
-
 ! -- Initialisation
 
-       fieldgen2d_sva=0
-       function_name='fieldgen2d_sva()'
+       fieldgen2d_sva_z=0
+       function_name='fieldgen2d_sva_z()'
        pidiv180=3.1415926535898d0/180.0d0
        dlim=1.0d-5
-
-! -- Check that the random number generator has been seeded.
-
-       if(.not.allocated(seed))then
-         write(amessage,90) trim(function_name)
-90       format(' The random number generator must be seeded before calling function ',a,'.')
-         go to 9890
-       end if
 
 ! -- Check input arguments.
 
@@ -3401,6 +3526,11 @@ integer (kind=c_int) function fieldgen2d_sva(                &
 107      format(' LDRAND must equal or exceed NNODE in call to function ',a,'.')
          go to 9890
        end if
+       if(ldz.lt.nnode)then
+         write(amessage,108) trim(function_name)
+108      format('LDZ must equal or exceed NNODE in call to function ',a,'.')
+         go to 9890
+       end if
        if(all(active.eq.0))then
          varname='ACTIVE'
          go to 9100
@@ -3434,19 +3564,9 @@ integer (kind=c_int) function fieldgen2d_sva(                &
          end if
        end do
 
-! -- Allocate the array that stores random numbers.
+! -- Allocate work vector.
 
-       allocate(diid(nnode,nreal),stat=ierr)
-       if(ierr.ne.0) go to 9200
        if(utl_allocate_vector('d',1,nreal).ne.0) go to 9200
-
-! -- Fill the diid array with random numbers.
-
-       do ireal=1,nreal
-         do jnode=1,nnode
-           diid(jnode,ireal)=utl_random_normal()
-         end do
-       end do
 
 ! -- Evaluate limit threshold
 
@@ -3528,7 +3648,7 @@ integer (kind=c_int) function fieldgen2d_sva(                &
              end if
              dtemp=dtemp*area(knode)
              do ireal=1,nreal
-                dvector1(ireal)=dvector1(ireal)+dtemp*diid(knode,ireal)
+                dvector1(ireal)=dvector1(ireal)+dtemp*z(knode,ireal)
              end do
              den=den+dtemp*dtemp
            end do
@@ -3557,14 +3677,13 @@ integer (kind=c_int) function fieldgen2d_sva(                &
 9210   format('Memory management error encountered in function ',a,'.')
        go to 9890
 
-9890   fieldgen2d_sva=1
+9890   fieldgen2d_sva_z=1
 
 9900   continue
-       if(allocated(diid)) deallocate(diid,stat=ierr)
 
        return
 
-end function fieldgen2d_sva
+end function fieldgen2d_sva_z
 
 
 
@@ -3580,6 +3699,150 @@ integer (kind=c_int) function fieldgen3d_sva(                &
                  bind(C,name="fieldgen3d_sva")
 
 ! -- This function generates 3D stochastic fields based on a spatially varying variogram.
+! -- It draws standard normal deviates using the (previously seeded) random number
+! -- generator, and then calls fieldgen3d_sva_z() to undertake the spatial convolution.
+
+       use iso_c_binding, only: c_int,c_double
+       use dimvar
+       use utilities
+       implicit none
+
+       interface
+       integer (kind=c_int) function fieldgen3d_sva_z(             &
+                                  nnode,                         &
+                                  ec,nc,zc,                      &
+                                  area,height,active,            &
+                                  mean,var,                      &
+                                  ahmax,ahmin,avert,             &
+                                  bearing,dip,rake,              &
+                                  transtype,avetype,power,       &
+                                  ldz,z,ldrand,nreal,randfield)        &
+                        bind(c,name="fieldgen3d_sva_z")
+           use iso_c_binding, only: c_int,c_double
+           integer(kind=c_int), intent(in)   :: nnode
+           real(kind=c_double), intent(in)   :: ec(nnode),nc(nnode),zc(nnode)
+           real(kind=c_double), intent(in)   :: area(nnode)
+           real(kind=c_double), intent(in)   :: height(nnode)
+           integer(kind=c_int), intent(in)   :: active(nnode)
+           real(kind=c_double), intent(in)   :: mean(nnode)
+           real(kind=c_double), intent(in)   :: var(nnode)
+           real(kind=c_double), intent(in)   :: ahmax(nnode),ahmin(nnode),avert(nnode)
+           real(kind=c_double), intent(in)   :: bearing(nnode)
+           real(kind=c_double), intent(in)   :: dip(nnode)
+           real(kind=c_double), intent(in)   :: rake(nnode)
+           integer(kind=c_int), intent(in)   :: transtype
+           integer(kind=c_int), intent(in)   :: avetype
+           real(kind=c_double), intent(in)   :: power
+           integer(kind=c_int), intent(in)   :: ldz
+           real(kind=c_double), intent(in)   :: z(ldz,nreal)
+           integer(kind=c_int), intent(in)   :: ldrand
+           integer(kind=c_int), intent(in)   :: nreal
+           real(kind=c_double), intent(out)  :: randfield(ldrand,nreal)
+       end function fieldgen3d_sva_z
+       end interface
+
+       integer(kind=c_int), intent(in)   :: nnode                       ! Nodes in model grid
+       real(kind=c_double), intent(in)   :: ec(nnode),nc(nnode),zc(nnode)! x,y,z coordinates of nodes
+       real(kind=c_double), intent(in)   :: area(nnode)            ! Areas of grid cells
+       real(kind=c_double), intent(in)   :: height(nnode)          ! Height of grid cells
+       integer(kind=c_int), intent(in)   :: active(nnode)          ! 0=inactive cell
+       real(kind=c_double), intent(in)   :: mean(nnode)            ! Mean value of stochastic field
+       real(kind=c_double), intent(in)   :: var(nnode)             ! Variance of stochastic field
+       real(kind=c_double), intent(in)   :: ahmax(nnode),ahmin(nnode),avert(nnode) ! Ave func. correlation lengths
+       real(kind=c_double), intent(in)   :: bearing(nnode)         ! Bearing of ahmax direction
+       real(kind=c_double), intent(in)   :: dip(nnode)             ! Dip of ahmax direction
+       real(kind=c_double), intent(in)   :: rake(nnode)            ! Rotation of ahmin direction
+       integer(kind=c_int), intent(in)   :: transtype              ! Stochastic field pertains to natural(0) or log(1) props
+       integer(kind=c_int), intent(in)   :: avetype                ! 1:spher,2:exp,3:gauss,4:pow
+       real(kind=c_double), intent(in)   :: power                  ! Power used in power AVETYPE
+       integer(kind=c_int), intent(in)   :: ldrand                 ! Leading dimension of RANDFIELD
+       integer(kind=c_int), intent(in)   :: nreal                  ! Number of realisations to generate
+       real(kind=c_double), intent(out)  :: randfield(ldrand,nreal)! Realisations
+
+       integer                 :: jnode,ireal,ierr
+       character(len=25)       :: varname
+       double precision, allocatable :: diid(:,:)
+
+! -- Initialisation
+
+       fieldgen3d_sva=0
+       function_name='fieldgen3d_sva()'
+
+! -- Check that the random number generator has been seeded.
+
+       if(.not.allocated(seed))then
+         write(amessage,90) trim(function_name)
+90       format(' The random number generator must be seeded before calling function ',a,'.')
+         go to 9890
+       end if
+
+! -- Check array dimensions (all other checking is done by fieldgen3d_sva_z()).
+
+       if(nnode.le.0)then
+         varname='NNODE'
+         go to 9000
+       end if
+       if(nreal.le.0)then
+         varname='NREAL'
+         go to 9000
+       end if
+
+! -- Allocate and fill the array that stores random numbers.
+
+       allocate(diid(nnode,nreal),stat=ierr)
+       if(ierr.ne.0) go to 9200
+       do ireal=1,nreal
+         do jnode=1,nnode
+           diid(jnode,ireal)=utl_random_normal()
+         end do
+       end do
+
+! -- Generate the fields.
+
+       if(fieldgen3d_sva_z(                                    &
+                 nnode,ec,nc,zc,area,height,active,mean,var,           &
+                 ahmax,ahmin,avert,bearing,dip,rake,                &
+                 transtype,avetype,power,                           &
+                 nnode,diid,ldrand,nreal,randfield).ne.0)then
+         function_name='fieldgen3d_sva()'
+         go to 9890
+       end if
+       function_name='fieldgen3d_sva()'
+       go to 9900
+
+9000   write(amessage,9010) trim(varname),trim(function_name)
+9010   format('The ',a,' argument of function ',a,' must be greater than zero.')
+       go to 9890
+
+9200   write(amessage,9210) trim(function_name)
+9210   format('Memory management error encountered in function ',a,'.')
+       go to 9890
+
+9890   fieldgen3d_sva=1
+
+9900   continue
+       if(allocated(diid)) deallocate(diid,stat=ierr)
+
+       return
+
+end function fieldgen3d_sva
+
+
+
+integer (kind=c_int) function fieldgen3d_sva_z(                &
+                              nnode,                         &
+                              ec,nc,zc,                      &
+                              area,height,active,            &
+                              mean,var,                      &
+                              ahmax,ahmin,avert,             &
+                              bearing,dip,rake,              &
+                              transtype,avetype,power,       &
+                              ldz,z,ldrand,nreal,randfield)        &
+                 bind(C,name="fieldgen3d_sva_z")
+
+! -- This function generates 3D stochastic fields based on a spatially varying variogram.
+! -- The standard normal deviates that drive the fields are supplied by the caller
+! -- in the Z array rather than being drawn internally.
 ! -- It does this by spatial convolution using an averaging function.
 
        use iso_c_binding, only: c_int,c_double
@@ -3601,6 +3864,8 @@ integer (kind=c_int) function fieldgen3d_sva(                &
        integer(kind=c_int), intent(in)   :: transtype              ! Stochastic field pertains to natural(0) or log(1) props
        integer(kind=c_int), intent(in)   :: avetype                ! 1:spher,2:exp,3:gauss,4:pow
        real(kind=c_double), intent(in)   :: power                  ! Power used in power AVETYPE
+       integer(kind=c_int), intent(in)   :: ldz                    ! Leading dimension of Z
+       real(kind=c_double), intent(in)   :: z(ldz,nreal)           ! Standard normal deviates
        integer(kind=c_int), intent(in)   :: ldrand                 ! Leading dimension of RANDFIELD
        integer(kind=c_int), intent(in)   :: nreal                  ! Number of realisations to generate
        real(kind=c_double), intent(out)  :: randfield(ldrand,nreal)! Realisations
@@ -3619,22 +3884,12 @@ integer (kind=c_int) function fieldgen3d_sva(                &
        double precision        :: dlim,pidiv180
        character(len=25)       :: varname
 
-       double precision, allocatable :: diid(:,:)
-
 ! -- Initialisation
 
-       fieldgen3d_sva=0
-       function_name='fieldgen3d_sva()'
+       fieldgen3d_sva_z=0
+       function_name='fieldgen3d_sva_z()'
        pidiv180=3.1415926535898d0/180.0d0
        dlim=1.0d-5
-
-! -- Check that the random number generator has been seeded.
-
-       if(.not.allocated(seed))then
-         write(amessage,90) trim(function_name)
-90       format(' The random number generator must be seeded before calling function ',a,'.')
-         go to 9890
-       end if
 
 ! -- Check input arguments.
 
@@ -3669,6 +3924,11 @@ integer (kind=c_int) function fieldgen3d_sva(                &
        if(ldrand.lt.nnode)then
          write(amessage,107) trim(function_name)
 107      format('LDRAND must equal or exceed NNODE in call to function ',a,'.')
+         go to 9890
+       end if
+       if(ldz.lt.nnode)then
+         write(amessage,108) trim(function_name)
+108      format('LDZ must equal or exceed NNODE in call to function ',a,'.')
          go to 9890
        end if
        if(all(active.eq.0))then
@@ -3724,19 +3984,9 @@ integer (kind=c_int) function fieldgen3d_sva(                &
          end if
        end do
 
-! -- Allocate the array that stores random numbers.
+! -- Allocate work vector.
 
-       allocate(diid(nnode,nreal),stat=ierr)
-       if(ierr.ne.0) go to 9200
        if(utl_allocate_vector('d',1,nreal).ne.0) go to 9200
-
-! -- Fill the diid array with random numbers.
-
-       do ireal=1,nreal
-         do jnode=1,nnode
-           diid(jnode,ireal)=utl_random_normal()
-         end do
-       end do
 
 ! -- Evaluate limit threshold
 
@@ -3842,7 +4092,7 @@ integer (kind=c_int) function fieldgen3d_sva(                &
              end if
              dtemp=dtemp*area(knode)*height(knode)
              do ireal=1,nreal
-               dvector1(ireal)=dvector1(ireal)+dtemp*diid(knode,ireal)
+               dvector1(ireal)=dvector1(ireal)+dtemp*z(knode,ireal)
              end do
              den=den+dtemp*dtemp
            end do
@@ -3873,14 +4123,13 @@ integer (kind=c_int) function fieldgen3d_sva(                &
 9210   format('Memory management error encountered in function ',a,'.')
        go to 9890
 
-9890   fieldgen3d_sva=1
+9890   fieldgen3d_sva_z=1
 
 9900   continue
-       if(allocated(diid)) deallocate(diid,stat=ierr)
 
        return
 
-end function fieldgen3d_sva
+end function fieldgen3d_sva_z
 
 
 
