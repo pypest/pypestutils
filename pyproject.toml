@@ -58,6 +58,11 @@ tests = [
 [project.urls]
 Repository = "https://github.com/pypest/pypestutils"
 
+[tool.uv]
+# fonttools 4.69.0 was published with only cp311 wheels (its release build failed partway), so
+# `uv sync` fails on other Pythons. Remove this once a complete fonttools release is out.
+constraint-dependencies = ["fonttools!=4.69.0"]
+
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib"
 testpaths = ["tests"]
